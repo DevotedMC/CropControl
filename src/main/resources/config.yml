@@ -1,0 +1,91 @@
+database:
+ host:
+ port:
+ database:
+ user:
+ password:
+ poolsize: 15
+ connectionTimeout: 3000
+ idleTimeout: 600000
+ maxLifetime: 7200000
+preload:
+ enabled: true
+ batch: 50
+ period: 300
+ delay: 1200
+dirtysave: 
+ period: 12000
+ delay: 6000
+drops:
+ wheatT1:
+  template:
+  base:
+   min: 1
+   max: 4
+   chance: 1.0
+#tools: TODO
+crops:
+ WHEAT:
+  0:
+   drops:
+    wheatT1:
+     chance: 0.5
+     adjust: 0
+     biomes:
+      FOREST:
+       adjust: -1
+       chance: 1.5
+      BEACH:
+       adjust: 1
+       chance: 0.5
+   VANILLA: true
+  1-4:
+   drops:
+    wheatT2:
+     chance: 1.0
+     adjust: 0
+     biomes:
+      FOREST:
+       adjust: -1
+       chance: 2.0
+      BEACH:
+       adjust: 1
+       chance: 0.25
+   VANILLA: true
+trees:
+ JUNGLE_LARGE:
+  sapling:
+   drops:
+    jungleT1:
+     chance: 0.25
+     adjust: -1
+     biomes:
+      JUNGLE:
+       adjust: 2
+       chance: 4
+   VANILLA: true
+  trunk:
+   drops:
+    jungleT2:
+     chance: 0.5
+     adjust: -1
+     biomes:
+      JUNGLE:
+       adjust: 2
+       chance: 2
+   VANILLA: true
+  leaf:
+   drops:
+    jungleT3:
+     chance: 0.1
+     adjust: 2
+     biomes:
+      JUNGLE:
+       adjust: 2
+       chance: 1.0
+   VANILLA: false
+ JUNGLE_SMALL:
+  inherit:
+   from: JUNGLE_LARGE
+   adjust: 0
+   chance: 0.5

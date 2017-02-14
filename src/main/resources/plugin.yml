@@ -1,0 +1,6 @@
+name: ${project.name}
+version: ${project.version}
+author: [ProgrammerDan]
+depend: [CivModCore]
+main: com.programmerdan.minecraft.cropcontrol.CropControl
+description: Fills the gaps left by RealisticBiomes and HiddenOre; control drops for player-grown plants and trees
