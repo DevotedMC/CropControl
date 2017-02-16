@@ -18,8 +18,9 @@ public class CropControl extends ACivMod {
 		reloadConfig();
 		
 		CropControl.instance = this;
-		connectDatabase();
-		if (!this.isEnabled()) return;
+		//TODO Uncomment these when DB support is done.
+//		connectDatabase();
+//		if (!this.isEnabled()) return;
 
 		registerEventHandler();
 
@@ -39,6 +40,7 @@ public class CropControl extends ACivMod {
 		if (!this.isEnabled()) return;
 		try {
 			this.eventHandler = new CropControlEventHandler(getConfig());
+			this.getServer().getPluginManager().registerEvents(eventHandler, this);
 		} catch (Exception e) {
 			this.severe("Failed to set up event capture / handling", e);
 			this.setEnabled(false);
