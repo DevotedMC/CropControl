@@ -1,15 +1,16 @@
 package com.programmerdan.minecraft.cropcontrol.handler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.CropState;
 import org.bukkit.Material;
-import org.bukkit.NetherWartsState;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,6 +22,7 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.material.CocoaPlant;
 import org.bukkit.material.Crops;
 import org.bukkit.material.NetherWarts;
+import org.bukkit.material.SimpleAttachableMaterialData;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
@@ -37,40 +39,130 @@ public class CropControlEventHandler implements Listener
 
 	private List<Crop> crops;
 
+	/**
+	 * List of materials that are crops, and if we track specific states
+	 * belonging to that material.
+	 */
+	private Map<Material, Boolean> harvestableCrops;
+	
+	private Map<BlockFace, BlockFace> adjacent;
+
 	public CropControlEventHandler(FileConfiguration config)
 	{
 		this.config = config;
+
 		crops = new ArrayList<Crop>();
+
+		harvestableCrops = new HashMap<Material, Boolean>();
+		
+		adjacent = new HashMap<BlockFace, BlockFace>();
+
+		fillHarvestableCropsList();
+		
+		loadAdjacents();
+	}
+	
+	public void loadAdjacents()
+	{
+		adjacent.put(BlockFace.NORTH, BlockFace.SOUTH);
+		adjacent.put(BlockFace.SOUTH, BlockFace.NORTH);
+		adjacent.put(BlockFace.EAST, BlockFace.WEST);
+		adjacent.put(BlockFace.WEST, BlockFace.EAST);
+	}
+
+	public void fillHarvestableCropsList()
+	{
+		harvestableCrops.put(Material.CROPS, true);
+		harvestableCrops.put(Material.CARROT, true);
+		harvestableCrops.put(Material.POTATO, true);
+		harvestableCrops.put(Material.NETHER_WARTS, true);
+		harvestableCrops.put(Material.BEETROOT_BLOCK, true);
+		harvestableCrops.put(Material.COCOA, true);
+		harvestableCrops.put(Material.PUMPKIN_STEM, false);
+		harvestableCrops.put(Material.MELON_STEM, false);
+		harvestableCrops.put(Material.CACTUS, false);
+		harvestableCrops.put(Material.BROWN_MUSHROOM, false);
+		harvestableCrops.put(Material.RED_MUSHROOM, false);
+		harvestableCrops.put(Material.SUGAR_CANE_BLOCK, false);
+	}
+
+	public String getBaseCropState(Material material)
+	{
+		switch (material)
+		{
+			case COCOA:
+				return "SMALL";
+			case MELON_STEM:
+				return "0";
+			case PUMPKIN_STEM:
+				return "0";
+			case CACTUS:
+				return null;
+			case BROWN_MUSHROOM:
+				return null;
+			case RED_MUSHROOM:
+				return null;
+			case SUGAR_CANE_BLOCK:
+				return null;
+			default:
+				return "SEEDED";
+		}
+	}
+
+	public String getCropState(BlockState blockState)
+	{
+		switch (blockState.getBlock().getType())
+		{
+			case COCOA:
+				return ((CocoaPlant) blockState.getData()).getSize().toString();
+			case NETHER_WARTS:
+				return ((NetherWarts) blockState.getData()).getState().toString();
+			case MELON_STEM:
+				return (int) blockState.getBlock().getData() + "";
+			case PUMPKIN_STEM:
+				return (int) blockState.getBlock().getData() + "";
+			default:
+				return ((Crops) blockState.getData()).getState().toString();
+		}
+	}
+
+	public Crop getCrop(int x, int y, int z, Material cropType)
+	{
+		for (Crop crop : crops)
+		{
+			if (crop.getX() == x && crop.getY() == y && crop.getZ() == z && crop.getCropType().equals(cropType.toString()))
+				return crop;
+		}
+
+		return null;
 	}
 
 	@EventHandler
 	public void onPlaceBlock(BlockPlaceEvent e)
 	{
-		Material placedMaterial = e.getBlock().getType();
+		Block block = e.getBlock();
 
-		if (placedMaterial == Material.CROPS || placedMaterial == Material.CARROT || placedMaterial == Material.POTATO || placedMaterial == Material.NETHER_WARTS || placedMaterial == Material.BEETROOT_BLOCK || placedMaterial == Material.COCOA || placedMaterial == Material.PUMPKIN_STEM || placedMaterial == Material.MELON_STEM)
-		{
-			if (cropsContains(e.getBlock().getX(), e.getBlock().getY(), e.getBlock().getZ(), placedMaterial.toString()))
-				return;
+		Material blockMaterial = block.getType();
 
-			crops.add(new Crop(null, null, e.getBlock().getX(), e.getBlock().getY(), e.getBlock().getZ(), placedMaterial.toString(), (placedMaterial == Material.NETHER_WARTS ? NetherWartsState.SEEDED.toString() : placedMaterial == Material.COCOA ? CocoaPlant.CocoaPlantSize.SMALL.toString() : placedMaterial == Material.MELON_STEM || placedMaterial == Material.PUMPKIN_STEM ? "0" : CropState.SEEDED.toString()), e.getPlayer().getUniqueId(), System.currentTimeMillis(), (placedMaterial == Material.PUMPKIN_STEM || placedMaterial == Material.MELON_STEM ? false : true)));
-		}
-		else if (placedMaterial == Material.CACTUS || placedMaterial == Material.BROWN_MUSHROOM || placedMaterial == Material.RED_MUSHROOM || placedMaterial == Material.SUGAR_CANE_BLOCK)
-		{
-			if (cropsContains(e.getBlock().getX(), e.getBlock().getY(), e.getBlock().getZ(), placedMaterial.toString()))
-				return;
+		if (!harvestableCrops.containsKey(blockMaterial))
+			return;
 
-			crops.add(new Crop(null, null, e.getBlock().getX(), e.getBlock().getY(), e.getBlock().getZ(), placedMaterial.toString(), null, e.getPlayer().getUniqueId(), System.currentTimeMillis(), false));
-		}
+		if (getCrop(block.getX(), block.getY(), block.getZ(), blockMaterial) != null)
+			return;
+
+		crops.add(new Crop(null, null, block.getX(), block.getY(), block.getZ(), blockMaterial.toString(), getBaseCropState(blockMaterial), e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial)));
 	}
 
 	@EventHandler
 	public void onInteract(PlayerInteractEvent e)
 	{
-		if (cropsContains(e.getClickedBlock().getX(), e.getClickedBlock().getY(), e.getClickedBlock().getZ(), e.getClickedBlock().getType().toString()))
-		{
-			Crop crop = getCrop(e.getClickedBlock().getX(), e.getClickedBlock().getY(), e.getClickedBlock().getZ(), e.getClickedBlock().getType().toString());
+		Block block = e.getClickedBlock();
 
+		if (getCrop(block.getX(), block.getY(), block.getZ(), block.getType()) != null)
+		{
+			Crop crop = getCrop(block.getX(), block.getY(), block.getZ(), block.getType());
+
+			Bukkit.broadcastMessage("");
 			Bukkit.broadcastMessage("Debug: There is a crop here.");
 			Bukkit.broadcastMessage("X: " + crop.getX());
 			Bukkit.broadcastMessage("Y: " + crop.getY());
@@ -91,115 +183,70 @@ public class CropControlEventHandler implements Listener
 	@EventHandler
 	public void onCropGrow(BlockGrowEvent e)
 	{
-		if (cropsContains(e.getBlock().getX(), e.getBlock().getY(), e.getBlock().getZ(), e.getBlock().getType().toString()))
-		{
-			if (e.getBlock().getType() == Material.NETHER_WARTS)
-				getCrop(e.getBlock().getX(), e.getBlock().getY(), e.getBlock().getZ(), e.getBlock().getType().toString()).setCropState(((NetherWarts) e.getNewState().getData()).getState().toString());
-			else if (e.getBlock().getType() == Material.COCOA)
-				getCrop(e.getBlock().getX(), e.getBlock().getY(), e.getBlock().getZ(), e.getBlock().getType().toString()).setCropState(((CocoaPlant) e.getNewState().getData()).getSize().toString());
-			else if (e.getBlock().getType() == Material.MELON_STEM || e.getBlock().getType() == Material.PUMPKIN_STEM)
-				getCrop(e.getNewState().getBlock().getX(), e.getNewState().getBlock().getY(), e.getNewState().getBlock().getZ(), e.getNewState().getBlock().getType().toString()).setCropState((int) e.getNewState().getBlock().getData() + "");
+		Block block = e.getNewState().getBlock();
 
-			else
-				getCrop(e.getBlock().getX(), e.getBlock().getY(), e.getBlock().getZ(), e.getBlock().getType().toString()).setCropState(((Crops) e.getNewState().getData()).getState().toString());
-		}
-		else
+		Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(), new Runnable()
 		{
-
-			if (e.getNewState().getBlock().getType() == Material.MELON_BLOCK)
+			@Override
+			public void run()
 			{
-
-				for (BlockFace face : BlockFace.values())
+				if (getCrop(block.getX(), block.getY(), block.getZ(), block.getType()) != null)
 				{
-					if (face != BlockFace.NORTH && face != BlockFace.SOUTH && face != BlockFace.EAST && face != BlockFace.WEST)
-						continue;
-
-					Block block = e.getNewState().getBlock().getRelative(face);
-
-					if (cropsContains(block.getX(), block.getY(), block.getZ(), Material.MELON_STEM.toString()))
+					getCrop(block.getX(), block.getY(), block.getZ(), block.getType()).setCropState(getCropState(e.getNewState()));
+				}
+				else
+				{
+					if (block.getType() == Material.MELON_BLOCK || block.getType() == Material.PUMPKIN)
 					{
-						UUID placer = getCrop(block.getX(), block.getY(), block.getZ(), Material.MELON_STEM.toString()).getPlacer();
+						for (BlockFace blockFace : adjacent.keySet())
+						{
+							Block otherBlock = block.getRelative(blockFace);
+							
+							if (!(otherBlock.getState().getData() instanceof SimpleAttachableMaterialData))
+								continue;
+							
+							BlockFace otherBlockFacing = ((SimpleAttachableMaterialData) otherBlock.getState().getData()).getFacing();
+							
+							Material stemMaterial = block.getType() == Material.MELON_BLOCK ? Material.MELON_STEM : Material.PUMPKIN_STEM;
+							
+							if (blockFace != adjacent.get(otherBlockFacing))
+								continue;
+							
+							if (getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(), stemMaterial) != null)
+							{
+								UUID placerUUID = getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(), stemMaterial).getPlacer();
 
-						crops.add(new Crop(null, null, e.getNewState().getBlock().getX(), e.getNewState().getBlock().getY(), e.getNewState().getBlock().getZ(), Material.MELON_BLOCK.toString(), null, placer, System.currentTimeMillis(), true));
+								crops.add(new Crop(null, null, block.getX(), block.getY(), block.getZ(), block.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
+							}
+						}
+					}
+					else if (block.getType() == Material.CACTUS || block.getType() == Material.SUGAR_CANE_BLOCK)
+					{
+						Block otherBlock = block.getRelative(BlockFace.DOWN);
+
+						if (getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(), otherBlock.getType()) != null)
+						{
+							UUID placerUUID = getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(), otherBlock.getType()).getPlacer();
+
+							crops.add(new Crop(null, null, block.getX(), block.getY(), block.getZ(), otherBlock.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
+						}
 					}
 				}
 			}
-			else if (e.getNewState().getBlock().getType() == Material.PUMPKIN)
-			{
-
-				for (BlockFace face : BlockFace.values())
-				{
-					if (face != BlockFace.NORTH && face != BlockFace.SOUTH && face != BlockFace.EAST && face != BlockFace.WEST)
-						continue;
-
-					Block block = e.getNewState().getBlock().getRelative(face);
-
-					if (cropsContains(block.getX(), block.getY(), block.getZ(), Material.PUMPKIN_STEM.toString()))
-					{
-						UUID placer = getCrop(block.getX(), block.getY(), block.getZ(), Material.PUMPKIN_STEM.toString()).getPlacer();
-
-						crops.add(new Crop(null, null, e.getNewState().getBlock().getX(), e.getNewState().getBlock().getY(), e.getNewState().getBlock().getZ(), Material.PUMPKIN.toString(), null, placer, System.currentTimeMillis(), true));
-					}
-				}
-
-			}
-			else if (e.getNewState().getBlock().getType() == Material.CACTUS)
-			{
-				Block block = e.getNewState().getBlock().getRelative(BlockFace.DOWN);
-
-				if (cropsContains(block.getX(), block.getY(), block.getZ(), Material.CACTUS.toString()))
-				{
-					UUID placer = getCrop(block.getX(), block.getY(), block.getZ(), Material.CACTUS.toString()).getPlacer();
-
-					crops.add(new Crop(null, null, e.getNewState().getBlock().getX(), e.getNewState().getBlock().getY(), e.getNewState().getBlock().getZ(), Material.CACTUS.toString(), null, placer, System.currentTimeMillis(), true));
-				}
-			}
-			else if (e.getNewState().getBlock().getType() == Material.SUGAR_CANE_BLOCK)
-			{
-				Block block = e.getNewState().getBlock().getRelative(BlockFace.DOWN);
-
-				if (cropsContains(block.getX(), block.getY(), block.getZ(), Material.SUGAR_CANE_BLOCK.toString()))
-				{
-					UUID placer = getCrop(block.getX(), block.getY(), block.getZ(), Material.SUGAR_CANE_BLOCK.toString()).getPlacer();
-
-					crops.add(new Crop(null, null, e.getNewState().getBlock().getX(), e.getNewState().getBlock().getY(), e.getNewState().getBlock().getZ(), Material.SUGAR_CANE_BLOCK.toString(), null, placer, System.currentTimeMillis(), true));
-				}
-			}
-
-		}
+		}, 1L);
+		
 	}
 
 	@EventHandler
 	public void onBlockSpread(BlockSpreadEvent e)
 	{
+
 	}
 
 	@EventHandler
 	public void onTreeGrow(StructureGrowEvent e)
 	{
 
-	}
-
-	public boolean cropsContains(int x, int y, int z, String cropType)
-	{
-		for (Crop crop : crops)
-		{
-			if (crop.getX() == x && crop.getY() == y && crop.getZ() == z && crop.getCropType().equals(cropType))
-				return true;
-		}
-
-		return false;
-	}
-
-	public Crop getCrop(int x, int y, int z, String cropType)
-	{
-		for (Crop crop : crops)
-		{
-			if (crop.getX() == x && crop.getY() == y && crop.getZ() == z && crop.getCropType().equals(cropType))
-				return crop;
-		}
-
-		return null;
 	}
 
 }
