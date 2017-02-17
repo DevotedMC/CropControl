@@ -3,34 +3,39 @@ package com.programmerdan.minecraft.cropcontrol.data;
 import java.math.BigInteger;
 import java.util.UUID;
 
-public class Sapling
+public class TreeComponent
 {
-	private BigInteger saplingID;
+	private BigInteger treeComponentID;
+	private BigInteger treeID;
 	private BigInteger chunkID;
 	private int x;
 	private int y;
 	private int z;
-	private String saplingType;
+	private String treeType;
 	private UUID placer;
-	private long timeStamp;
 	private boolean harvestable;
 	
-	public Sapling(BigInteger saplingID, BigInteger chunkID, int x, int y, int z, String saplingType, UUID placer, long timeStamp, boolean harvestable)
+	public TreeComponent(BigInteger treeComponentID, BigInteger treeID, BigInteger chunkID, int x, int y, int z, String treeType, UUID placer, boolean harvestable)
 	{
-		this.saplingID = saplingID;
+		this.treeComponentID = treeComponentID;
+		this.treeID = treeID;
 		this.chunkID = chunkID;
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.saplingType = saplingType;
+		this.treeType = treeType;
 		this.placer = placer;
-		this.timeStamp = timeStamp;
 		this.harvestable = harvestable;
 	}
 
-	public BigInteger getSaplingID()
+	public BigInteger getTreeComponentID()
 	{
-		return saplingID;
+		return treeComponentID;
+	}
+
+	public BigInteger getTreeID()
+	{
+		return treeID;
 	}
 
 	public BigInteger getChunkID()
@@ -53,23 +58,19 @@ public class Sapling
 		return z;
 	}
 
-	public String getSaplingType()
+	public String getTreeType()
 	{
-		return saplingType;
+		return treeType;
 	}
-
+	
 	public UUID getPlacer()
 	{
 		return placer;
 	}
 
-	public long getTimeStamp()
-	{
-		return timeStamp;
-	}
-	
-	public boolean getHarvestable()
+	public boolean isHarvestable()
 	{
 		return harvestable;
 	}
+	
 }
