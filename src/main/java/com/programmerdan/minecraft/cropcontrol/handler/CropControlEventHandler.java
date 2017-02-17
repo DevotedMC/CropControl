@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -18,14 +19,16 @@ import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.material.CocoaPlant;
 import org.bukkit.material.Crops;
 import org.bukkit.material.NetherWarts;
-import org.bukkit.material.SimpleAttachableMaterialData;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
+import com.programmerdan.minecraft.cropcontrol.data.Sapling;
+import com.programmerdan.minecraft.cropcontrol.data.WorldChunk;
 
 /**
  * Simple monitor for all growth and break events and such.
@@ -39,13 +42,15 @@ public class CropControlEventHandler implements Listener
 
 	private List<Crop> crops;
 
+	private List<WorldChunk> chunks;
+
+	private List<Sapling> saplings;
+
 	/**
 	 * List of materials that are crops, and if we track specific states
 	 * belonging to that material.
 	 */
 	private Map<Material, Boolean> harvestableCrops;
-	
-	private Map<BlockFace, BlockFace> adjacent;
 
 	public CropControlEventHandler(FileConfiguration config)
 	{
@@ -53,21 +58,13 @@ public class CropControlEventHandler implements Listener
 
 		crops = new ArrayList<Crop>();
 
+		chunks = new ArrayList<WorldChunk>();
+
+		saplings = new ArrayList<Sapling>();
+
 		harvestableCrops = new HashMap<Material, Boolean>();
-		
-		adjacent = new HashMap<BlockFace, BlockFace>();
 
 		fillHarvestableCropsList();
-		
-		loadAdjacents();
-	}
-	
-	public void loadAdjacents()
-	{
-		adjacent.put(BlockFace.NORTH, BlockFace.SOUTH);
-		adjacent.put(BlockFace.SOUTH, BlockFace.NORTH);
-		adjacent.put(BlockFace.EAST, BlockFace.WEST);
-		adjacent.put(BlockFace.WEST, BlockFace.EAST);
 	}
 
 	public void fillHarvestableCropsList()
@@ -126,12 +123,55 @@ public class CropControlEventHandler implements Listener
 		}
 	}
 
+	public String getSaplingType(Byte data)
+	{
+		switch (data)
+		{
+			case 0:
+				return "OAK";
+			case 1:
+				return "SPRUCE";
+			case 2:
+				return "BIRCH";
+			case 3:
+				return "JUNGLE";
+			case 4:
+				return "ACACIA";
+			case 5:
+				return "DARK_OAK";
+			default:
+				return null;
+		}
+	}
+
 	public Crop getCrop(int x, int y, int z, Material cropType)
 	{
 		for (Crop crop : crops)
 		{
 			if (crop.getX() == x && crop.getY() == y && crop.getZ() == z && crop.getCropType().equals(cropType.toString()))
 				return crop;
+		}
+
+		return null;
+	}
+
+	public WorldChunk getChunk(UUID worldID, int chunkX, int chunkZ)
+	{
+		for (WorldChunk worldChunk : chunks)
+		{
+			if (worldChunk.getWorldID() == worldID && worldChunk.getChunkX() == chunkX && worldChunk.getChunkZ() == chunkZ)
+				return worldChunk;
+		}
+
+		return null;
+	}
+
+	public Sapling getSapling(int x, int y, int z, String saplingType)
+	{
+		for (Sapling sapling : saplings)
+		{
+			if (sapling.getX() == x && sapling.getY() == y && sapling.getZ() == z && sapling.getSaplingType() == saplingType)
+				return sapling;
 		}
 
 		return null;
@@ -144,38 +184,31 @@ public class CropControlEventHandler implements Listener
 
 		Material blockMaterial = block.getType();
 
-		if (!harvestableCrops.containsKey(blockMaterial))
-			return;
+		if (harvestableCrops.containsKey(blockMaterial))
+		{
+			if (getCrop(block.getX(), block.getY(), block.getZ(), blockMaterial) != null)
+				return;
 
-		if (getCrop(block.getX(), block.getY(), block.getZ(), blockMaterial) != null)
-			return;
-
-		crops.add(new Crop(null, null, block.getX(), block.getY(), block.getZ(), blockMaterial.toString(), getBaseCropState(blockMaterial), e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial)));
+			crops.add(new Crop(null, null, block.getX(), block.getY(), block.getZ(), blockMaterial.toString(), getBaseCropState(blockMaterial), e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial)));
+		}
+		else if (blockMaterial == Material.SAPLING)
+		{
+			if (getSapling(block.getX(), block.getY(), block.getZ(), getSaplingType(block.getData())) != null)
+				return;
+			
+			saplings.add(new Sapling(null, null, block.getX(), block.getY(), block.getZ(), getSaplingType(block.getData()), e.getPlayer().getUniqueId(), System.currentTimeMillis()));
+		}
 	}
 
 	@EventHandler
 	public void onInteract(PlayerInteractEvent e)
 	{
-		Block block = e.getClickedBlock();
-
-		if (getCrop(block.getX(), block.getY(), block.getZ(), block.getType()) != null)
+		Bukkit.broadcastMessage("Debug: Chunks: ");
+		for (int i = 0; i < chunks.size(); i++)
 		{
-			Crop crop = getCrop(block.getX(), block.getY(), block.getZ(), block.getType());
-
-			Bukkit.broadcastMessage("");
-			Bukkit.broadcastMessage("Debug: There is a crop here.");
-			Bukkit.broadcastMessage("X: " + crop.getX());
-			Bukkit.broadcastMessage("Y: " + crop.getY());
-			Bukkit.broadcastMessage("Z: " + crop.getZ());
-			Bukkit.broadcastMessage("Crop Type: " + crop.getCropType());
-			Bukkit.broadcastMessage("Crop State: " + crop.getCropState());
-			Bukkit.broadcastMessage("Placer UUID: " + crop.getPlacer());
-			Bukkit.broadcastMessage("TimeStamp: " + crop.getTimeStamp());
-			Bukkit.broadcastMessage("Directly Harvestable: " + crop.getHarvestable());
-		}
-		else
-		{
-			Bukkit.broadcastMessage("Debug: There is not a crop here.");
+			Bukkit.broadcastMessage(i + ") WorldID: " + chunks.get(i).getWorldID());
+			Bukkit.broadcastMessage(i + ") X: " + chunks.get(i).getChunkX());
+			Bukkit.broadcastMessage(i + ") Z: " + chunks.get(i).getChunkZ());
 		}
 	}
 
@@ -198,20 +231,14 @@ public class CropControlEventHandler implements Listener
 				{
 					if (block.getType() == Material.MELON_BLOCK || block.getType() == Material.PUMPKIN)
 					{
-						for (BlockFace blockFace : adjacent.keySet())
+						BlockFace[] directions = new BlockFace[] { BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
+
+						for (BlockFace blockFace : directions)
 						{
 							Block otherBlock = block.getRelative(blockFace);
-							
-							if (!(otherBlock.getState().getData() instanceof SimpleAttachableMaterialData))
-								continue;
-							
-							BlockFace otherBlockFacing = ((SimpleAttachableMaterialData) otherBlock.getState().getData()).getFacing();
-							
+
 							Material stemMaterial = block.getType() == Material.MELON_BLOCK ? Material.MELON_STEM : Material.PUMPKIN_STEM;
-							
-							if (blockFace != adjacent.get(otherBlockFacing))
-								continue;
-							
+
 							if (getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(), stemMaterial) != null)
 							{
 								UUID placerUUID = getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(), stemMaterial).getPlacer();
@@ -234,19 +261,66 @@ public class CropControlEventHandler implements Listener
 				}
 			}
 		}, 1L);
-		
+
 	}
 
 	@EventHandler
 	public void onBlockSpread(BlockSpreadEvent e)
 	{
+		Block source = e.getSource();
 
+		Block block = e.getBlock();
+
+		if (!harvestableCrops.containsKey(source.getType()))
+			return;
+
+		if (getCrop(source.getX(), source.getY(), source.getZ(), source.getType()) != null)
+		{
+			UUID placerUUID = getCrop(source.getX(), source.getY(), source.getZ(), source.getType()).getPlacer();
+
+			crops.add(new Crop(null, null, block.getX(), block.getY(), block.getZ(), source.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
+		}
 	}
 
 	@EventHandler
 	public void onTreeGrow(StructureGrowEvent e)
 	{
+		
+	}
+
+	/*
+	 * This is where we should (in my humble opinion) be getting data from the
+	 * DB, Such that when a chunk is loaded we load all of the crops, saplings,
+	 * trees & tree componenets. And therefore when a chunk is unloaded we save
+	 * it all to the DB,
+	 * 
+	 * Or something along those lines.
+	 * 
+	 * Secondly, I think these work. Need clarification.
+	 */
+	@EventHandler
+	public void onChunkLoad(ChunkLoadEvent e)
+	{
+		Chunk chunk = e.getChunk();
+
+		if (getChunk(chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()) != null)
+			return;
+
+		chunks.add(new WorldChunk(null, chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()));
 
 	}
+
+	// @EventHandler
+	// public void onChunkUnload(ChunkUnloadEvent e)
+	// {
+	// Chunk chunk = e.getChunk();
+	//
+	// if (getChunk(chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()) ==
+	// null)
+	// return;
+	//
+	// chunks.remove(getChunk(chunk.getWorld().getUID(), chunk.getX(),
+	// chunk.getZ()));
+	// }
 
 }
