@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -19,9 +20,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockGrowEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.StructureGrowEvent;
@@ -39,7 +46,6 @@ import com.programmerdan.minecraft.cropcontrol.data.WorldChunk;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 
@@ -86,6 +92,22 @@ public class CropControlEventHandler implements Listener
 		harvestableCrops = new HashMap<Material, Boolean>();
 
 		fillHarvestableCropsList();
+
+		loadExistingChunks();
+	}
+
+	public void loadExistingChunks()
+	{
+		for (World world : CropControl.getPlugin().getServer().getWorlds())
+		{
+			for (Chunk loadedChunk : world.getLoadedChunks())
+			{
+				if (getChunk(loadedChunk.getWorld().getUID(), loadedChunk.getX(), loadedChunk.getZ()) != null)
+					continue;
+
+				chunks.add(new WorldChunk(new BigInteger(chunks.size() + ""), loadedChunk.getWorld().getUID(), loadedChunk.getX(), loadedChunk.getZ()));
+			}
+		}
 	}
 
 	public void fillHarvestableCropsList()
@@ -102,6 +124,7 @@ public class CropControlEventHandler implements Listener
 		harvestableCrops.put(Material.BROWN_MUSHROOM, false);
 		harvestableCrops.put(Material.RED_MUSHROOM, false);
 		harvestableCrops.put(Material.SUGAR_CANE_BLOCK, false);
+		harvestableCrops.put(Material.CHORUS_FLOWER, false);
 	}
 
 	public String getBaseCropState(Material material)
@@ -122,6 +145,8 @@ public class CropControlEventHandler implements Listener
 				return null;
 			case SUGAR_CANE_BLOCK:
 				return null;
+			case CHORUS_FLOWER:
+				return null;
 			default:
 				return "SEEDED";
 		}
@@ -139,6 +164,10 @@ public class CropControlEventHandler implements Listener
 				return (int) blockState.getBlock().getData() + "";
 			case PUMPKIN_STEM:
 				return (int) blockState.getBlock().getData() + "";
+			case CHORUS_FRUIT:
+				return null;
+			case CHORUS_FLOWER:
+				return null;
 			default:
 				return ((Crops) blockState.getData()).getState().toString();
 		}
@@ -181,6 +210,17 @@ public class CropControlEventHandler implements Listener
 		for (WorldChunk worldChunk : chunks)
 		{
 			if (worldChunk.getWorldID() == worldID && worldChunk.getChunkX() == chunkX && worldChunk.getChunkZ() == chunkZ)
+				return worldChunk;
+		}
+
+		return null;
+	}
+
+	public WorldChunk getChunk(Chunk chunk)
+	{
+		for (WorldChunk worldChunk : chunks)
+		{
+			if (worldChunk.getWorldID() == chunk.getWorld().getUID() && worldChunk.getChunkX() == chunk.getX() && worldChunk.getChunkZ() == chunk.getZ())
 				return worldChunk;
 		}
 
@@ -270,7 +310,7 @@ public class CropControlEventHandler implements Listener
 	@EventHandler
 	public void onInteract(PlayerInteractEvent e)
 	{
-		if (e.getHand() != EquipmentSlot.HAND)
+		if (e.getHand() != EquipmentSlot.HAND || e.getAction() != Action.RIGHT_CLICK_BLOCK)
 			return;
 
 		Player p = e.getPlayer();
@@ -368,17 +408,17 @@ public class CropControlEventHandler implements Listener
 
 				p.spigot().sendMessage(message.create());
 			}
-			
+
 			if (getTreeComponent(block.getX(), block.getY(), (block.getZ()), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID()) != null)
 			{
 				TreeComponent treeComponent = getTreeComponent(block.getX(), block.getY(), (block.getZ()), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID());
-				
+
 				ComponentBuilder hoverBuilder = new ComponentBuilder("TreeComponentID: " + treeComponent.getTreeComponentID()).color(ChatColor.RED).append("\nChunkID: " + treeComponent.getChunkID()).append("\nX: " + treeComponent.getX()).append("\nY: " + treeComponent.getY()).append("\nZ: " + treeComponent.getZ()).append("\nTreeType: " + treeComponent.getTreeType()).append("\nPlacer: " + treeComponent.getPlacer()).append("\nHarvestable: " + treeComponent.isHarvestable());
-				
+
 				BaseComponent[] hoverMessage = hoverBuilder.create();
-				
+
 				ComponentBuilder message = new ComponentBuilder("Tree Component").color(ChatColor.AQUA).event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverMessage));
-				
+
 				p.spigot().sendMessage(message.create());
 			}
 			else
@@ -488,28 +528,168 @@ public class CropControlEventHandler implements Listener
 
 		List<BlockState> blocks = new ArrayList<BlockState>();
 
-		if (getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()) == null)
-			return;
-
-		// Because dirt & saplings are part of the structure
-		for (BlockState state : e.getBlocks())
+		if (getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()) != null)
 		{
-			if (state.getType() == Material.LOG || state.getType() == Material.LOG_2 || state.getType() == Material.LEAVES || state.getType() == Material.LEAVES_2)
-				blocks.add(state);
+			// Because dirt & saplings are part of the structure
+			for (BlockState state : e.getBlocks())
+			{
+				if (state.getType() == Material.LOG || state.getType() == Material.LOG_2 || state.getType() == Material.LEAVES || state.getType() == Material.LEAVES_2)
+					blocks.add(state);
+			}
+
+			if (blocks.size() == 0)
+				return;
+
+			// TODO Fix ID here.
+			trees.add(new Tree(new BigInteger(trees.size() + ""), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID(), structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), e.getSpecies().toString(), getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), System.currentTimeMillis()));
+
+			//Done in the case of Multiple saplings (Big Jungle trees etc)
+			for (BlockState state : e.getBlocks())
+			{
+				if (state.getBlock().getType() != Material.SAPLING)
+					continue;
+				
+				if (getSapling(state.getX(), state.getY(), state.getZ(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID()) == null)
+					return;
+				
+				saplings.remove(getSapling(state.getX(), state.getY(), state.getZ(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID()));
+			}
+			
+			for (BlockState state : blocks)
+			{
+				// TODO Fix ID here.
+				treeComponents.add(new TreeComponent(new BigInteger(treeComponents.size() + ""), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID(), state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), true));
+			}
 		}
-
-		if (blocks.size() == 0)
-			return;
-		//TODO Fix ID here.
-		trees.add(new Tree(new BigInteger(trees.size() + ""), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID(), structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), e.getSpecies().toString(), getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), System.currentTimeMillis()));
-		
-		saplings.remove(getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()));
-
-		for (BlockState state : blocks)
+		else if (getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()) != null)
 		{
-			//TODO Fix ID here.
-			treeComponents.add(new TreeComponent(new BigInteger(treeComponents.size() + ""), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID(), state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), true));
+			// Because dirt & saplings are part of the structure
+			for (BlockState state : e.getBlocks())
+			{
+				if (state.getType() == Material.HUGE_MUSHROOM_1 || state.getType() == Material.HUGE_MUSHROOM_2)
+					blocks.add(state);
+			}
+
+			if (blocks.size() == 0)
+				return;
+
+			// TODO Fix ID here.
+			trees.add(new Tree(new BigInteger(trees.size() + ""), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID(), structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), e.getSpecies().toString(), getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), System.currentTimeMillis()));
+
+			crops.remove(getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()));
+
+			for (BlockState state : blocks)
+			{
+				// TODO Fix ID here.
+				treeComponents.add(new TreeComponent(new BigInteger(treeComponents.size() + ""), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID(), state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), true));
+			}
 		}
+	}
+
+	public void breakTracked(Block block, String howBroken)
+	{
+		if (getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+		{
+			Crop crop = getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
+
+			Bukkit.broadcastMessage("Broke a Crop " + howBroken);
+
+			crops.remove(crop);
+		}
+		else if (getSapling(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+		{
+			Sapling sapling = getSapling(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
+
+			Bukkit.broadcastMessage("Broke a Sapling " + howBroken);
+
+			saplings.remove(sapling);
+		}
+		else if (getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+		{
+			TreeComponent treeComponent = getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
+
+			Tree tree = getTree(getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).getTreeID());
+
+			treeComponents.remove(treeComponent);
+
+			Bukkit.broadcastMessage("Broke a Tree Component " + howBroken + (getTreeComponenets(tree.getTreeID()).size() == 0 ? " (Completely)" : ""));
+
+			if (getTreeComponenets(tree.getTreeID()).size() == 0)
+			{
+				trees.remove(tree);
+			}
+		}
+	}
+
+	@EventHandler
+	public void onBlockBreak(BlockBreakEvent e)
+	{
+		breakTracked(e.getBlock(), "by breaking it with a hand/tool.");
+	}
+
+	@EventHandler
+	public void onBlockBurn(BlockBurnEvent e)
+	{
+		breakTracked(e.getBlock(), "by burning it.");
+	}
+
+	@EventHandler
+	public void onBlockExplode(BlockExplodeEvent e)
+	{
+		for (Block block : e.blockList())
+		{
+			breakTracked(block, "by blowing it up.");
+		}
+	}
+	
+	@EventHandler
+	public void onEntityExplode(EntityExplodeEvent e)
+	{
+		for (Block block : e.blockList())
+		{
+			breakTracked(block, "by blowing it up.");
+		}
+	}
+
+	//TODO Handle these. If a piston moves a tree block, that would cause issues unless handled.
+//	@EventHandler
+//	public void onPistionExtend(BlockPistonExtendEvent e)
+//	{
+//		e.g
+//		
+//		Bukkit.broadcastMessage("Tripped: PistonExtend");
+//	}
+//
+//	@EventHandler
+//	public void onPistonRetract(BlockPistonRetractEvent e)
+//	{
+//		for (Block block : e.getBlocks())
+//		{
+//			breakTracked(e.getBlock(), e.getEventName());
+//		}
+//	}
+	
+	@EventHandler
+	public void onBlockPhysics(BlockPhysicsEvent e)
+	{		
+		if (e.getChangedType() == Material.SOIL)
+			breakTracked(e.getBlock(), "by breaking/killing the soil.");
+		else if (e.getChangedType() == Material.PISTON_BASE || e.getChangedType() == Material.PISTON_STICKY_BASE || e.getChangedType() == Material.PISTON_EXTENSION || e.getChangedType() == Material.PISTON_MOVING_PIECE)
+			breakTracked(e.getBlock(), "by using a piston on it.");
+		else if (e.getChangedType() == Material.WATER || e.getChangedType() == Material.STATIONARY_WATER || e.getChangedType() == Material.LAVA || e.getChangedType() == Material.STATIONARY_LAVA)
+			breakTracked(e.getBlock(), "by using water/lava on it.");
+		else if (e.getChangedType() == Material.CHORUS_PLANT)
+			breakTracked(e.getBlock(), "by breaking the supporting Chorus Plant.");
+		else if (e.getChangedType() == Material.SUGAR_CANE)
+			breakTracked(e.getBlock(), "by breaking the supporting Sugar Cane.");
+		else if (e.getChangedType() == Material.CACTUS)
+			breakTracked(e.getBlock(), "by breaking the supporting Cactus.");
+	}
+	
+	@EventHandler
+	public void onLeafDecay(LeavesDecayEvent e)
+	{
+		breakTracked(e.getBlock(), "by letting the leaf decay.");
 	}
 
 	/*
@@ -519,9 +699,6 @@ public class CropControlEventHandler implements Listener
 	 * it all to the DB,
 	 * 
 	 * Or something along those lines.
-	 * 
-	 * Secondly, I think these work. Need clarification. (Joining to quick seems
-	 * not to fire the load event..)
 	 */
 	@EventHandler
 	public void onChunkLoad(ChunkLoadEvent e)
