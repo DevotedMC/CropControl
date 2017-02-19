@@ -73,4 +73,9 @@ public class TreeComponent
 		return harvestable;
 	}
 	
+	public void setHarvestable(boolean harvestable)
+	{
+		this.harvestable = harvestable;
+	}
+	
 }

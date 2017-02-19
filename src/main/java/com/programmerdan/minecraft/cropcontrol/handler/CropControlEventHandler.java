@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.TreeType;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -23,11 +24,12 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockGrowEvent;
-import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -124,7 +126,6 @@ public class CropControlEventHandler implements Listener
 		harvestableCrops.put(Material.BROWN_MUSHROOM, false);
 		harvestableCrops.put(Material.RED_MUSHROOM, false);
 		harvestableCrops.put(Material.SUGAR_CANE_BLOCK, false);
-		harvestableCrops.put(Material.CHORUS_FLOWER, false);
 	}
 
 	public String getBaseCropState(Material material)
@@ -145,8 +146,6 @@ public class CropControlEventHandler implements Listener
 				return null;
 			case SUGAR_CANE_BLOCK:
 				return null;
-			case CHORUS_FLOWER:
-				return null;
 			default:
 				return "SEEDED";
 		}
@@ -164,9 +163,13 @@ public class CropControlEventHandler implements Listener
 				return (int) blockState.getBlock().getData() + "";
 			case PUMPKIN_STEM:
 				return (int) blockState.getBlock().getData() + "";
-			case CHORUS_FRUIT:
+			case CACTUS:
 				return null;
-			case CHORUS_FLOWER:
+			case BROWN_MUSHROOM:
+				return null;
+			case RED_MUSHROOM:
+				return null;
+			case SUGAR_CANE_BLOCK:
 				return null;
 			default:
 				return ((Crops) blockState.getData()).getState().toString();
@@ -178,17 +181,17 @@ public class CropControlEventHandler implements Listener
 		switch (data)
 		{
 			case 0:
-				return "OAK";
+				return "OAK_SAPLING";
 			case 1:
-				return "SPRUCE";
+				return "SPRUCE_SAPLING";
 			case 2:
-				return "BIRCH";
+				return "BIRCH_SAPLING";
 			case 3:
-				return "JUNGLE";
+				return "JUNGLE_SAPLING";
 			case 4:
-				return "ACACIA";
+				return "ACACIA_SAPLING";
 			case 5:
-				return "DARK_OAK";
+				return "DARK_OAK_SAPLING";
 			default:
 				return null;
 		}
@@ -221,6 +224,17 @@ public class CropControlEventHandler implements Listener
 		for (WorldChunk worldChunk : chunks)
 		{
 			if (worldChunk.getWorldID() == chunk.getWorld().getUID() && worldChunk.getChunkX() == chunk.getX() && worldChunk.getChunkZ() == chunk.getZ())
+				return worldChunk;
+		}
+
+		return null;
+	}
+
+	public WorldChunk getChunk(BigInteger chunkID)
+	{
+		for (WorldChunk worldChunk : chunks)
+		{
+			if (worldChunk.getChunkID() == chunkID)
 				return worldChunk;
 		}
 
@@ -305,6 +319,18 @@ public class CropControlEventHandler implements Listener
 			// TODO Manage correct SaplingID with DB support
 			saplings.add(new Sapling(new BigInteger(saplings.size() + ""), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), getSaplingType(block.getData()), e.getPlayer().getUniqueId(), System.currentTimeMillis(), false));
 		}
+		else if (blockMaterial == Material.CHORUS_FLOWER)
+		{
+			if (isTracked(block) == true)
+				return;
+
+			// TODO Fix ID
+			trees.add(new Tree(new BigInteger(trees.size() + ""), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), e.getPlayer().getUniqueId(), System.currentTimeMillis()));
+
+			// TODO Fix ID
+			treeComponents.add(new TreeComponent(new BigInteger(treeComponents.size() + ""), getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), e.getPlayer().getUniqueId(), false));
+		}
+
 	}
 
 	@EventHandler
@@ -510,7 +536,7 @@ public class CropControlEventHandler implements Listener
 
 		Block block = e.getBlock();
 
-		if (!harvestableCrops.containsKey(source.getType()))
+		if (!harvestableCrops.containsKey(source.getType()) && source.getType() != Material.CHORUS_FLOWER && source.getType() != Material.CHORUS_PLANT && block.getType() != Material.CHORUS_FLOWER && block.getType() != Material.CHORUS_PLANT)
 			return;
 
 		if (getCrop(source.getX(), source.getY(), source.getZ(), getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ()).getChunkID()) != null)
@@ -519,6 +545,17 @@ public class CropControlEventHandler implements Listener
 			// TODO Manage correct CropID with DB support
 			crops.add(new Crop(new BigInteger(crops.size() + ""), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), source.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
 		}
+		else if (getTreeComponent(source.getX(), source.getY(), source.getZ(), getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ()).getChunkID()) != null)
+		{
+			TreeComponent treeComponent = getTreeComponent(source.getX(), source.getY(), source.getZ(), getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ()).getChunkID());
+
+			treeComponent.setHarvestable(true);
+
+			// TODO Manage correct ID with DB support
+			treeComponents.add(new TreeComponent(new BigInteger(treeComponents.size() + ""), treeComponent.getTreeID(), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), treeComponent.getPlacer(), true));
+
+		}
+
 	}
 
 	@EventHandler
@@ -543,18 +580,18 @@ public class CropControlEventHandler implements Listener
 			// TODO Fix ID here.
 			trees.add(new Tree(new BigInteger(trees.size() + ""), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID(), structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), e.getSpecies().toString(), getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), System.currentTimeMillis()));
 
-			//Done in the case of Multiple saplings (Big Jungle trees etc)
+			// Done in the case of Multiple saplings (Big Jungle trees etc)
 			for (BlockState state : e.getBlocks())
 			{
 				if (state.getBlock().getType() != Material.SAPLING)
 					continue;
-				
+
 				if (getSapling(state.getX(), state.getY(), state.getZ(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID()) == null)
 					return;
-				
+
 				saplings.remove(getSapling(state.getX(), state.getY(), state.getZ(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID()));
 			}
-			
+
 			for (BlockState state : blocks)
 			{
 				// TODO Fix ID here.
@@ -586,51 +623,16 @@ public class CropControlEventHandler implements Listener
 		}
 	}
 
-	public void breakTracked(Block block, String howBroken)
-	{
-		if (getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
-		{
-			Crop crop = getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
-
-			Bukkit.broadcastMessage("Broke a Crop " + howBroken);
-
-			crops.remove(crop);
-		}
-		else if (getSapling(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
-		{
-			Sapling sapling = getSapling(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
-
-			Bukkit.broadcastMessage("Broke a Sapling " + howBroken);
-
-			saplings.remove(sapling);
-		}
-		else if (getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
-		{
-			TreeComponent treeComponent = getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
-
-			Tree tree = getTree(getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).getTreeID());
-
-			treeComponents.remove(treeComponent);
-
-			Bukkit.broadcastMessage("Broke a Tree Component " + howBroken + (getTreeComponenets(tree.getTreeID()).size() == 0 ? " (Completely)" : ""));
-
-			if (getTreeComponenets(tree.getTreeID()).size() == 0)
-			{
-				trees.remove(tree);
-			}
-		}
-	}
-
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent e)
 	{
-		breakTracked(e.getBlock(), "by breaking it with a hand/tool.");
+		floodTracker(e.getBlock(), BreakType.PLAYER);
 	}
 
 	@EventHandler
 	public void onBlockBurn(BlockBurnEvent e)
 	{
-		breakTracked(e.getBlock(), "by burning it.");
+		floodTracker(e.getBlock(), BreakType.NATURAL);
 	}
 
 	@EventHandler
@@ -638,58 +640,290 @@ public class CropControlEventHandler implements Listener
 	{
 		for (Block block : e.blockList())
 		{
-			breakTracked(block, "by blowing it up.");
+			floodTracker(block, BreakType.EXPLOSION);
 		}
 	}
-	
+
 	@EventHandler
 	public void onEntityExplode(EntityExplodeEvent e)
 	{
 		for (Block block : e.blockList())
 		{
-			breakTracked(block, "by blowing it up.");
+			floodTracker(block, BreakType.EXPLOSION);
 		}
 	}
 
-	//TODO Handle these. If a piston moves a tree block, that would cause issues unless handled.
-//	@EventHandler
-//	public void onPistionExtend(BlockPistonExtendEvent e)
-//	{
-//		e.g
-//		
-//		Bukkit.broadcastMessage("Tripped: PistonExtend");
-//	}
-//
-//	@EventHandler
-//	public void onPistonRetract(BlockPistonRetractEvent e)
-//	{
-//		for (Block block : e.getBlocks())
-//		{
-//			breakTracked(e.getBlock(), e.getEventName());
-//		}
-//	}
-	
-	@EventHandler
-	public void onBlockPhysics(BlockPhysicsEvent e)
-	{		
-		if (e.getChangedType() == Material.SOIL)
-			breakTracked(e.getBlock(), "by breaking/killing the soil.");
-		else if (e.getChangedType() == Material.PISTON_BASE || e.getChangedType() == Material.PISTON_STICKY_BASE || e.getChangedType() == Material.PISTON_EXTENSION || e.getChangedType() == Material.PISTON_MOVING_PIECE)
-			breakTracked(e.getBlock(), "by using a piston on it.");
-		else if (e.getChangedType() == Material.WATER || e.getChangedType() == Material.STATIONARY_WATER || e.getChangedType() == Material.LAVA || e.getChangedType() == Material.STATIONARY_LAVA)
-			breakTracked(e.getBlock(), "by using water/lava on it.");
-		else if (e.getChangedType() == Material.CHORUS_PLANT)
-			breakTracked(e.getBlock(), "by breaking the supporting Chorus Plant.");
-		else if (e.getChangedType() == Material.SUGAR_CANE)
-			breakTracked(e.getBlock(), "by breaking the supporting Sugar Cane.");
-		else if (e.getChangedType() == Material.CACTUS)
-			breakTracked(e.getBlock(), "by breaking the supporting Cactus.");
-	}
-	
 	@EventHandler
 	public void onLeafDecay(LeavesDecayEvent e)
 	{
-		breakTracked(e.getBlock(), "by letting the leaf decay.");
+		floodTracker(e.getBlock(), BreakType.NATURAL);
+	}
+
+	@EventHandler
+	public void onEntityChangeBlock(EntityChangeBlockEvent e)
+	{
+		floodTracker(e.getBlock(), BreakType.NATURAL);
+	}
+
+	@EventHandler
+	public void onBlockFromTo(BlockFromToEvent e)
+	{
+		if (e.getBlock().getType() == Material.WATER || e.getBlock().getType() == Material.STATIONARY_WATER)
+		{
+			floodTracker(e.getBlock(), BreakType.WATER);
+			
+		}
+		else if (e.getBlock().getType() == Material.LAVA || e.getBlock().getType() == Material.STATIONARY_LAVA)
+		{
+			floodTracker(e.getBlock(), BreakType.LAVA);
+		}
+	}
+
+	// TODO Handle these. If a piston moves a tree block, that would cause
+	// issues unless handled.
+	// @EventHandler
+	// public void onPistionExtend(BlockPistonExtendEvent e)
+	// {
+	//
+	// Bukkit.broadcastMessage("Tripped: PistonExtend");
+	// }
+	//
+	// @EventHandler
+	// public void onPistonRetract(BlockPistonRetractEvent e)
+	// {
+	// for (Block block : e.getBlocks())
+	// {
+	// breakTracked(e.getBlock(), e.getEventName());
+	// }
+	// }
+
+	public Material getTrackedTypeMaterial(String trackedType)
+	{
+		for (Material material : harvestableCrops.keySet())
+		{
+			if (material.toString() == trackedType)
+				return material;
+		}
+
+		if (Material.MELON_BLOCK.toString() == trackedType)
+			return Material.MELON_BLOCK;
+		else if (Material.PUMPKIN.toString() == trackedType)
+			return Material.PUMPKIN;
+
+		for (Byte i = 0; i < 6; i++)
+		{
+			if (getSaplingType(i) == trackedType)
+				return Material.SAPLING;
+		}
+
+		for (TreeType treeType : TreeType.values())
+		{
+			if (treeType.toString() == trackedType)
+			{
+				if (treeType == TreeType.ACACIA || treeType == TreeType.DARK_OAK)
+					return Material.LOG_2;
+				else if (treeType == TreeType.BROWN_MUSHROOM)
+					return Material.HUGE_MUSHROOM_1;
+				else if (treeType == TreeType.RED_MUSHROOM)
+					return Material.HUGE_MUSHROOM_2;
+				else
+					return Material.LOG;
+			}
+		}
+
+		if (Material.CHORUS_PLANT.toString() == trackedType)
+			return Material.CHORUS_PLANT;
+
+		return null;
+	}
+
+	public Material getTrackedCropMaterial(String trackedType)
+	{
+		if (Material.MELON_BLOCK.toString() == trackedType)
+			return Material.MELON_BLOCK;
+		else if (Material.PUMPKIN.toString() == trackedType)
+			return Material.PUMPKIN;
+		else
+		{
+			for (Material material : harvestableCrops.keySet())
+			{
+				if (material.toString() == trackedType)
+					return material;
+			}
+		}
+
+		return null;
+	}
+
+	public Material getTrackedSaplingMaterial(String trackedType)
+	{
+		for (Byte i = 0; i < 6; i++)
+		{
+			if (getSaplingType(i) == trackedType)
+				return Material.SAPLING;
+		}
+
+		return null;
+	}
+
+	public Material getTrackedTreeMaterial(String trackedType)
+	{
+		if (Material.CHORUS_PLANT.toString() == trackedType)
+			return Material.CHORUS_PLANT;
+		else
+		{
+			for (TreeType treeType : TreeType.values())
+			{
+				if (treeType.toString() == trackedType)
+				{
+					if (treeType == TreeType.ACACIA || treeType == TreeType.DARK_OAK)
+						return Material.LOG_2;
+					else if (treeType == TreeType.BROWN_MUSHROOM)
+						return Material.HUGE_MUSHROOM_1;
+					else if (treeType == TreeType.RED_MUSHROOM)
+						return Material.HUGE_MUSHROOM_2;
+					else
+						return Material.LOG;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	public boolean isTracked(Block block)
+	{
+		if (getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+			return true;
+		else if (getSapling(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+			return true;
+		else if (getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+			return true;
+
+		return false;
+
+	}
+
+	@SuppressWarnings("deprecation")
+	public void floodTracker(Block startBlock, BreakType breakType)
+	{
+		BlockFace[] blockFaces = new BlockFace[] { BlockFace.UP, BlockFace.DOWN, BlockFace.EAST, BlockFace.WEST, BlockFace.NORTH, BlockFace.SOUTH };
+
+		ArrayList<Location> checkedLocations = new ArrayList<Location>();
+
+		ArrayList<Location> uncheckedLocations = new ArrayList<Location>();
+
+		uncheckedLocations.add(startBlock.getLocation());
+
+		do
+		{
+			for (int i = 0; i < uncheckedLocations.size(); i++)
+			{
+				if (isTracked(uncheckedLocations.get(i).getBlock()) && !checkedLocations.contains(uncheckedLocations.get(i)))
+				{
+					checkedLocations.add(uncheckedLocations.get(i));
+				}
+			}
+
+			ArrayList<Location> toAddLocations = new ArrayList<Location>();
+
+			for (BlockFace blockFace : blockFaces)
+			{
+				for (Location location : uncheckedLocations)
+				{
+					if (isTracked(location.getBlock().getRelative(blockFace)) && !toAddLocations.contains(location.getBlock().getRelative(blockFace).getLocation()) && !checkedLocations.contains(location.getBlock().getRelative(blockFace).getLocation()))
+						toAddLocations.add(location.getBlock().getRelative(blockFace).getLocation());
+				}
+			}
+			
+			uncheckedLocations.clear();
+
+			uncheckedLocations.addAll(toAddLocations);
+			
+			toAddLocations.clear();
+
+		}
+		while (uncheckedLocations.size() > 0);
+
+		for (Location location : checkedLocations)
+		{
+			if ((location.getBlock().getType() == Material.CHORUS_FLOWER ? Material.CHORUS_PLANT : location.getBlock().getType()) == Material.CHORUS_PLANT)
+			{
+				verifyAndDrop(location.getBlock(), breakType, 20L);
+			}
+			else
+				verifyAndDrop(location.getBlock(), breakType, 1L);
+		}
+	}
+
+	public void drop(Block block, BreakType breakType)
+	{
+
+	}
+
+	@SuppressWarnings("deprecation")
+	public void verifyAndDrop(Block block, BreakType breakType, long delay)
+	{
+		CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(), new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				if (getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+				{
+					Crop crop = getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
+
+					if (getTrackedCropMaterial(crop.getCropType()) == block.getType())
+						return;
+
+					Bukkit.broadcastMessage(ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
+
+					drop(block, breakType);
+
+					crops.remove(crop);
+				}
+				else if (getSapling(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+				{
+					Sapling sapling = getSapling(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
+
+					if (getTrackedSaplingMaterial(sapling.getSaplingType()) == block.getType())
+						return;
+
+					Bukkit.broadcastMessage(ChatColor.GREEN + "Broke Sapling (" + breakType.toString() + ")");
+
+					drop(block, breakType);
+
+					saplings.remove(sapling);
+				}
+				else if (getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+				{
+					TreeComponent treeComponent = getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID());
+
+					Tree tree = getTree(getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).getTreeID());
+
+					if (getTrackedTreeMaterial(treeComponent.getTreeType()) == (block.getType() == Material.LEAVES ? Material.LOG : block.getType() == Material.LEAVES_2 ? Material.LOG_2 : block.getType() == Material.CHORUS_FLOWER ? Material.CHORUS_PLANT : block.getType()))
+						return;
+
+					Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Broke Tree Component (" + breakType.toString() + ")");
+
+					drop(block, breakType);
+
+					treeComponents.remove(treeComponent);
+
+					if (getTreeComponenets(tree.getTreeID()).size() == 0)
+					{
+						Bukkit.broadcastMessage(ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")");
+
+						trees.remove(tree);
+					}
+				}
+			}
+		}, delay);
+	}
+
+	private enum BreakType
+	{
+		PLAYER, WATER, LAVA, PISTON, EXPLOSION, NATURAL;
 	}
 
 	/*
