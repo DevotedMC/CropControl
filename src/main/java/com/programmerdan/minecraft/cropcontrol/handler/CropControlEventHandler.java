@@ -33,6 +33,7 @@ import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.StructureGrowEvent;
@@ -875,33 +876,129 @@ public class CropControlEventHandler implements Listener
 	}
 
 	@EventHandler
+	public void onPlayerBucketEmpty(PlayerBucketEmptyEvent e)
+	{
+		if (e.getBucket() == Material.LAVA_BUCKET)
+			handleBreak(e.getBlockClicked().getRelative(e.getBlockFace()), BreakType.LAVA, null);
+		else if (e.getBucket() == Material.WATER_BUCKET)
+			handleBreak(e.getBlockClicked().getRelative(e.getBlockFace()), BreakType.WATER, null);
+	}
+
+	@EventHandler
 	public void onBlockFromTo(BlockFromToEvent e)
 	{
-		if (e.getToBlock().getType() == Material.WATER || e.getBlock().getType() == Material.STATIONARY_WATER)
+		if (e.getToBlock().getType() == Material.WATER || e.getToBlock().getType() == Material.STATIONARY_WATER)
 		{
-			handleBreak(e.getToBlock(), BreakType.WATER, null);
+			handleBreak(e.getBlock(), BreakType.WATER, null);
 		}
-		else if (e.getToBlock().getType() == Material.LAVA || e.getBlock().getType() == Material.STATIONARY_LAVA)
+		else if (e.getToBlock().getType() == Material.LAVA || e.getToBlock().getType() == Material.STATIONARY_LAVA)
 		{
-			handleBreak(e.getToBlock(), BreakType.LAVA, null);
+			handleBreak(e.getBlock(), BreakType.LAVA, null);
 		}
 	}
 
-	// @EventHandler
-	// public void onPistionExtend(BlockPistonExtendEvent e)
-	// {
-	//
-	// Bukkit.broadcastMessage("Tripped: PistonExtend");
-	// }
-	//
-	// @EventHandler
-	// public void onPistonRetract(BlockPistonRetractEvent e)
-	// {
-	// for (Block block : e.getBlocks())
-	// {
-	// breakTracked(e.getBlock(), e.getEventName());
-	// }
-	// }
+	@EventHandler
+	public void onPistionExtend(BlockPistonExtendEvent e)
+	{
+		for (Block block : e.getBlocks())
+		{
+			if (getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+			{
+				if (getTrackedTreeMaterial(getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).getTreeType()) == Material.CHORUS_PLANT)
+				{
+					handleBreak(block, BreakType.PISTON, null);
+					
+					continue;
+				}
+
+				CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(), new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setX(block.getX());
+						getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setY(block.getY());
+						getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setZ(block.getZ());
+						getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setChunkID(getChunk(block.getChunk()).getChunkID());
+					}
+				}, 1L);
+
+				if (getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+				{
+					CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(), new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setX(block.getX());
+							getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setY(block.getY());
+							getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setZ(block.getZ());
+							getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setChunkID(getChunk(block.getChunk()).getChunkID());
+
+						}
+					}, 1L);
+				}
+			}
+			else if (block.getType() == Material.SOIL)
+			{
+				handleBreak(block.getRelative(BlockFace.UP), BreakType.PISTON, null);
+			}
+			else
+				handleBreak(block, BreakType.PISTON, null);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onPistonRetract(BlockPistonRetractEvent e)
+	{
+		for (Block block : e.getBlocks())
+		{
+			if (getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+			{
+				if (getTrackedTreeMaterial(getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).getTreeType()) == Material.CHORUS_PLANT)
+				{
+					handleBreak(block, BreakType.PISTON, null);
+					
+					continue;
+				}
+
+				CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(), new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setX(block.getX());
+						getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setY(block.getY());
+						getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setZ(block.getZ());
+						getTreeComponent(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setChunkID(getChunk(block.getChunk()).getChunkID());
+					}
+				}, 1L);
+
+				if (getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()) != null)
+				{
+					CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(), new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setX(block.getX());
+							getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setY(block.getY());
+							getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setZ(block.getZ());
+							getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).setChunkID(getChunk(block.getChunk()).getChunkID());
+
+						}
+					}, 1L);
+				}
+			}
+			else if (block.getType() == Material.SOIL)
+			{
+				handleBreak(block.getRelative(BlockFace.UP), BreakType.PISTON, null);
+			}
+			else
+				handleBreak(block, BreakType.PISTON, null);
+		}
+	}
 
 	public ArrayList<Location> returnUpwardsBlocks(Block startBlock, Material upwardBlockMaterial)
 	{

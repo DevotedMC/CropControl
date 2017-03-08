@@ -31,6 +31,26 @@ public class Tree
 		return x;
 	}
 
+	public void setChunkID(BigInteger chunkID)
+	{
+		this.chunkID = chunkID;
+	}
+
+	public void setX(int x)
+	{
+		this.x = x;
+	}
+
+	public void setY(int y)
+	{
+		this.y = y;
+	}
+
+	public void setZ(int z)
+	{
+		this.z = z;
+	}
+
 	public int getY()
 	{
 		return y;
