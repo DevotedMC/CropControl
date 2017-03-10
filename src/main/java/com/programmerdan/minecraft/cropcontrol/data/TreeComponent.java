@@ -1,13 +1,12 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
-import java.math.BigInteger;
 import java.util.UUID;
 
 public class TreeComponent
 {
-	private BigInteger treeComponentID;
-	private BigInteger treeID;
-	private BigInteger chunkID;
+	private long treeComponentID;
+	private long treeID;
+	private long chunkID;
 	private int x;
 	private int y;
 	private int z;
@@ -15,7 +14,7 @@ public class TreeComponent
 	private UUID placer;
 	private boolean harvestable;
 	
-	public TreeComponent(BigInteger treeComponentID, BigInteger treeID, BigInteger chunkID, int x, int y, int z, String treeType, UUID placer, boolean harvestable)
+	public TreeComponent(long treeComponentID, long treeID, long chunkID, int x, int y, int z, String treeType, UUID placer, boolean harvestable)
 	{
 		this.treeComponentID = treeComponentID;
 		this.treeID = treeID;
@@ -28,22 +27,22 @@ public class TreeComponent
 		this.harvestable = harvestable;
 	}
 
-	public BigInteger getTreeComponentID()
+	public long getTreeComponentID()
 	{
 		return treeComponentID;
 	}
 
-	public BigInteger getTreeID()
+	public long getTreeID()
 	{
 		return treeID;
 	}
 
-	public BigInteger getChunkID()
+	public long getChunkID()
 	{
 		return chunkID;
 	}
 	
-	public void setChunkID(BigInteger chunkID)
+	public void setChunkID(long chunkID)
 	{
 		this.chunkID = chunkID;
 	}

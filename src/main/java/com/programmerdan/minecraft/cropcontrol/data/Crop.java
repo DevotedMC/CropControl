@@ -1,6 +1,5 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
-import java.math.BigInteger;
 import java.util.UUID;
 
 import org.bukkit.CropState;
@@ -8,8 +7,8 @@ import org.bukkit.CropState;
 public class Crop
 {
 
-	private BigInteger cropID;
-	private BigInteger chunkID;
+	private long cropID;
+	private long chunkID;
 	private int x;
 	private int y;
 	private int z;
@@ -19,7 +18,7 @@ public class Crop
 	private long timeStamp;
 	private boolean harvestable;
 
-	public Crop(BigInteger cropID, BigInteger chunkID, int x, int y, int z, String cropType, String cropState, UUID placer, long timeStamp, boolean harvestable)
+	public Crop(long cropID, long chunkID, int x, int y, int z, String cropType, String cropState, UUID placer, long timeStamp, boolean harvestable)
 	{
 		this.cropID = cropID;
 		this.chunkID = chunkID;
@@ -33,12 +32,12 @@ public class Crop
 		this.harvestable = harvestable;
 	}
 
-	public BigInteger getCropID()
+	public long getCropID()
 	{
 		return cropID;
 	}
 
-	public BigInteger getChunkID()
+	public long getChunkID()
 	{
 		return chunkID;
 	}

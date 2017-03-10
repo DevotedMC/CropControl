@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.data.DAO;
 
 import vg.civcraft.mc.civmodcore.dao.ManagedDatasource;
 
@@ -29,6 +30,7 @@ import vg.civcraft.mc.civmodcore.dao.ManagedDatasource;
 public class CropControlDatabaseHandler {
 
 	private ManagedDatasource data;
+	private DAO dataAccessObject;
 	
 	public ManagedDatasource getData() {
 		return this.data;
@@ -40,7 +42,7 @@ public class CropControlDatabaseHandler {
 		return CropControlDatabaseHandler.instance;
 	}
 	
-	public static ManagedDatasource getinstanceData() {
+	public static ManagedDatasource getInstanceData() {
 		return CropControlDatabaseHandler.instance.data;
 	}
 	
@@ -49,6 +51,11 @@ public class CropControlDatabaseHandler {
 			throw new RuntimeException("Failed to configure Database for CropControl!");
 		}
 		CropControlDatabaseHandler.instance = this;
+		this.dataAccessObject = new DAO(this);
+	}
+	
+	public static DAO getDAO() {
+		return CropControlDatabaseHandler.instance.dataAccessObject;
 	}
 
 	private boolean configureData(ConfigurationSection config) {
@@ -113,6 +120,7 @@ public class CropControlDatabaseHandler {
 	 * placed UUID
 	 * time LONG
 	 * 
+	 * 
 	 * [sapling]
 	 * sid BIGINT
 	 * cid BIGINT
@@ -153,35 +161,35 @@ public class CropControlDatabaseHandler {
 		Bukkit.getScheduler().runTaskTimerAsynchronously(CropControl.getPlugin(), new Runnable() {
 			@Override
 			public void run() {
-				
+				Crop.saveDirty();
 			}
 		}, delay, period);
 
 		Bukkit.getScheduler().runTaskTimerAsynchronously(CropControl.getPlugin(), new Runnable() {
 			@Override
 			public void run() {
-				
+				Sapling.saveDirty();
 			}
 		}, delay + (period / 5), period);
 		
 		Bukkit.getScheduler().runTaskTimerAsynchronously(CropControl.getPlugin(), new Runnable() {
 			@Override
 			public void run() {
-				
+				Tree.saveDirty();
 			}
 		}, delay + ((period * 2) / 5), period);
 
 		Bukkit.getScheduler().runTaskTimerAsynchronously(CropControl.getPlugin(), new Runnable() {
 			@Override
 			public void run() {
-				
+				TreeComponent.saveDirty();
 			}
 		}, delay + ((period * 3) / 5), period);
 
 		Bukkit.getScheduler().runTaskTimerAsynchronously(CropControl.getPlugin(), new Runnable() {
 			@Override
 			public void run() {
-				
+				WorldChunk.saveDirty();
 			}
 		}, delay + ((period * 4) / 5), period);
 
@@ -202,7 +210,7 @@ public class CropControlDatabaseHandler {
 				private long lastId = 0l;
 				@Override
 				public void run() {
-					lastId = .preload(lastId, batchsize);
+					lastId = Crop.preload(lastId, batchsize);
 					if (lastId < 0) this.cancel();
 				}
 			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay, period);
@@ -211,47 +219,38 @@ public class CropControlDatabaseHandler {
 				private long lastId = 0l;
 				@Override
 				public void run() {
-					lastId = .preload(lastId, batchsize);
+					lastId = Sapling.preload(lastId, batchsize);
 					if (lastId < 0) this.cancel();
 				}
-			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + (period / 6), period);
+			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + (period / 5), period);
 			
 			new BukkitRunnable() {
 				private long lastId = 0l;
 				@Override
 				public void run() {
-					lastId = .preload(lastId, batchsize, false);
+					lastId = Tree.preload(lastId, batchsize, false);
 					if (lastId < 0) this.cancel();
 				}
-			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + ((period * 2) / 6), period);
+			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + ((period * 2) / 5), period);
 			
 			new BukkitRunnable() {
 				private long lastId = 0l;
 				@Override
 				public void run() {
-					lastId = .preload(lastId, batchsize);
+					lastId = TreeComponent.preload(lastId, batchsize);
 					if (lastId < 0) this.cancel();
 				}
-			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + ((period * 3) / 6), period);
+			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + ((period * 3) / 5), period);
 
 			new BukkitRunnable() {
 				private long lastId = 0l;
 				@Override
 				public void run() {
-					lastId = .preload(lastId, batchsize);
+					lastId = WorldChunk.preload(lastId, batchsize);
 					if (lastId < 0) this.cancel();
 				}
-			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + ((period * 4) / 6), period);
-			
-			new BukkitRunnable() {
-				private long lastId = 0l;
-				@Override
-				public void run() {
-					lastId = .preload(lastId, batchsize);
-					if (lastId < 0) this.cancel();
-				}
-			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + ((period * 5) / 6), period);
-		} else {
+			}.runTaskTimerAsynchronously(CropControl.getPlugin(), delay + ((period * 4) / 5), period);
+					} else {
 			CropControl.getPlugin().info("Preloading is disabled. Expect more lag.");
 		}
 		
@@ -261,8 +260,120 @@ public class CropControlDatabaseHandler {
 	 * Basic method to set up data model v1.
 	 */
 	private void initializeTables() {
-		data.registerMigration(0,  false, "" 
-				);
+		data.registerMigration(0,  false,
+				/*
+				 * 	private long chunkID;
+	private UUID worldID;
+	private int chunkX;
+	private int chunkZ;
+				 */
+				"CREATE TABLE crops_chunk(" +
+				" chunk_id BIGINT NOT NULL AUTOINCREMENT PRIMARY KEY," +
+				" world VARCHAR(36) NOT NULL," +
+				" x BIGINT NOT NULL," +
+				" z BIGINT NOT NULL," +
+				" INDEX crops_world_chunk(world, x, z)" +
+				");",
+				/*
+				 * 	private long cropID;
+	private long chunkID;
+	private int x;
+	private int y;
+	private int z;
+	private String cropType;
+	private String cropState;
+	private UUID placer;
+	private long timeStamp;
+	private boolean harvestable;
+				 */
+				"CREATE TABLE crops_crop(" +
+				" crop_id BIGINT NOT NULL AUTOINCREMENT PRIMARY KEY," +
+				" chunk_id BIGINT NOT NULL REFERENCES crops_chunk(chunk_id)," +
+				" x INT NOT NULL," +
+				" y INT NOT NULL," +
+				" z INT NOT NULL," +
+				" type TEXT," + // TODO minimize size footprint
+				" state TEXT," + 
+				" placer VARCHAR(36)," +
+				" track_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+				" harvestable BOOLEAN DEFAULT FALSE," +
+				" INDEX crops_crop_inner(chunk_id, x, z, y)," + 
+				" INDEX crops_crop_type(chunk_id, type, state)," + 
+				" INDEX crops_crop_owner(chunk_id, placer)" + 
+				");",
+				/*
+				 * 	private long saplingID;
+	private long chunkID;
+	private int x;
+	private int y;
+	private int z;
+	private String saplingType;
+	private UUID placer;
+	private long timeStamp;
+	private boolean harvestable;
+				 */
+				"CREATE TABLE crops_sapling(" +
+				" sapling_id BIGINT NOT NULL AUTOINCREMENT PRIMARY KEY," +
+				" chunk_id BIGINT NOT NULL REFERENCES crops_chunk(chunk_id)," +
+				" x INT NOT NULL," +
+				" y INT NOT NULL," +
+				" z INT NOT NULL," +
+				" type TEXT," +
+				" placer VARCHAR(36)," +
+				" track_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+				" harvestable BOOLEAN DEFAULT FALSE," +
+				" INDEX crops_sapling_inner(chunk_id, x, z, y)," +
+				" INDEX crops_sapling_type(chunk_id, type)," +
+				" INDEX crops_sapling_owner(chunk_id, placer)" +
+				");",
+				/*
+				 * 	private long treeID;
+	private long chunkID;
+	private int x;
+	private int y;
+	private int z;
+	private String treeType;
+	private UUID placer;
+	private long timeStamp;
+				 */
+				"CREATE TABLE crops_tree(" +
+				" tree_id BIGINT NOT NULL AUTOINCREMENT PRIMARY KEY," +
+				" chunk_id BIGINT NOT NULL REFERENCES crops_chunk(chunk_id)," +
+				" x INT NOT NULL," +
+				" y INT NOT NULL," +
+				" z INT NOT NULL," +
+				" type TEXT," +
+				" placer VARCHAR(36)," +
+				" track_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+				" INDEX crops_tree_inner(chunk_id, x, z, y)," +
+				" INDEX crops_tree_type(chunk_id, type)," +
+				" INDEX crops_tree_owner(chunk_id, placer)" +
+				");",
+				/*
+				 * 	private long treeComponentID;
+	private long treeID;
+	private long chunkID;
+	private int x;
+	private int y;
+	private int z;
+	private String treeType;
+	private UUID placer;
+	private boolean harvestable;
+				 */
+				"CREATE TABLE crops_tree_component(" +
+				" tree_component_id BIGINT NOT NULL AUTOINCREMENT PRIMARY KEY," +
+				" tree_id BIGINT NOT NULL AUTOINCREMENT PRIMARY KEY," +
+				" chunk_id BIGINT NOT NULL REFERENCES crops_chunk(chunk_id)," +
+				" x INT NOT NULL," +
+				" y INT NOT NULL," +
+				" z INT NOT NULL," +
+				" type TEXT," +
+				" placer VARCHAR(36)," +
+				" harvestable BOOLEAN DEFAULT FALSE," +
+				" INDEX crops_tree_component_inner(tree_id, chunk_id, x, z, y)," +
+				" INDEX crops_tree_component_type(tree_id, chunk_id, type)," +
+				" INDEX crops_tree_component_owner(tree_id, chunk_id, placer)" +
+				");");
 		
 	}
 	
@@ -270,6 +381,6 @@ public class CropControlDatabaseHandler {
 	 * Add all new migrations here.
 	 */
 	private void stageUpdates() {
-		
+		// NOOP
 	}
 }

@@ -1,6 +1,5 @@
 package com.programmerdan.minecraft.cropcontrol.handler;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +109,7 @@ public class CropControlEventHandler implements Listener
 				if (getChunk(loadedChunk.getWorld().getUID(), loadedChunk.getX(), loadedChunk.getZ()) != null)
 					continue;
 
-				chunks.add(new WorldChunk(new BigInteger(chunks.size() + ""), loadedChunk.getWorld().getUID(), loadedChunk.getX(), loadedChunk.getZ()));
+				chunks.add(new WorldChunk( (long) chunks.size(), loadedChunk.getWorld().getUID(), loadedChunk.getX(), loadedChunk.getZ()));
 			}
 		}
 	}
@@ -206,7 +205,7 @@ public class CropControlEventHandler implements Listener
 		}
 	}
 
-	public Crop getCrop(int x, int y, int z, BigInteger chunkID)
+	public Crop getCrop(int x, int y, int z, long chunkID)
 	{
 		for (Crop crop : crops)
 		{
@@ -239,7 +238,7 @@ public class CropControlEventHandler implements Listener
 		return null;
 	}
 
-	public WorldChunk getChunk(BigInteger chunkID)
+	public WorldChunk getChunk(long chunkID)
 	{
 		for (WorldChunk worldChunk : chunks)
 		{
@@ -250,7 +249,7 @@ public class CropControlEventHandler implements Listener
 		return null;
 	}
 
-	public Sapling getSapling(int x, int y, int z, BigInteger chunkID)
+	public Sapling getSapling(int x, int y, int z, long chunkID)
 	{
 		for (Sapling sapling : saplings)
 		{
@@ -261,7 +260,7 @@ public class CropControlEventHandler implements Listener
 		return null;
 	}
 
-	public Tree getTree(BigInteger treeID)
+	public Tree getTree(long treeID)
 	{
 		for (Tree tree : trees)
 		{
@@ -272,7 +271,7 @@ public class CropControlEventHandler implements Listener
 		return null;
 	}
 
-	public Tree getTree(int x, int y, int z, BigInteger chunkID)
+	public Tree getTree(int x, int y, int z, long chunkID)
 	{
 		for (Tree tree : trees)
 		{
@@ -283,7 +282,7 @@ public class CropControlEventHandler implements Listener
 		return null;
 	}
 
-	public List<TreeComponent> getTreeComponents(BigInteger treeID)
+	public List<TreeComponent> getTreeComponents(long treeID)
 	{
 		List<TreeComponent> trees = new ArrayList<TreeComponent>();
 
@@ -296,7 +295,7 @@ public class CropControlEventHandler implements Listener
 		return trees;
 	}
 
-	public TreeComponent getTreeComponent(int x, int y, int z, BigInteger chunkID)
+	public TreeComponent getTreeComponent(int x, int y, int z, long chunkID)
 	{
 		for (TreeComponent treeComponent : treeComponents)
 		{
@@ -580,14 +579,14 @@ public class CropControlEventHandler implements Listener
 			if (getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID()) != null)
 				return;
 			// TODO Manage correct CropID with DB support
-			crops.add(new Crop(new BigInteger(crops.size() + ""), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), blockMaterial.toString(), getBaseCropState(blockMaterial), e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial)));
+			crops.add(new Crop( (long) crops.size(), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), blockMaterial.toString(), getBaseCropState(blockMaterial), e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial)));
 		}
 		else if (blockMaterial == Material.SAPLING)
 		{
 			if (getSapling(block.getX(), block.getY(), block.getZ(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID()) != null)
 				return;
 			// TODO Manage correct SaplingID with DB support
-			saplings.add(new Sapling(new BigInteger(saplings.size() + ""), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), getSaplingType(block.getData()), e.getPlayer().getUniqueId(), System.currentTimeMillis(), false));
+			saplings.add(new Sapling( (long) saplings.size(), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), getSaplingType(block.getData()), e.getPlayer().getUniqueId(), System.currentTimeMillis(), false));
 		}
 		else if (blockMaterial == Material.CHORUS_FLOWER)
 		{
@@ -595,10 +594,10 @@ public class CropControlEventHandler implements Listener
 				return;
 
 			// TODO Fix ID
-			trees.add(new Tree(new BigInteger(trees.size() + ""), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), e.getPlayer().getUniqueId(), System.currentTimeMillis()));
+			trees.add(new Tree( (long) trees.size(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), e.getPlayer().getUniqueId(), System.currentTimeMillis()));
 
 			// TODO Fix ID
-			treeComponents.add(new TreeComponent(new BigInteger(getTreeComponents(getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).getTreeID()).size() + ""), getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), e.getPlayer().getUniqueId(), false));
+			treeComponents.add(new TreeComponent((long) getTreeComponents(getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID()).getTreeID()).size(), getTree(block.getX(), block.getY(), block.getZ(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), e.getPlayer().getUniqueId(), false));
 		}
 
 	}
@@ -632,7 +631,7 @@ public class CropControlEventHandler implements Listener
 							{
 								UUID placerUUID = getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(), getChunk(otherBlock.getWorld().getUID(), otherBlock.getChunk().getX(), otherBlock.getChunk().getZ()).getChunkID()).getPlacer();
 								// TODO Manage correct CropID with DB support
-								crops.add(new Crop(new BigInteger(crops.size() + ""), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), block.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
+								crops.add(new Crop( (long) crops.size(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), block.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
 							}
 						}
 					}
@@ -644,7 +643,7 @@ public class CropControlEventHandler implements Listener
 						{
 							UUID placerUUID = getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(), getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID()).getPlacer();
 							// TODO Manage correct CropID with DB support
-							crops.add(new Crop(new BigInteger(crops.size() + ""), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), otherBlock.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
+							crops.add(new Crop( (long) crops.size(), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), otherBlock.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
 						}
 					}
 				}
@@ -667,7 +666,7 @@ public class CropControlEventHandler implements Listener
 		{
 			UUID placerUUID = getCrop(source.getX(), source.getY(), source.getZ(), getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ()).getChunkID()).getPlacer();
 			// TODO Manage correct CropID with DB support
-			crops.add(new Crop(new BigInteger(crops.size() + ""), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), source.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
+			crops.add(new Crop( (long) crops.size(), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), source.getType().toString(), null, placerUUID, System.currentTimeMillis(), true));
 		}
 		else if (getTreeComponent(source.getX(), source.getY(), source.getZ(), getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ()).getChunkID()) != null)
 		{
@@ -676,7 +675,7 @@ public class CropControlEventHandler implements Listener
 			treeComponent.setHarvestable(true);
 
 			// TODO Manage correct ID with DB support
-			treeComponents.add(new TreeComponent(new BigInteger(getTreeComponents(treeComponent.getTreeID()).size() + ""), treeComponent.getTreeID(), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), treeComponent.getPlacer(), true));
+			treeComponents.add(new TreeComponent( (long) getTreeComponents(treeComponent.getTreeID()).size(), treeComponent.getTreeID(), getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ()).getChunkID(), block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(), treeComponent.getPlacer(), true));
 
 		}
 
@@ -702,7 +701,7 @@ public class CropControlEventHandler implements Listener
 				return;
 
 			// TODO Fix ID here.
-			trees.add(new Tree(new BigInteger(trees.size() + ""), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID(), structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), e.getSpecies().toString(), getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), System.currentTimeMillis()));
+			trees.add(new Tree( (long) trees.size(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID(), structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), e.getSpecies().toString(), getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), System.currentTimeMillis()));
 
 			// Done in the case of Multiple saplings (Big Jungle trees etc)
 			for (BlockState state : e.getBlocks())
@@ -719,7 +718,7 @@ public class CropControlEventHandler implements Listener
 			for (BlockState state : blocks)
 			{
 				// TODO Fix ID here.
-				treeComponents.add(new TreeComponent(new BigInteger(getTreeComponents(getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getChunk()).getChunkID()).getTreeID()).size() + ""), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID(), state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
+				treeComponents.add(new TreeComponent( (long) getTreeComponents(getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getChunk()).getChunkID()).getTreeID()).size(), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID(), state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
 						getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), true));
 			}
 		}
@@ -736,14 +735,14 @@ public class CropControlEventHandler implements Listener
 				return;
 
 			// TODO Fix ID here.
-			trees.add(new Tree(new BigInteger(trees.size() + ""), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID(), structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), e.getSpecies().toString(), getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), System.currentTimeMillis()));
+			trees.add(new Tree( (long) trees.size(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID(), structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), e.getSpecies().toString(), getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), System.currentTimeMillis()));
 
 			crops.remove(getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()));
 
 			for (BlockState state : blocks)
 			{
 				// TODO Fix ID here.
-				treeComponents.add(new TreeComponent(new BigInteger(getTreeComponents(getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getChunk()).getChunkID()).getTreeID()).size() + ""), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID(), state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
+				treeComponents.add(new TreeComponent( (long) getTreeComponents(getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getChunk()).getChunkID()).getTreeID()).size(), getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getTreeID(), getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ()).getChunkID(), state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
 						getTree(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()).getPlacer(), true));
 			}
 		}
@@ -1258,7 +1257,7 @@ public class CropControlEventHandler implements Listener
 		if (getChunk(chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()) != null)
 			return;
 		// TODO Add in actual chunkID support via DB
-		chunks.add(new WorldChunk(new BigInteger(chunks.size() + ""), chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()));
+		chunks.add(new WorldChunk( (long) chunks.size(), chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()));
 
 	}
 

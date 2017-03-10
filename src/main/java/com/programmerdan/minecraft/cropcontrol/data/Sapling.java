@@ -1,12 +1,11 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
-import java.math.BigInteger;
 import java.util.UUID;
 
 public class Sapling
 {
-	private BigInteger saplingID;
-	private BigInteger chunkID;
+	private long saplingID;
+	private long chunkID;
 	private int x;
 	private int y;
 	private int z;
@@ -15,7 +14,7 @@ public class Sapling
 	private long timeStamp;
 	private boolean harvestable;
 	
-	public Sapling(BigInteger saplingID, BigInteger chunkID, int x, int y, int z, String saplingType, UUID placer, long timeStamp, boolean harvestable)
+	public Sapling(long saplingID, long chunkID, int x, int y, int z, String saplingType, UUID placer, long timeStamp, boolean harvestable)
 	{
 		this.saplingID = saplingID;
 		this.chunkID = chunkID;
@@ -28,12 +27,12 @@ public class Sapling
 		this.harvestable = harvestable;
 	}
 
-	public BigInteger getSaplingID()
+	public long getSaplingID()
 	{
 		return saplingID;
 	}
 
-	public BigInteger getChunkID()
+	public long getChunkID()
 	{
 		return chunkID;
 	}

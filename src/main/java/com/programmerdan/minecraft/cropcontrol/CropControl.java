@@ -1,5 +1,6 @@
 package com.programmerdan.minecraft.cropcontrol;
 
+import com.programmerdan.minecraft.cropcontrol.data.DAO;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler;
 
@@ -18,9 +19,8 @@ public class CropControl extends ACivMod {
 		reloadConfig();
 		
 		CropControl.instance = this;
-		//TODO Uncomment these when DB support is done.
-//		connectDatabase();
-//		if (!this.isEnabled()) return;
+		connectDatabase();
+		if (!this.isEnabled()) return;
 
 		registerEventHandler();
 
@@ -53,6 +53,10 @@ public class CropControl extends ACivMod {
 	 */
 	public static CropControl getPlugin() {
 		return CropControl.instance;
+	}
+	
+	public static DAO getDAO() {
+		return CropControl.instance.databaseHandler.getDAO();
 	}
 	
 	/**

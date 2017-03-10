@@ -1,16 +1,15 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
-import java.math.BigInteger;
 import java.util.UUID;
 
 public class WorldChunk {
 	
-	private BigInteger chunkID;
+	private long chunkID;
 	private UUID worldID;
 	private int chunkX;
 	private int chunkZ;
 	
-	public WorldChunk(BigInteger chunkID, UUID worldID, int chunkX, int chunkZ)
+	public WorldChunk(long chunkID, UUID worldID, int chunkX, int chunkZ)
 	{
 		this.chunkID = chunkID;
 		this.worldID = worldID;
@@ -18,7 +17,7 @@ public class WorldChunk {
 		this.chunkZ = chunkZ;
 	}
 
-	public BigInteger getChunkID() {
+	public long getChunkID() {
 		return chunkID;
 	}
 

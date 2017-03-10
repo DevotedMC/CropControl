@@ -1,12 +1,11 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
-import java.math.BigInteger;
 import java.util.UUID;
 
 public class Tree
 {
-	private BigInteger treeID;
-	private BigInteger chunkID;
+	private long treeID;
+	private long chunkID;
 	private int x;
 	private int y;
 	private int z;
@@ -14,7 +13,7 @@ public class Tree
 	private UUID placer;
 	private long timeStamp;
 	
-	public Tree(BigInteger treeID, BigInteger chunkID, int x, int y, int z, String treeType, UUID placer, long timeStamp)
+	public Tree(long treeID, long chunkID, int x, int y, int z, String treeType, UUID placer, long timeStamp)
 	{
 		this.treeID = treeID;
 		this.chunkID = chunkID;
@@ -31,7 +30,7 @@ public class Tree
 		return x;
 	}
 
-	public void setChunkID(BigInteger chunkID)
+	public void setChunkID(long chunkID)
 	{
 		this.chunkID = chunkID;
 	}
@@ -61,12 +60,12 @@ public class Tree
 		return z;
 	}
 
-	public BigInteger getTreeID()
+	public long getTreeID()
 	{
 		return treeID;
 	}
 
-	public BigInteger getChunkID()
+	public long getChunkID()
 	{
 		return chunkID;
 	}
