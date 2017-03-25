@@ -35,6 +35,9 @@ public class Crop extends Locatable {
 
 	private Crop() {}
 	
+	public static Crop create(WorldChunk chunk, int x, int y, int z, String cropType, String cropState, UUID placer, long timeStamp, boolean harvestable) {
+		return create(chunk, x, y, z, cropType, cropState, placer, new Timestamp(timeStamp), harvestable);
+	}
 	public static Crop create(WorldChunk chunk, int x, int y, int z, String cropType, String cropState, UUID placer, Timestamp timeStamp, boolean harvestable) {
 		Crop crop = new Crop();
 		crop.chunkID = chunk.getChunkID();

@@ -41,8 +41,7 @@ public class DAO {
 	}
 
 	public Tree getTree(long treeID) {
-		// TODO:
-		return null;
+		return WorldChunk.getTree(treeID);
 	}
 
 	public Tree getTree(int x, int y, int z, long chunkID) {
@@ -54,11 +53,13 @@ public class DAO {
 	}
 
 	public List<TreeComponent> getTreeComponents(long treeID) {
-		List<TreeComponent> trees = new ArrayList<TreeComponent>();
-
-		// TODO:
-
-		return trees;
+		List<TreeComponent> components = WorldChunk.getTreeComponents(treeID);
+		return components;
+	}
+	
+	public List<TreeComponent> getTreeComponents(Tree tree) {
+		List<TreeComponent> components = WorldChunk.getTreeComponents(tree);
+		return components;
 	}
 
 	public TreeComponent getTreeComponent(int x, int y, int z, long chunkID) {

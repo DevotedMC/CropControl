@@ -35,6 +35,10 @@ public class Sapling extends Locatable {
 	}
 
 	public static Sapling create(WorldChunk chunk, int x, int y, int z, String saplingType, UUID placer,
+			long timeStamp, boolean harvestable) {
+		return create(chunk, x, y, z, saplingType, placer, new Timestamp(timeStamp), harvestable);
+	}
+	public static Sapling create(WorldChunk chunk, int x, int y, int z, String saplingType, UUID placer,
 			Timestamp timeStamp, boolean harvestable) {
 		Sapling sapling = new Sapling();
 		sapling.chunkID = chunk.getChunkID();

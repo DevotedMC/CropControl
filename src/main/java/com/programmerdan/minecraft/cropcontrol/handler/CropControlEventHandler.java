@@ -254,9 +254,9 @@ public class CropControlEventHandler implements Listener {
 		int z = block.getZ();
 
 		p.sendMessage(ChatColor.GREEN + "Fier's fancy debug system:");
-
+		WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
+		
 		if (!e.getPlayer().isSneaking()) {
-			WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
 			if (chunk != null) {
 				ComponentBuilder hoverBuilder = new ComponentBuilder("ChunkID: " + chunk.getChunkID())
 						.color(ChatColor.RED).append("\nChunkX: " + chunk.getChunkX()).color(ChatColor.RED)
@@ -363,12 +363,8 @@ public class CropControlEventHandler implements Listener {
 				p.spigot().sendMessage(message.create());
 			}
 
-			if (getTreeComponent(block.getX(), block.getY(), (block.getZ()),
-					getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-							.getChunkID()) != null) {
-				TreeComponent treeComponent = getTreeComponent(block.getX(), block.getY(), (block.getZ()),
-						getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-								.getChunkID());
+			if (component != null) {
+				TreeComponent treeComponent = component;
 
 				ComponentBuilder hoverBuilder = new ComponentBuilder(
 						"TreeComponentID: " + treeComponent.getTreeComponentID()).color(ChatColor.RED)
@@ -396,16 +392,11 @@ public class CropControlEventHandler implements Listener {
 				p.spigot().sendMessage(message.create());
 			}
 		} else {
-			if (getTreeComponent(block.getX(), block.getY(), (block.getZ()),
-					getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-							.getChunkID()) != null) {
+			TreeComponent component = chunk.getTreeComponent(x, y, z);
+			if (component != null) {
+				Tree tree = CropControl.getDAO().getTree(component.getTreeID());
 
-				TreeComponent orgignalTreeComponent = getTreeComponent(block.getX(), block.getY(), (block.getZ()),
-						getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-								.getChunkID());
-				Tree tree = getTree(orgignalTreeComponent.getTreeID());
-
-				for (TreeComponent treeComponent : getTreeComponents(tree.getTreeID())) {
+				for (TreeComponent treeComponent : CropControl.getDAO().getTreeComponents(tree)) {
 					p.sendMessage(ChatColor.RED + "TreeComponentID: " + treeComponent.getTreeComponentID()
 							+ " ChunkID: " + treeComponent.getChunkID() + " X: " + treeComponent.getX() + " Y: "
 							+ treeComponent.getY() + " Z: " + treeComponent.getZ() + " TreeType: "
@@ -432,53 +423,43 @@ public class CropControlEventHandler implements Listener {
 		Block block = e.getBlock();
 
 		Material blockMaterial = block.getType();
+		int x = block.getX();
+		int y = block.getY();
+		int z = block.getZ();
+		WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
 
 		if (harvestableCrops.containsKey(blockMaterial)) {
-			if (getCrop(block.getX(), block.getY(), block.getZ(),
-					getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-							.getChunkID()) != null)
+			// we placed a block overtop an existing crop. Will be handled by a break event?
+			if (chunk.getCrop(x, y, z) != null) {
+				CropControl.getPlugin().debug("Ignoring placement overtop a Crop at {0}, {1}, {2}", x, y, z);
 				return;
-			// TODO Manage correct CropID with DB support
-			crops.add(new Crop((long) crops.size(),
-					getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-							.getChunkID(),
-					block.getX(), block.getY(), block.getZ(), blockMaterial.toString(), getBaseCropState(blockMaterial),
-					e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial)));
+			}
+			
+			// We've placed a crop!
+			Crop.create(chunk, x, y, z, blockMaterial.toString(), getBaseCropState(blockMaterial),
+					e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial));
 		} else if (blockMaterial == Material.SAPLING) {
-			if (getSapling(block.getX(), block.getY(), block.getZ(),
-					getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-							.getChunkID()) != null)
+			// we placed a block overtop an existing sapling. TODO: Do I need to remove sapling here, or will there be a break event?
+			if (chunk.getSapling(x, y, z) != null) {
+				CropControl.getPlugin().debug("Ignoring placement overtop a Sapling at {0}, {1}, {2}", x, y, z);
 				return;
-			// TODO Manage correct SaplingID with DB support
-			saplings.add(new Sapling((long) saplings.size(),
-					getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-							.getChunkID(),
-					block.getX(), block.getY(), block.getZ(), getSaplingType(block.getData()),
-					e.getPlayer().getUniqueId(), System.currentTimeMillis(), false));
+			}
+			// We've placed a sapling!
+			Sapling.create(chunk, x, y, z, getSaplingType(block.getData()),
+					e.getPlayer().getUniqueId(), System.currentTimeMillis(), false);
 		} else if (blockMaterial == Material.CHORUS_FLOWER) {
-			if (isTracked(block) == true)
+			if (CropControl.getDAO().isTracked(block) == true) {
+				CropControl.getPlugin().debug("Ignoring placement overtop a tracked object at {0}, {1}, {2}", x, y, z);
 				return;
+			}
 
-			// TODO Fix ID
-			trees.add(
-					new Tree((long) trees.size(),
-							getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-									.getChunkID(),
-							block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(),
-							e.getPlayer().getUniqueId(), System.currentTimeMillis()));
+			// First register the "tree"
+			Tree chorusPlant = Tree.create(chunk, x, y, z, Material.CHORUS_PLANT.toString(),
+					e.getPlayer().getUniqueId(), System.currentTimeMillis());
 
-			// TODO Fix ID
-			treeComponents
-					.add(new TreeComponent(
-							(long) getTreeComponents(getTree(block.getX(), block.getY(), block.getZ(),
-									getChunk(block.getChunk()).getChunkID()).getTreeID()).size(),
-							getTree(block.getX(), block.getY(), block.getZ(),
-									getChunk(block.getWorld().getUID(), block.getChunk().getX(),
-											block.getChunk().getZ()).getChunkID()).getTreeID(),
-							getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-									.getChunkID(),
-							block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(),
-							e.getPlayer().getUniqueId(), false));
+			// Then the component in the tree.
+			TreeComponent.create(chorusPlant, chunk, x, y, z, Material.CHORUS_PLANT.toString(),
+					e.getPlayer().getUniqueId(), false);
 		}
 
 	}

@@ -9,12 +9,15 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bukkit.Chunk;
 
+import com.google.common.collect.Sets;
 import com.programmerdan.minecraft.cropcontrol.CreationError;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
@@ -29,6 +32,7 @@ public class WorldChunk {
 	private Map<Locatable, Sapling> saplingCacheLoc = new ConcurrentHashMap<Locatable, Sapling>();
 	
 	private static Map<Long, Tree> universalTreeCache = new ConcurrentHashMap<Long, Tree>();
+	private static Map<Long, Set<TreeComponent>> universalTreeComponentCache = new ConcurrentHashMap<Long, Set<TreeComponent>>();
 	
 	private Map<Long, Tree> treeCacheID = new ConcurrentHashMap<Long, Tree>();
 	private Map<Locatable, Tree> treeCacheLoc = new ConcurrentHashMap<Locatable, Tree>();
@@ -85,13 +89,20 @@ public class WorldChunk {
 		List<Tree> trees = Tree.preload(this);
 		for (Tree tree: trees) {
 			treeCacheLoc.put(new Locatable(tree.getChunkID(), tree.getX(), tree.getY(), tree.getZ()), tree);
-			treeCacheID.put(tree.getTreeID(), tree);			
+			treeCacheID.put(tree.getTreeID(), tree);
+			WorldChunk.universalTreeCache.put(tree.getTreeID(), tree);
 		}
 		
 		List<TreeComponent> components = TreeComponent.preload(this);
 		for (TreeComponent component : components) {
 			componentCacheLoc.put(new Locatable(component.getChunkID(), component.getX(), component.getY(), component.getZ()), component);
-			componentCacheID.put(component.getTreeComponentID(), component);			
+			componentCacheID.put(component.getTreeComponentID(), component);
+			Set<TreeComponent> treeComponents = WorldChunk.universalTreeComponentCache.get(component.getTreeID());
+			if (treeComponents == null) {
+				treeComponents = Sets.newConcurrentHashSet();
+				WorldChunk.universalTreeComponentCache.put(component.getTreeID(), treeComponents);
+			}
+			treeComponents.add(component);
 		}
 	}
 	
@@ -131,6 +142,7 @@ public class WorldChunk {
 		}
 		treeCacheLoc.put(new Locatable(tree.getChunkID(), tree.getX(), tree.getY(), tree.getZ()), tree);
 		treeCacheID.put(tree.getTreeID(), tree);
+		WorldChunk.universalTreeCache.put(tree.getTreeID(), tree);
 	}
 	
 	public void unregister(Tree tree) {
@@ -145,6 +157,14 @@ public class WorldChunk {
 		Tree result = treeCacheLoc.get(new Locatable(chunkID, x, y, z));
 		return result;
 	}
+	
+	public static Tree getTree(long treeID) {
+		Tree tree = WorldChunk.universalTreeCache.get(treeID);
+		if (tree == null) {
+			tree = Tree.byId(treeID);
+		}
+		return tree;
+	}
 
 	public void register(TreeComponent component) {
 		TreeComponent preExist = componentCacheLoc.remove((Locatable) component); // did we have one here already?
@@ -153,6 +173,13 @@ public class WorldChunk {
 		}
 		componentCacheLoc.put(new Locatable(component.getChunkID(), component.getX(), component.getY(), component.getZ()), component);
 		componentCacheID.put(component.getTreeComponentID(), component);
+		
+		Set<TreeComponent> treeComponents = WorldChunk.universalTreeComponentCache.get(component.getTreeID());
+		if (treeComponents == null) {
+			treeComponents = Sets.newConcurrentHashSet();
+			WorldChunk.universalTreeComponentCache.put(component.getTreeID(), treeComponents);
+		}
+		treeComponents.add(component);
 	}
 	
 	public void unregister(TreeComponent component) {
@@ -166,6 +193,19 @@ public class WorldChunk {
 	public TreeComponent getTreeComponent(int x, int y, int z) {
 		TreeComponent result = componentCacheLoc.get(new Locatable(chunkID, x, y, z));
 		return result;
+	}
+	
+	public static List<TreeComponent> getTreeComponents(Tree tree) {
+		return getTreeComponents(tree.getTreeID());
+	}
+	
+	public static List<TreeComponent> getTreeComponents(long treeId) {
+		List<TreeComponent> list = new CopyOnWriteArrayList<TreeComponent>();
+		Set<TreeComponent> set = WorldChunk.universalTreeComponentCache.get(treeId);
+		if (set != null) {
+			list.addAll(set);
+		}
+		return list;
 	}
 	
 	public static void unloadChunk(Chunk chunk) {
@@ -191,6 +231,8 @@ public class WorldChunk {
 		while (!unloadQueue.isEmpty()) {
 			WorldChunk unload = unloadQueue.poll();
 			
+			if (unload == null) continue;
+			
 			// extract crops and such
 			Iterable<Crop> crops = unload.cropCacheID.values();
 			Iterable<Sapling> saplings = unload.saplingCacheID.values();
@@ -202,7 +244,7 @@ public class WorldChunk {
 			UUID world_uuid = unload.getWorldID();
 			Map<Long, WorldChunk> chunks = chunkCacheLoc.get(world_uuid);
 			if (chunks == null) {
-				return;
+				continue;
 			}
 			WorldChunk cacheChunk = chunks.remove(chunk_id);
 			if (cacheChunk != null) {
@@ -231,10 +273,13 @@ public class WorldChunk {
 			trees = null;
 			components = null;
 			
+			unloads ++;
+			
 			if (System.currentTimeMillis() - start > maxTime) {
 				break;
 			}
 		}
+		CropControl.getPlugin().debug("Unloaded {0} chunks in {1} ms", unloads, (System.currentTimeMillis() - start));
 	}
 	
 	public static WorldChunk getChunk(Chunk chunk) {

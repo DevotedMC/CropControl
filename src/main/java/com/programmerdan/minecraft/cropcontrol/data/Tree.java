@@ -35,6 +35,10 @@ public class Tree extends Locatable {
 	}
 
 	public static Tree create(WorldChunk chunk, int x, int y, int z, String treeType, UUID placer,
+			long timeStamp) {
+		return create(chunk, x, y, z, treeType, placer, new Timestamp(timeStamp));
+	}
+	public static Tree create(WorldChunk chunk, int x, int y, int z, String treeType, UUID placer,
 			Timestamp timeStamp) {
 		Tree tree = new Tree();
 		tree.chunkID = chunk.getChunkID();
@@ -254,5 +258,38 @@ public class Tree extends Locatable {
 		}
 		// Note we don't register as we assume the trees is being preloaded _by_ the chunk
 		return trees;
+	}
+	
+	public static Tree byId(long treeID) {
+		Tree tree = null;
+		try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
+				PreparedStatement statement = connection.prepareStatement(
+						"SELECT * FROM crops_tree WHERE tree_id = ?;");) {
+			statement.setLong(1, treeID);
+			try (ResultSet results = statement.executeQuery();) {
+				if (results.next()) {
+					tree = new Tree();
+					tree.treeID = results.getLong(1);
+					tree.chunkID = results.getLong(2);
+					tree.x = results.getInt(3);
+					tree.y = results.getInt(4);
+					tree.z = results.getInt(5);
+					tree.treeType = results.getString(6);
+					try {
+						tree.placer = UUID.fromString(results.getString(7));
+					} catch (IllegalArgumentException iae) {
+						tree.placer = null;
+					}
+					tree.timeStamp = results.getTimestamp(8);
+					tree.removed = results.getBoolean(9);
+					tree.dirty = false;
+				} else {
+					throw new CreationError(Tree.class, "Unable to retrieve tree by ID");
+				}
+			}
+		} catch (SQLException e) {
+			CropControl.getPlugin().severe("Failed to load trees", e);
+		}
+		return tree;
 	}
 }
