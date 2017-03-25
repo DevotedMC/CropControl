@@ -66,6 +66,9 @@ public class CropControlEventHandler implements Listener {
 	 * belonging to that material.
 	 */
 	private Map<Material, Boolean> harvestableCrops;
+	
+	public static final BlockFace[] directions = new BlockFace[] { 
+			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
 
 	public CropControlEventHandler(FileConfiguration config) {
 		this.config = config;
@@ -469,52 +472,44 @@ public class CropControlEventHandler implements Listener {
 	public void onCropGrow(BlockGrowEvent e) {
 		Block block = e.getNewState().getBlock();
 
-		Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(), new Runnable() {
+		Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(CropControl.getPlugin(), new Runnable() {
 			@Override
 			public void run() {
-				if (getCrop(block.getX(), block.getY(), block.getZ(),
-						getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-								.getChunkID()) != null) {
-					getCrop(block.getX(), block.getY(), block.getZ(),
-							getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-									.getChunkID()).setCropState(getCropState(e.getNewState()));
+				WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
+				int x = block.getX();
+				int y = block.getY();
+				int z = block.getZ();
+				Crop crop = chunk.getCrop(x, y, z);
+				if (crop != null) {
+					crop.setCropState(getCropState(e.getNewState()));
 				} else {
 					if (block.getType() == Material.MELON_BLOCK || block.getType() == Material.PUMPKIN) {
-						BlockFace[] directions = new BlockFace[] { BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST,
-								BlockFace.WEST };
-
-						for (BlockFace blockFace : directions) {
+						for (BlockFace blockFace : CropControlEventHandler.directions) {
 							Block otherBlock = block.getRelative(blockFace);
-
-							if (getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(),
-									getChunk(otherBlock.getWorld().getUID(), otherBlock.getChunk().getX(),
-											otherBlock.getChunk().getZ()).getChunkID()) != null) {
-								UUID placerUUID = getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(),
-										getChunk(otherBlock.getWorld().getUID(), otherBlock.getChunk().getX(),
-												otherBlock.getChunk().getZ()).getChunkID()).getPlacer();
-								// TODO Manage correct CropID with DB support
-								crops.add(new Crop((long) crops.size(),
-										getChunk(block.getWorld().getUID(), block.getChunk().getX(),
-												block.getChunk().getZ()).getChunkID(),
-										block.getX(), block.getY(), block.getZ(), block.getType().toString(), null,
-										placerUUID, System.currentTimeMillis(), true));
+							WorldChunk otherChunk = CropControl.getDAO().getChunk(otherBlock.getChunk());
+							int otherX = otherBlock.getX();
+							int otherY = otherBlock.getY();
+							int otherZ = otherBlock.getZ();
+							Crop otherCrop = otherChunk.getCrop(otherX, otherY, otherZ);
+							if (otherCrop != null) {
+								UUID placerUUID = otherCrop.getPlacer();
+								
+								Crop.create(chunk, x,y,z,  block.getType().toString(), null,
+										placerUUID, System.currentTimeMillis(), true);
+								break;
 							}
 						}
 					} else if (block.getType() == Material.CACTUS || block.getType() == Material.SUGAR_CANE_BLOCK) {
 						Block otherBlock = block.getRelative(BlockFace.DOWN);
-
-						if (getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(),
-								getChunk(block.getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-										.getChunkID()) != null) {
-							UUID placerUUID = getCrop(otherBlock.getX(), otherBlock.getY(), otherBlock.getZ(),
-									getChunk(block.getWorld().getUID(), block.getChunk().getX(),
-											block.getChunk().getZ()).getChunkID()).getPlacer();
-							// TODO Manage correct CropID with DB support
-							crops.add(new Crop((long) crops.size(),
-									getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(),
-											block.getChunk().getZ()).getChunkID(),
-									block.getX(), block.getY(), block.getZ(), otherBlock.getType().toString(), null,
-									placerUUID, System.currentTimeMillis(), true));
+						int otherX = otherBlock.getX();
+						int otherY = otherBlock.getY();
+						int otherZ = otherBlock.getZ();
+						Crop otherCrop = chunk.getCrop(otherX, otherY, otherZ);
+						if (otherCrop != null) {
+							UUID placerUUID = otherCrop.getPlacer();
+							
+							Crop.create(chunk, x,y,z,  block.getType().toString(), null,
+									placerUUID, System.currentTimeMillis(), true);
 						}
 					}
 				}
@@ -526,43 +521,37 @@ public class CropControlEventHandler implements Listener {
 	@EventHandler
 	public void onBlockSpread(BlockSpreadEvent e) {
 		Block source = e.getSource();
+		WorldChunk sourceChunk = CropControl.getDAO().getChunk(source.getChunk());
+		int sourceX = source.getX();
+		int sourceY = source.getY();
+		int sourceZ = source.getZ();
 
 		Block block = e.getBlock();
+		WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
+		int x = block.getX();
+		int y = block.getY();
+		int z = block.getZ();
 
 		if (!harvestableCrops.containsKey(source.getType()) && source.getType() != Material.CHORUS_FLOWER
 				&& source.getType() != Material.CHORUS_PLANT && block.getType() != Material.CHORUS_FLOWER
 				&& block.getType() != Material.CHORUS_PLANT)
 			return;
 
-		if (getCrop(source.getX(), source.getY(), source.getZ(),
-				getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ())
-						.getChunkID()) != null) {
-			UUID placerUUID = getCrop(source.getX(), source.getY(), source.getZ(),
-					getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ())
-							.getChunkID()).getPlacer();
-			// TODO Manage correct CropID with DB support
-			crops.add(new Crop((long) crops.size(),
-					getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-							.getChunkID(),
-					block.getX(), block.getY(), block.getZ(), source.getType().toString(), null, placerUUID,
-					System.currentTimeMillis(), true));
-		} else if (getTreeComponent(source.getX(), source.getY(), source.getZ(),
-				getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ())
-						.getChunkID()) != null) {
-			TreeComponent treeComponent = getTreeComponent(source.getX(), source.getY(), source.getZ(),
-					getChunk(source.getWorld().getUID(), source.getChunk().getX(), source.getChunk().getZ())
-							.getChunkID());
-
+		Crop sourceCrop = sourceChunk.getCrop(sourceX, sourceY, sourceZ);
+		if (sourceCrop != null) {
+			UUID placerUUID = sourceCrop.getPlacer();
+			Crop.create(chunk, x, y, z, source.getType().toString(), null, placerUUID,
+					System.currentTimeMillis(), true);
+			return;
+		} 
+		
+		TreeComponent treeComponent = sourceChunk.getTreeComponent(sourceX, sourceY, sourceZ);
+		if (treeComponent != null) {
 			treeComponent.setHarvestable(true);
 
-			// TODO Manage correct ID with DB support
-			treeComponents.add(new TreeComponent((long) getTreeComponents(treeComponent.getTreeID()).size(),
-					treeComponent.getTreeID(),
-					getChunk(block.getChunk().getWorld().getUID(), block.getChunk().getX(), block.getChunk().getZ())
-							.getChunkID(),
-					block.getX(), block.getY(), block.getZ(), Material.CHORUS_PLANT.toString(),
-					treeComponent.getPlacer(), true));
-
+			// TODO: should we differentiate between flower and plant here?
+			TreeComponent.create(treeComponent.getTreeID(), chunk, x, y, z, Material.CHORUS_PLANT.toString(),
+					treeComponent.getPlacer(), true);
 		}
 
 	}
@@ -570,67 +559,49 @@ public class CropControlEventHandler implements Listener {
 	@EventHandler
 	public void onTreeGrow(StructureGrowEvent e) {
 		Location structureLocation = e.getLocation();
-
+		int x = structureLocation.getBlockX();
+		int y = structureLocation.getBlockY();
+		int z = structureLocation.getBlockZ();
+		WorldChunk sourceChunk = CropControl.getDAO().getChunk(structureLocation.getChunk());
+		
 		List<BlockState> blocks = new ArrayList<BlockState>();
 
-		if (getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(),
-				getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-						structureLocation.getChunk().getZ()).getChunkID()) != null) {
+		Sapling sapling =  sourceChunk.getSapling(x, y, z);
+		if (sapling != null) {
 			// Because dirt & saplings are part of the structure
 			for (BlockState state : e.getBlocks()) {
 				if (state.getType() == Material.LOG || state.getType() == Material.LOG_2
-						|| state.getType() == Material.LEAVES || state.getType() == Material.LEAVES_2)
+						|| state.getType() == Material.LEAVES || state.getType() == Material.LEAVES_2) {
 					blocks.add(state);
+				}
 			}
 
-			if (blocks.size() == 0)
+			if (blocks.size() == 0) {
+				CropControl.getPlugin().debug("Ignoring tree grow that has no logs or leaves at {0}, {1}, {2}", x, y, z);
+				// TODO: do we remove the sapling?
 				return;
+			}
 
-			// TODO Fix ID here.
-			trees.add(new Tree((long) trees.size(),
-					getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-							structureLocation.getChunk().getZ()).getChunkID(),
-					structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(),
-					e.getSpecies().toString(),
-					getSapling(structureLocation.getBlockX(), structureLocation.getBlockY(),
-							structureLocation.getBlockZ(),
-							getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-									structureLocation.getChunk().getZ()).getChunkID()).getPlacer(),
-					System.currentTimeMillis()));
+			Tree tree = Tree.create(sourceChunk, x, y, z, e.getSpecies().toString(), sapling.getPlacer(), System.currentTimeMillis());
 
 			// Done in the case of Multiple saplings (Big Jungle trees etc)
 			for (BlockState state : e.getBlocks()) {
 				if (state.getBlock().getType() != Material.SAPLING)
 					continue;
-
-				if (getSapling(state.getX(), state.getY(), state.getZ(),
-						getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ())
-								.getChunkID()) == null)
-					return;
-
-				saplings.remove(getSapling(state.getX(), state.getY(), state.getZ(),
-						getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ())
-								.getChunkID()));
+				WorldChunk testChunk = CropControl.getDAO().getChunk(state.getChunk());
+				Sapling testSapling = testChunk.getSapling(state.getX(), state.getY(), state.getZ());
+				if (testSapling == null) {
+					CropControl.getPlugin().debug("Found a sapling part of a recognized structure that wasn't itself tracked at {0}", state.getLocation());
+					continue;
+				}
+				
+				testSapling.setRemoved();
 			}
 
 			for (BlockState state : blocks) {
-				// TODO Fix ID here.
-				treeComponents.add(new TreeComponent(
-						(long) getTreeComponents(getTree(structureLocation.getBlockX(), structureLocation.getBlockY(),
-								structureLocation.getBlockZ(), getChunk(structureLocation.getChunk()).getChunkID())
-										.getTreeID()).size(),
-						getTree(structureLocation.getBlockX(), structureLocation.getBlockY(),
-								structureLocation.getBlockZ(),
-								getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-										structureLocation.getChunk().getZ()).getChunkID()).getTreeID(),
-						getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ())
-								.getChunkID(),
-						state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
-						getTree(structureLocation.getBlockX(), structureLocation.getBlockY(),
-								structureLocation.getBlockZ(),
-								getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-										structureLocation.getChunk().getZ()).getChunkID()).getPlacer(),
-						true));
+				WorldChunk partChunk = CropControl.getDAO().getChunk(state.getChunk());
+				TreeComponent.create(tree, partChunk, state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
+						tree.getPlacer(), true);
 			}
 		} else if (getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(),
 				getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),

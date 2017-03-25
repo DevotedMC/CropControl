@@ -28,19 +28,6 @@ public class TreeComponent extends Locatable {
 	private UUID placer;
 	private boolean harvestable;
 
-	public TreeComponent(long treeComponentID, long treeID, long chunkID, int x, int y, int z, String treeType,
-			UUID placer, boolean harvestable) {
-		this.treeComponentID = treeComponentID;
-		this.treeID = treeID;
-		this.chunkID = chunkID;
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.treeType = treeType;
-		this.placer = placer;
-		this.harvestable = harvestable;
-	}
-
 	private boolean dirty;
 
 	private boolean removed;
@@ -50,8 +37,12 @@ public class TreeComponent extends Locatable {
 
 	public static TreeComponent create(Tree tree, WorldChunk chunk, int x, int y, int z, String treeType, UUID placer,
 			boolean harvestable) {
+		return create(tree.getTreeID(), chunk, x, y, z, treeType, placer, harvestable);
+	}
+	
+	public static TreeComponent create(long treeId, WorldChunk chunk, int x, int y, int z, String treeType, UUID placer, boolean harvestable) {
 		TreeComponent component = new TreeComponent();
-		component.treeID = tree.getTreeID();
+		component.treeID = treeId;
 		component.chunkID = chunk.getChunkID();
 		component.x = x;
 		component.y = y;
