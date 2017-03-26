@@ -143,6 +143,7 @@ public class Tree extends Locatable {
 		this.removed = true;
 		this.dirty = true;
 		Tree.dirties.offer(new WeakReference<Tree>(this));
+		WorldChunk.remove(this);
 	}
 
 	public static void flushDirty(Iterable<Tree> trees) {

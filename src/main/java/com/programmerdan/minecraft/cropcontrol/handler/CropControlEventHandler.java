@@ -2,8 +2,11 @@ package com.programmerdan.minecraft.cropcontrol.handler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -12,6 +15,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.TreeType;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -35,11 +39,14 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.CocoaPlant;
 import org.bukkit.material.Crops;
 import org.bukkit.material.NetherWarts;
+import org.bukkit.util.Vector;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
@@ -70,6 +77,9 @@ public class CropControlEventHandler implements Listener {
 	public static final BlockFace[] directions = new BlockFace[] { 
 			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
 
+	public static final BlockFace[] growDirections = new BlockFace[] { 
+			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.UP };
+	
 	public CropControlEventHandler(FileConfiguration config) {
 		this.config = config;
 
@@ -603,51 +613,30 @@ public class CropControlEventHandler implements Listener {
 				TreeComponent.create(tree, partChunk, state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
 						tree.getPlacer(), true);
 			}
-		} else if (getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(),
-				getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-						structureLocation.getChunk().getZ()).getChunkID()) != null) {
+			return;
+		}
+		
+		Crop crop =  sourceChunk.getCrop(x, y, z);
+		if (crop != null) {
 			// Because dirt & saplings are part of the structure
 			for (BlockState state : e.getBlocks()) {
 				if (state.getType() == Material.HUGE_MUSHROOM_1 || state.getType() == Material.HUGE_MUSHROOM_2)
 					blocks.add(state);
 			}
 
-			if (blocks.size() == 0)
+			if (blocks.size() == 0) {
+				CropControl.getPlugin().debug("Ignoring mushroom? grow that has no mushroom parts at {0}, {1}, {2}", x, y, z);
 				return;
+			}
 
-			// TODO Fix ID here.
-			trees.add(new Tree((long) trees.size(),
-					getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-							structureLocation.getChunk().getZ()).getChunkID(),
-					structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(),
-					e.getSpecies().toString(),
-					getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(), structureLocation.getBlockZ(),
-							getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-									structureLocation.getChunk().getZ()).getChunkID()).getPlacer(),
-					System.currentTimeMillis()));
+			Tree tree = Tree.create(sourceChunk, x, y, z, e.getSpecies().toString(), crop.getPlacer(), System.currentTimeMillis());
 
-			crops.remove(getCrop(structureLocation.getBlockX(), structureLocation.getBlockY(),
-					structureLocation.getBlockZ(), getChunk(structureLocation.getWorld().getUID(),
-							structureLocation.getChunk().getX(), structureLocation.getChunk().getZ()).getChunkID()));
+			crop.setRemoved();
 
 			for (BlockState state : blocks) {
-				// TODO Fix ID here.
-				treeComponents.add(new TreeComponent(
-						(long) getTreeComponents(getTree(structureLocation.getBlockX(), structureLocation.getBlockY(),
-								structureLocation.getBlockZ(), getChunk(structureLocation.getChunk()).getChunkID())
-										.getTreeID()).size(),
-						getTree(structureLocation.getBlockX(), structureLocation.getBlockY(),
-								structureLocation.getBlockZ(),
-								getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-										structureLocation.getChunk().getZ()).getChunkID()).getTreeID(),
-						getChunk(state.getWorld().getUID(), state.getChunk().getX(), state.getChunk().getZ())
-								.getChunkID(),
-						state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
-						getTree(structureLocation.getBlockX(), structureLocation.getBlockY(),
-								structureLocation.getBlockZ(),
-								getChunk(structureLocation.getWorld().getUID(), structureLocation.getChunk().getX(),
-										structureLocation.getChunk().getZ()).getChunkID()).getPlacer(),
-						true));
+				WorldChunk partChunk = CropControl.getDAO().getChunk(state.getChunk());
+				TreeComponent.create(tree, partChunk, state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
+						tree.getPlacer(), true);
 			}
 		}
 	}
@@ -662,265 +651,279 @@ public class CropControlEventHandler implements Listener {
 
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent e) {
-		handleBreak(e.getBlock(), BreakType.PLAYER, null);
+		if (e.getPlayer() != null ) {
+			handleBreak(e.getBlock(), BreakType.PLAYER, e.getPlayer().getUniqueId(), null);
+		} else {
+			handleBreak(e.getBlock(), BreakType.NATURAL, null, null);
+		}
 	}
 
 	@EventHandler
 	public void onBlockBurn(BlockBurnEvent e) {
-		handleBreak(e.getBlock(), BreakType.NATURAL, null);
+		handleBreak(e.getBlock(), BreakType.NATURAL, null, null);
 	}
 
 	@EventHandler
 	public void onBlockExplode(BlockExplodeEvent e) {
-		ArrayList<Location> toBreakList = new ArrayList<Location>();
+		doExplodeHandler(e.blockList());
+	}
+	
+	private void doExplodeHandler(List<Block> blockList) {
+		Set<Location> toBreakList = new HashSet<Location>();
 
-		for (Block block : e.blockList()) {
-			if (getTreeComponent(block.getX(), block.getY(), block.getZ(),
-					getChunk(block.getChunk()).getChunkID()) != null) {
-				if (getTrackedTreeMaterial(getTreeComponent(block.getX(), block.getY(), block.getZ(),
-						getChunk(block.getChunk()).getChunkID()).getTreeType()) == Material.CHORUS_PLANT) {
+		for (Block block : blockList) {
+			WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
+			int x = block.getX();
+			int y = block.getY();
+			int z = block.getZ();
+			TreeComponent component = chunk.getTreeComponent(x, y, z);
+			if (component != null) {
+				if (getTrackedTreeMaterial(component.getTreeType()) == Material.CHORUS_PLANT) {
 					for (Location location : returnUpwardsChorusBlocks(block)) {
-						if (!toBreakList.contains(location))
+						if (!toBreakList.contains(location)) {
 							toBreakList.add(location);
+						} else {
+							break; // once we hit a thing already contained, move on.
+						}
 					}
 				} else {
-					handleBreak(block, BreakType.EXPLOSION, null);
+					handleBreak(block, BreakType.EXPLOSION, null, null);
 				}
-			} else if (getCrop(block.getX(), block.getY(), block.getZ(),
-					getChunk(block.getChunk()).getChunkID()) != null) {
-				if (getTrackedCropMaterial(
-						getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID())
-								.getCropType()) == Material.SUGAR_CANE_BLOCK
-						|| getTrackedCropMaterial(getCrop(block.getX(), block.getY(), block.getZ(),
-								getChunk(block.getChunk()).getChunkID()).getCropType()) == Material.CACTUS) {
-					for (Location location : returnUpwardsBlocks(block, getTrackedCropMaterial(
-							getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID())
-									.getCropType()))) {
-						if (!toBreakList.contains(location))
-							toBreakList.add(location);
-					}
-				} else {
-					handleBreak(block, BreakType.EXPLOSION, null);
-				}
-			} else {
-				handleBreak(block, BreakType.EXPLOSION, null);
+				continue;
 			}
+			Crop crop = chunk.getCrop(x, y, z);
+			if (crop != null) {
+				Material type = getTrackedCropMaterial(crop.getCropType());
+				if (type == Material.SUGAR_CANE_BLOCK || type == Material.CACTUS) {
+					for (Location location : returnUpwardsBlocks(block, type)) {
+						if (!toBreakList.contains(location)) {
+							toBreakList.add(location);
+						} else {
+							break;
+						}
+					}
+				} else {
+					handleBreak(block, BreakType.EXPLOSION, null, null);
+				}
+				continue;
+			}
+			
+			handleBreak(block, BreakType.EXPLOSION, null, null);
 		}
-
-		if (toBreakList.size() > 0)
-			handleBreak(toBreakList.get(0).getBlock(), BreakType.EXPLOSION, toBreakList);
+		// if this has anything, it has a set of sets of parts of connected to-drops. Not a single stem; so need the
+		//   code to not require a single start as there isn't one.
+		if (toBreakList.size() > 0) {
+			// TODO: null first param.
+			handleBreak(null, BreakType.EXPLOSION, null, toBreakList);
+		}
 	}
 
 	@EventHandler
 	public void onEntityExplode(EntityExplodeEvent e) {
-		ArrayList<Location> toBreakList = new ArrayList<Location>();
-
-		for (Block block : e.blockList()) {
-			if (getTreeComponent(block.getX(), block.getY(), block.getZ(),
-					getChunk(block.getChunk()).getChunkID()) != null) {
-				if (getTrackedTreeMaterial(getTreeComponent(block.getX(), block.getY(), block.getZ(),
-						getChunk(block.getChunk()).getChunkID()).getTreeType()) == Material.CHORUS_PLANT) {
-					for (Location location : returnUpwardsChorusBlocks(block)) {
-						if (!toBreakList.contains(location))
-							toBreakList.add(location);
-					}
-				} else {
-					handleBreak(block, BreakType.EXPLOSION, null);
-				}
-			} else if (getCrop(block.getX(), block.getY(), block.getZ(),
-					getChunk(block.getChunk()).getChunkID()) != null) {
-				if (getTrackedCropMaterial(
-						getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID())
-								.getCropType()) == Material.SUGAR_CANE_BLOCK
-						|| getTrackedCropMaterial(getCrop(block.getX(), block.getY(), block.getZ(),
-								getChunk(block.getChunk()).getChunkID()).getCropType()) == Material.CACTUS) {
-					for (Location location : returnUpwardsBlocks(block, getTrackedCropMaterial(
-							getCrop(block.getX(), block.getY(), block.getZ(), getChunk(block.getChunk()).getChunkID())
-									.getCropType()))) {
-						if (!toBreakList.contains(location))
-							toBreakList.add(location);
-					}
-				} else {
-					handleBreak(block, BreakType.EXPLOSION, null);
-				}
-			} else {
-				handleBreak(block, BreakType.EXPLOSION, null);
-			}
-		}
-
-		if (toBreakList.size() > 0)
-			handleBreak(toBreakList.get(0).getBlock(), BreakType.EXPLOSION, toBreakList);
+		doExplodeHandler(e.blockList());
 	}
 
 	@EventHandler
 	public void onLeafDecay(LeavesDecayEvent e) {
-		handleBreak(e.getBlock(), BreakType.NATURAL, null);
+		handleBreak(e.getBlock(), BreakType.NATURAL, null, null);
 	}
 
 	@EventHandler
 	public void onEntityChangeBlock(EntityChangeBlockEvent e) {
-		handleBreak(e.getBlock(), BreakType.NATURAL, null);
+		handleBreak(e.getBlock(), BreakType.NATURAL, null, null);
 	}
 
 	@EventHandler
 	public void onPlayerBucketEmpty(PlayerBucketEmptyEvent e) {
+		UUID uuid = null;
+		if (e.getPlayer() != null) {
+			uuid = e.getPlayer().getUniqueId();			
+		}
+		
 		if (e.getBucket() == Material.LAVA_BUCKET)
-			handleBreak(e.getBlockClicked().getRelative(e.getBlockFace()), BreakType.LAVA, null);
+			handleBreak(e.getBlockClicked().getRelative(e.getBlockFace()), BreakType.LAVA, uuid, null);
 		else if (e.getBucket() == Material.WATER_BUCKET)
-			handleBreak(e.getBlockClicked().getRelative(e.getBlockFace()), BreakType.WATER, null);
+			handleBreak(e.getBlockClicked().getRelative(e.getBlockFace()), BreakType.WATER, uuid, null);
 	}
 
 	@EventHandler
 	public void onBlockFromTo(BlockFromToEvent e) {
 		if (e.getToBlock().getType() == Material.WATER || e.getToBlock().getType() == Material.STATIONARY_WATER) {
-			handleBreak(e.getBlock(), BreakType.WATER, null);
+			handleBreak(e.getBlock(), BreakType.WATER, null, null);
 		} else if (e.getToBlock().getType() == Material.LAVA || e.getToBlock().getType() == Material.STATIONARY_LAVA) {
-			handleBreak(e.getBlock(), BreakType.LAVA, null);
+			handleBreak(e.getBlock(), BreakType.LAVA, null, null);
 		}
 	}
 
 	@EventHandler
 	public void onPistionExtend(BlockPistonExtendEvent e) {
+		// We need to order movements of moved components from furthest to nearest
+		TreeMap<Double, Runnable> movements = new TreeMap<Double, Runnable>();
 		for (Block block : e.getBlocks()) {
-			if (getTreeComponent(block.getX(), block.getY(), block.getZ(),
-					getChunk(block.getChunk()).getChunkID()) != null) {
-				if (getTrackedTreeMaterial(getTreeComponent(block.getX(), block.getY(), block.getZ(),
-						getChunk(block.getChunk()).getChunkID()).getTreeType()) == Material.CHORUS_PLANT) {
-					handleBreak(block, BreakType.PISTON, null);
+			// handle tree breaks
+			WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
+			int x = block.getX();
+			int y = block.getY();
+			int z = block.getZ();
+			TreeComponent component = chunk.getTreeComponent(x, y, z);
+			
+			Block nextBlock = block.getRelative(e.getDirection());
+			
+			WorldChunk newChunk = CropControl.getDAO().getChunk(nextBlock.getChunk());
+			int newX = nextBlock.getX();
+			int newY = nextBlock.getY();
+			int newZ = nextBlock.getZ();
+
+			if (component != null) {
+				// chorus fruit tree break
+				if (getTrackedTreeMaterial(component.getTreeType()) == Material.CHORUS_PLANT) {
+					handleBreak(block, BreakType.PISTON, null, null);
 
 					continue;
 				}
 
-				CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(),
-						new Runnable() {
-							@Override
-							public void run() {
-								getTreeComponent(block.getX(), block.getY(), block.getZ(),
-										getChunk(block.getChunk()).getChunkID()).setX(block.getX());
-								getTreeComponent(block.getX(), block.getY(), block.getZ(),
-										getChunk(block.getChunk()).getChunkID()).setY(block.getY());
-								getTreeComponent(block.getX(), block.getY(), block.getZ(),
-										getChunk(block.getChunk()).getChunkID()).setZ(block.getZ());
-								getTreeComponent(block.getX(), block.getY(), block.getZ(),
-										getChunk(block.getChunk()).getChunkID())
-												.setChunkID(getChunk(block.getChunk()).getChunkID());
-							}
-						}, 1L);
-
-				if (getTree(block.getX(), block.getY(), block.getZ(),
-						getChunk(block.getChunk()).getChunkID()) != null) {
-					CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(),
+				// move component and optionally tree
+				Tree tree = chunk.getTree(x, y, z);
+				if (tree == null) {
+					movements.put(e.getBlock().getLocation().distance(block.getLocation()), 
 							new Runnable() {
 								@Override
 								public void run() {
-									getTree(block.getX(), block.getY(), block.getZ(),
-											getChunk(block.getChunk()).getChunkID()).setX(block.getX());
-									getTree(block.getX(), block.getY(), block.getZ(),
-											getChunk(block.getChunk()).getChunkID()).setY(block.getY());
-									getTree(block.getX(), block.getY(), block.getZ(),
-											getChunk(block.getChunk()).getChunkID()).setZ(block.getZ());
-									getTree(block.getX(), block.getY(), block.getZ(),
-											getChunk(block.getChunk()).getChunkID())
-													.setChunkID(getChunk(block.getChunk()).getChunkID());
-
+									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
 								}
-							}, 1L);
+							}
+					);
+				} else {
+					movements.put(e.getBlock().getLocation().distance(block.getLocation()), 
+							new Runnable() {
+								@Override
+								public void run() {
+									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+									tree.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+								}
+							}
+					);
 				}
-			} else if (block.getType() == Material.SOIL) {
-				handleBreak(block.getRelative(BlockFace.UP), BreakType.PISTON, null);
-			} else
-				handleBreak(block, BreakType.PISTON, null);
+				// if tree base, move the whole tree
+
+				continue;
+			} 
+			
+			if (block.getType() == Material.SOIL) { // TODO: Mycellium, sand, etc.
+				handleBreak(block.getRelative(BlockFace.UP), BreakType.PISTON, null, null);
+			} else {
+				handleBreak(block, BreakType.PISTON, null, null);
+			}
+		}
+		if (!movements.isEmpty()) {
+			for (Double update : movements.descendingKeySet()) {
+				Runnable movement = movements.get(update);
+				movement.run(); // just as a method, not a thread or anything  :)
+			}
 		}
 	}
-
-	@SuppressWarnings("deprecation")
+	
 	@EventHandler
 	public void onPistonRetract(BlockPistonRetractEvent e) {
+		// We need to order movements of moved components from furthest to nearest
+		TreeMap<Double, Runnable> movements = new TreeMap<Double, Runnable>();
+
 		for (Block block : e.getBlocks()) {
-			if (getTreeComponent(block.getX(), block.getY(), block.getZ(),
-					getChunk(block.getChunk()).getChunkID()) != null) {
-				if (getTrackedTreeMaterial(getTreeComponent(block.getX(), block.getY(), block.getZ(),
-						getChunk(block.getChunk()).getChunkID()).getTreeType()) == Material.CHORUS_PLANT) {
-					handleBreak(block, BreakType.PISTON, null);
+			// handle tree breaks
+			WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
+			int x = block.getX();
+			int y = block.getY();
+			int z = block.getZ();
+			TreeComponent component = chunk.getTreeComponent(x, y, z);
+			
+			Block nextBlock = block.getRelative(e.getDirection());
+			
+			WorldChunk newChunk = CropControl.getDAO().getChunk(nextBlock.getChunk());
+			int newX = nextBlock.getX();
+			int newY = nextBlock.getY();
+			int newZ = nextBlock.getZ();
+
+			if (component != null) {
+				if (getTrackedTreeMaterial(component.getTreeType()) == Material.CHORUS_PLANT) {
+					handleBreak(block, BreakType.PISTON, null, null);
 
 					continue;
 				}
 
-				CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(),
-						new Runnable() {
-							@Override
-							public void run() {
-								getTreeComponent(block.getX(), block.getY(), block.getZ(),
-										getChunk(block.getChunk()).getChunkID()).setX(block.getX());
-								getTreeComponent(block.getX(), block.getY(), block.getZ(),
-										getChunk(block.getChunk()).getChunkID()).setY(block.getY());
-								getTreeComponent(block.getX(), block.getY(), block.getZ(),
-										getChunk(block.getChunk()).getChunkID()).setZ(block.getZ());
-								getTreeComponent(block.getX(), block.getY(), block.getZ(),
-										getChunk(block.getChunk()).getChunkID())
-												.setChunkID(getChunk(block.getChunk()).getChunkID());
-							}
-						}, 1L);
-
-				if (getTree(block.getX(), block.getY(), block.getZ(),
-						getChunk(block.getChunk()).getChunkID()) != null) {
-					CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(),
+				// move component and optionally tree
+				Tree tree = chunk.getTree(x, y, z);
+				if (tree == null) {
+					movements.put(e.getBlock().getLocation().distance(block.getLocation()), 
 							new Runnable() {
 								@Override
 								public void run() {
-									getTree(block.getX(), block.getY(), block.getZ(),
-											getChunk(block.getChunk()).getChunkID()).setX(block.getX());
-									getTree(block.getX(), block.getY(), block.getZ(),
-											getChunk(block.getChunk()).getChunkID()).setY(block.getY());
-									getTree(block.getX(), block.getY(), block.getZ(),
-											getChunk(block.getChunk()).getChunkID()).setZ(block.getZ());
-									getTree(block.getX(), block.getY(), block.getZ(),
-											getChunk(block.getChunk()).getChunkID())
-													.setChunkID(getChunk(block.getChunk()).getChunkID());
-
+									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
 								}
-							}, 1L);
+							}
+					);
+				} else {
+					movements.put(e.getBlock().getLocation().distance(block.getLocation()), 
+							new Runnable() {
+								@Override
+								public void run() {
+									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+									tree.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+								}
+							}
+					);
 				}
+				// if tree base, move the whole tree
+
+				continue;
 			} else if (block.getType() == Material.SOIL) {
-				handleBreak(block.getRelative(BlockFace.UP), BreakType.PISTON, null);
-			} else
-				handleBreak(block, BreakType.PISTON, null);
+				handleBreak(block.getRelative(BlockFace.UP), BreakType.PISTON, null, null);
+			} else {
+				handleBreak(block, BreakType.PISTON, null, null);
+			}
+		}
+		if (!movements.isEmpty()) {
+			for (Double update : movements.descendingKeySet()) {
+				Runnable movement = movements.get(update);
+				movement.run(); // just as a method, not a thread or anything  :)
+			}
 		}
 	}
 
-	public ArrayList<Location> returnUpwardsBlocks(Block startBlock, Material upwardBlockMaterial) {
-		ArrayList<Location> checkedLocations = new ArrayList<Location>();
+	public Set<Location> returnUpwardsBlocks(Block startBlock, Material upwardBlockMaterial) {
+		Set<Location> checkedLocations = new HashSet<Location>();
 
-		ArrayList<Location> uncheckedLocations = new ArrayList<Location>();
+		Set<Location> uncheckedLocations = new HashSet<Location>();
 
-		if (getCrop(startBlock.getLocation().getBlockX(), startBlock.getLocation().getBlockY(),
-				startBlock.getLocation().getBlockZ(),
-				getChunk(startBlock.getLocation().getChunk()).getChunkID()) != null)
-			if (getTrackedCropMaterial(getCrop(startBlock.getLocation().getBlockX(),
-					startBlock.getLocation().getBlockY(), startBlock.getLocation().getBlockZ(),
-					getChunk(startBlock.getLocation().getChunk()).getChunkID()).getCropType()) == upwardBlockMaterial)
+		Crop crop = CropControl.getDAO().getChunk(startBlock.getChunk()).getCrop(startBlock.getX(), startBlock.getY(), startBlock.getZ());
+		if (crop != null) {
+			if (getTrackedCropMaterial(crop.getCropType()) == upwardBlockMaterial) {
 				uncheckedLocations.add(startBlock.getLocation());
+			}
+		} else {
+			return checkedLocations; // failfast
+		}
 
+		Set<Location> toAddLocations = new HashSet<Location>();
+		
 		do {
-			for (int i = 0; i < uncheckedLocations.size(); i++) {
-				if (isTracked(uncheckedLocations.get(i).getBlock())
-						&& !checkedLocations.contains(uncheckedLocations.get(i))) {
-					checkedLocations.add(uncheckedLocations.get(i));
+			for (Location unchecked : uncheckedLocations) {
+				if (CropControl.getDAO().isTracked(unchecked.getBlock())
+						&& !checkedLocations.contains(unchecked)) {
+					checkedLocations.add(unchecked);
 				}
 			}
 
-			ArrayList<Location> toAddLocations = new ArrayList<Location>();
-
 			for (Location location : uncheckedLocations) {
-				if (isTracked(location.getBlock().getRelative(BlockFace.UP))
-						&& !toAddLocations.contains(location.getBlock().getRelative(BlockFace.UP).getLocation())
-						&& !checkedLocations.contains(location.getBlock().getRelative(BlockFace.UP).getLocation())) {
-					if (getTrackedCropMaterial(getCrop(location.getBlock().getRelative(BlockFace.UP).getX(),
-							location.getBlock().getRelative(BlockFace.UP).getY(),
-							location.getBlock().getRelative(BlockFace.UP).getZ(),
-							getChunk(location.getBlock().getRelative(BlockFace.UP).getChunk()).getChunkID())
+				Block upBlock = location.getBlock().getRelative(BlockFace.UP);
+				Location up = upBlock.getLocation();
+				if (CropControl.getDAO().isTracked(upBlock)
+						&& !toAddLocations.contains(up)
+						&& !checkedLocations.contains(up)) {
+					
+					if (getTrackedCropMaterial(
+							CropControl.getDAO().getChunk(upBlock.getChunk()).getCrop(upBlock.getX(), upBlock.getY(), upBlock.getZ())
 									.getCropType()) == upwardBlockMaterial)
-						toAddLocations.add(location.getBlock().getRelative(BlockFace.UP).getLocation());
+						toAddLocations.add(up);
 				}
 			}
 
@@ -930,56 +933,49 @@ public class CropControlEventHandler implements Listener {
 
 			toAddLocations.clear();
 
-		} while (uncheckedLocations.size() > 0);
+		} while (!uncheckedLocations.isEmpty());
 
 		return checkedLocations;
 	}
 
-	public ArrayList<Location> returnUpwardsChorusBlocks(Block startBlock) {
-		BlockFace[] blockFaces = new BlockFace[] { BlockFace.UP, BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH,
-				BlockFace.WEST };
+	public Set<Location> returnUpwardsChorusBlocks(Block startBlock) {
+		Set<Location> checkedLocations = new HashSet<Location>();
 
-		ArrayList<Location> checkedLocations = new ArrayList<Location>();
+		Set<Location> uncheckedLocations = new HashSet<Location>();
 
-		ArrayList<Location> uncheckedLocations = new ArrayList<Location>();
-
-		if (getTreeComponent(startBlock.getLocation().getBlockX(), startBlock.getLocation().getBlockY(),
-				startBlock.getLocation().getBlockZ(),
-				getChunk(startBlock.getLocation().getChunk()).getChunkID()) != null)
-			if (getTrackedTreeMaterial(getTreeComponent(startBlock.getLocation().getBlockX(),
-					startBlock.getLocation().getBlockY(), startBlock.getLocation().getBlockZ(),
-					getChunk(startBlock.getLocation().getChunk()).getChunkID()).getTreeType()) == Material.CHORUS_PLANT)
+		TreeComponent component = CropControl.getDAO().getChunk(startBlock.getChunk())
+				.getTreeComponent(startBlock.getX(), startBlock.getY(), startBlock.getZ());
+		if (component != null) {
+			if (getTrackedTreeMaterial(component.getTreeType()) == Material.CHORUS_PLANT) {
 				uncheckedLocations.add(startBlock.getLocation());
+			}
+		} else {
+			return checkedLocations; // failfast
+		}
+		
+		Tree tree = CropControl.getDAO().getTree(component);
 
+		Set<Location> toAddLocations = new HashSet<Location>();
 		do {
-			for (int i = 0; i < uncheckedLocations.size(); i++) {
-				if (isTracked(uncheckedLocations.get(i).getBlock())
-						&& !checkedLocations.contains(uncheckedLocations.get(i))) {
-					checkedLocations.add(uncheckedLocations.get(i));
+			for (Location unchecked : uncheckedLocations) {
+				if (CropControl.getDAO().isTracked(unchecked.getBlock())
+						&& !checkedLocations.contains(unchecked)) {
+					checkedLocations.add(unchecked);
 				}
 			}
 
-			ArrayList<Location> toAddLocations = new ArrayList<Location>();
-
 			for (Location location : uncheckedLocations) {
-				for (BlockFace blockFace : blockFaces) {
-					if (isTracked(location.getBlock().getRelative(blockFace))
-							&& !toAddLocations.contains(location.getBlock().getRelative(blockFace).getLocation())
-							&& !checkedLocations.contains(location.getBlock().getRelative(blockFace).getLocation())) {
-						if (getTrackedTreeMaterial(getTreeComponent(location.getBlock().getRelative(blockFace).getX(),
-								location.getBlock().getRelative(blockFace).getY(),
-								location.getBlock().getRelative(blockFace).getZ(),
-								getChunk(location.getBlock().getRelative(blockFace).getChunk()).getChunkID())
-										.getTreeType()) == Material.CHORUS_PLANT
-								&& getTreeComponents(getTree(getTreeComponent(startBlock.getX(), startBlock.getY(),
-										startBlock.getZ(), getChunk(startBlock.getChunk()).getChunkID()).getTreeID())
-												.getTreeID()).contains(getTreeComponent(
-														location.getBlock().getRelative(blockFace).getX(),
-														location.getBlock().getRelative(blockFace).getY(),
-														location.getBlock().getRelative(blockFace).getZ(),
-														getChunk(location.getBlock().getRelative(blockFace).getChunk())
-																.getChunkID()))) {
-							toAddLocations.add(location.getBlock().getRelative(blockFace).getLocation());
+				for (BlockFace blockFace : CropControlEventHandler.growDirections) {
+					Block relBlock = location.getBlock().getRelative(blockFace);
+					Location rel = relBlock.getLocation();
+					if (CropControl.getDAO().isTracked(relBlock)
+							&& !toAddLocations.contains(rel)
+							&& !checkedLocations.contains(rel)) {
+						TreeComponent relComponent = CropControl.getDAO().getChunk(relBlock.getChunk())
+								.getTreeComponent(relBlock.getX(), relBlock.getY(), relBlock.getZ());
+						if (getTrackedTreeMaterial(relComponent.getTreeType()) == Material.CHORUS_PLANT
+								&& CropControl.getDAO().isTreeComponent(tree, relComponent)) {
+							toAddLocations.add(rel);
 						}
 					}
 				}
@@ -991,146 +987,190 @@ public class CropControlEventHandler implements Listener {
 
 			toAddLocations.clear();
 
-		} while (uncheckedLocations.size() > 0);
+		} while (!uncheckedLocations.isEmpty());
 
 		return checkedLocations;
 	}
 
-	@SuppressWarnings("deprecation")
-	public void handleBreak(Block startBlock, BreakType breakType, ArrayList<Location> altBlocks) {
-		CropControl.getPlugin().getServer().getScheduler().scheduleAsyncDelayedTask(CropControl.getPlugin(),
+	public void handleBreak(final Block startBlock, final BreakType breakType, final UUID breaker, final Set<Location> altBlocks) {
+		Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(),
 				new Runnable() {
 					@Override
 					public void run() {
-						if (getCrop(startBlock.getX(), startBlock.getY(), startBlock.getZ(),
-								getChunk(startBlock.getChunk()).getChunkID()) != null) {
-							Crop crop = getCrop(startBlock.getX(), startBlock.getY(), startBlock.getZ(),
-									getChunk(startBlock.getChunk()).getChunkID());
-
-							if (getTrackedCropMaterial(crop.getCropType()) == startBlock.getType())
-								return;
-
-							if (getTrackedCropMaterial(crop.getCropType()) == Material.SUGAR_CANE_BLOCK
-									|| getTrackedCropMaterial(crop.getCropType()) == Material.CACTUS) {
-								if (altBlocks == null) {
-									for (Location location : returnUpwardsBlocks(startBlock,
-											getTrackedCropMaterial(crop.getCropType()))) {
+						if (startBlock != null) { // no altBlocks.
+							WorldChunk chunk = CropControl.getDAO().getChunk(startBlock.getChunk());
+							int x = startBlock.getX();
+							int y = startBlock.getY();
+							int z = startBlock.getZ();
+							
+							Crop crop = chunk.getCrop(x, y, z);
+							if (crop != null) {
+								Material type = getTrackedCropMaterial(crop.getCropType());
+								if (type != startBlock.getType()) {
+									CropControl.getPlugin().debug("Ignoring mismatched Crop track vs. actual type {0}, {1}, {2}", x, y, z);
+									return;
+								}
+	
+								if (type == Material.SUGAR_CANE_BLOCK || type == Material.CACTUS) {
+									for (Location location : returnUpwardsBlocks(startBlock, type)) {
 										Bukkit.broadcastMessage(
 												ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
+										
+										Crop upCrop = CropControl.getDAO().getChunk(location.getChunk())
+												.getCrop(location.getBlockX(), location.getBlockY(), location.getBlockZ());
 
-										drop(location.getBlock(), breakType);
+										drop(location.getBlock(), upCrop, breaker, breakType);
 
-										crops.remove(getCrop(location.getBlockX(), location.getBlockY(),
-												location.getBlockZ(), getChunk(location.getChunk()).getChunkID()));
+										upCrop.setRemoved();
 									}
 								} else {
-									for (Location location : altBlocks) {
-										Bukkit.broadcastMessage(
-												ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
-
-										drop(location.getBlock(), breakType);
-
-										crops.remove(getCrop(location.getBlock().getX(), location.getBlock().getY(),
-												location.getBlock().getZ(),
-												getChunk(location.getChunk()).getChunkID()));
-									}
+									Bukkit.broadcastMessage(ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
+	
+									drop(startBlock, crop, breaker, breakType);
+	
+									crop.setRemoved();
 								}
-							} else {
-								Bukkit.broadcastMessage(ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
-
-								drop(startBlock, breakType);
-
-								crops.remove(crop);
+								
+								return;
 							}
-						} else if (getSapling(startBlock.getX(), startBlock.getY(), startBlock.getZ(),
-								getChunk(startBlock.getChunk()).getChunkID()) != null) {
-							Sapling sapling = getSapling(startBlock.getX(), startBlock.getY(), startBlock.getZ(),
-									getChunk(startBlock.getChunk()).getChunkID());
-
-							if (getTrackedSaplingMaterial(sapling.getSaplingType()) == startBlock.getType())
+							
+							Sapling sapling = chunk.getSapling(x, y, z);
+							if (sapling != null) {
+								if (getTrackedSaplingMaterial(sapling.getSaplingType()) != startBlock.getType()) {
+									CropControl.getPlugin().debug("Ignoring mismatched Sapling track vs. actual type {0}, {1}, {2}", x, y, z);
+									return;
+								}
+	
+								Bukkit.broadcastMessage(ChatColor.GREEN + "Broke Sapling (" + breakType.toString() + ")");
+	
+								drop(startBlock, sapling, breaker, breakType);
+	
+								sapling.setRemoved();
 								return;
-
-							Bukkit.broadcastMessage(ChatColor.GREEN + "Broke Sapling (" + breakType.toString() + ")");
-
-							drop(startBlock, breakType);
-
-							saplings.remove(sapling);
-						} else if (getTreeComponent(startBlock.getX(), startBlock.getY(), startBlock.getZ(),
-								getChunk(startBlock.getChunk()).getChunkID()) != null) {
-							TreeComponent treeComponent = getTreeComponent(startBlock.getX(), startBlock.getY(),
-									startBlock.getZ(), getChunk(startBlock.getChunk()).getChunkID());
-
-							Tree tree = getTree(getTreeComponent(startBlock.getX(), startBlock.getY(),
-									startBlock.getZ(), getChunk(startBlock.getChunk()).getChunkID()).getTreeID());
-
-							if (getTrackedTreeMaterial(treeComponent
-									.getTreeType()) == (startBlock.getType() == Material.LEAVES ? Material.LOG
-											: startBlock.getType() == Material.LEAVES_2 ? Material.LOG_2
-													: startBlock.getType() == Material.CHORUS_FLOWER
-															? Material.CHORUS_PLANT : startBlock.getType()))
-								return;
-
-							if (getTrackedTreeMaterial(treeComponent.getTreeType()) == Material.CHORUS_PLANT) {
-								if (altBlocks == null) {
+							}
+							
+							TreeComponent treeComponent = chunk.getTreeComponent(x, y, z);
+							if (treeComponent != null) {
+								Tree tree = CropControl.getDAO().getTree(treeComponent);
+								Material type = getTrackedTreeMaterial(treeComponent.getTreeType());
+								if (type != 
+										(startBlock.getType() == Material.LEAVES ? Material.LOG : 
+										startBlock.getType() == Material.LEAVES_2 ? Material.LOG_2 :
+										startBlock.getType() == Material.CHORUS_FLOWER	? Material.CHORUS_PLANT : 
+										startBlock.getType())) {
+									CropControl.getPlugin().debug("Ignoring mismatched Tree Component track vs. actual type {0}, {1}, {2}", x, y, z);
+									return;
+								}
+	
+								if (type == Material.CHORUS_PLANT) {
 									for (Location location : returnUpwardsChorusBlocks(startBlock)) {
 										Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Broke Tree Component ("
 												+ breakType.toString() + ")");
 
-										drop(location.getBlock(), breakType);
+										TreeComponent upComponent = CropControl.getDAO().getChunk(location.getChunk())
+												.getTreeComponent(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+										
+										drop(location.getBlock(), upComponent, breaker, breakType);
 
-										treeComponents.remove(getTreeComponent(location.getBlockX(),
-												location.getBlockY(), location.getBlockZ(),
-												getChunk(location.getChunk()).getChunkID()));
+										upComponent.setRemoved();
 
-										if (getTreeComponents(tree.getTreeID()).size() == 0) {
-											Bukkit.broadcastMessage(
-													ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")");
-
-											trees.remove(tree);
-										}
 									}
 								} else {
-									for (Location location : altBlocks) {
-										Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Broke Tree Component ("
-												+ breakType.toString() + ")");
-
-										drop(location.getBlock(), breakType);
-
-										treeComponents.remove(getTreeComponent(location.getBlock().getX(),
-												location.getBlock().getY(), location.getBlock().getZ(),
-												getChunk(location.getBlock().getChunk()).getChunkID()));
-
-										if (getTreeComponents(tree.getTreeID()).size() == 0) {
-											Bukkit.broadcastMessage(
-													ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")");
-
-											trees.remove(tree);
-										}
-
-									}
+									Bukkit.broadcastMessage(
+											ChatColor.DARK_GREEN + "Broke Tree Component (" + breakType.toString() + ")");
+	
+									drop(startBlock, treeComponent, breaker, breakType);
+	
+									treeComponent.setRemoved();
 								}
-							} else {
-								Bukkit.broadcastMessage(
-										ChatColor.DARK_GREEN + "Broke Tree Component (" + breakType.toString() + ")");
-
-								drop(startBlock, breakType);
-
-								treeComponents.remove(treeComponent);
-
-								if (getTreeComponents(tree.getTreeID()).size() == 0) {
+								if (CropControl.getDAO().getTreeComponents(tree).isEmpty()) {
 									Bukkit.broadcastMessage(
 											ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")");
 
-									trees.remove(tree);
+									tree.setRemoved();										
 								}
+								return;
+							}
+							
+							CropControl.getPlugin().debug("Failed to find matching element at {0}, {1}, {2}", x, y, z);
+						} else {
+							for (Location location : altBlocks) {
+								Block block = location.getBlock();
+								int x = block.getX();
+								int y = block.getY();
+								int z = block.getZ();
+								WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
+								
+								Crop crop = chunk.getCrop(x, y, z);
+								if (crop != null) {
+									Bukkit.broadcastMessage(
+											ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
+	
+									drop(location.getBlock(), crop, breaker, breakType);
+									
+									crop.setRemoved();
+									continue;
+								}
+								
+								TreeComponent treeComponent = chunk.getTreeComponent(x, y, z);
+								
+								if (treeComponent != null) {
+									Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Broke Tree Component ("
+											+ breakType.toString() + ")");
+	
+									drop(location.getBlock(), treeComponent, breaker, breakType);
+	
+									treeComponent.setRemoved();
+									
+									if (CropControl.getDAO().getTreeComponents(treeComponent.getTreeID()).isEmpty()) {
+										Bukkit.broadcastMessage(
+												ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")");
+	
+										CropControl.getDAO().getTree(treeComponent).setRemoved();
+									}
+									
+									continue;
+								}
+								
+								CropControl.getPlugin().debug("Encountered altBlock to drop that isn't a crop or component at {0}, {1}, {2}", x, y, z);
 							}
 						}
 					}
 				}, 1L);
 	}
 
-	public void drop(Block block, BreakType breakType) {
-
+	public void drop(Block block, Crop crop, UUID player, BreakType breakType) {
+		Biome biome = block.getBiome();
+		boolean byPlayer = player != null;
+		boolean placed = byPlayer && player.equals(crop.getPlacer());
+		boolean harvestable = crop.getHarvestable();
+		ItemStack toolUsed = null;
+		if (byPlayer) {
+			Player p = Bukkit.getPlayer(player);
+			if (p != null) {
+				toolUsed = p.getInventory().getItemInMainHand();
+			}
+		}
+		
+		 
+	}
+	
+	public void drop(Block block, Sapling sapling, UUID player, BreakType breakType) {
+		
+	}
+	
+	public void drop(Block block, TreeComponent component, UUID player, BreakType breakType) {
+		
+	}
+	
+	public void drop(Block block, Tree tree, UUID player, BreakType breakType) {
+		
+	}
+	
+	public void realDrop(Location location, List<ItemStack> items) {
+		for (ItemStack item : items) {
+			location.getWorld().dropItem(location.add(0.5, 0.5, 0.5), item).setVelocity(new Vector(0, 0.05, 0));
+		}
 	}
 
 	private enum BreakType {
@@ -1156,26 +1196,16 @@ public class CropControlEventHandler implements Listener {
 	@EventHandler
 	public void onChunkLoad(ChunkLoadEvent e) {
 		Chunk chunk = e.getChunk();
-
-		if (getChunk(chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()) != null)
-			return;
-		// TODO Add in actual chunkID support via DB
-		chunks.add(new WorldChunk((long) chunks.size(), chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()));
+		
+		CropControl.getDAO().getChunk(chunk);
 
 	}
 
-	// TODO Uncomment
-	// @EventHandler
-	// public void onChunkUnload(ChunkUnloadEvent e)
-	// {
-	// Chunk chunk = e.getChunk();
-	//
-	// if (getChunk(chunk.getWorld().getUID(), chunk.getX(), chunk.getZ()) ==
-	// null)
-	// return;
-	//
-	// chunks.remove(getChunk(chunk.getWorld().getUID(), chunk.getX(),
-	// chunk.getZ()));
-	// }
+	@EventHandler
+	public void onChunkUnload(ChunkUnloadEvent e) {
+		Chunk chunk = e.getChunk();
+		
+		CropControl.getDAO().unloadChunk(chunk);
+	}
 
 }

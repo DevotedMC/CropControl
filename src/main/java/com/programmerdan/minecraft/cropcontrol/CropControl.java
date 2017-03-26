@@ -56,7 +56,7 @@ public class CropControl extends ACivMod {
 	}
 	
 	public static DAO getDAO() {
-		return CropControl.instance.databaseHandler.getDAO();
+		return CropControlDatabaseHandler.getDAO();
 	}
 	
 	/**

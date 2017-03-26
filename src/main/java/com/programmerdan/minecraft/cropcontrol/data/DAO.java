@@ -35,6 +35,10 @@ public class DAO {
 	public WorldChunk getChunk(long chunkID) {
 		return WorldChunk.byId(chunkID);
 	}
+	
+	public void unloadChunk(Chunk chunk) {
+		WorldChunk.unloadChunk(chunk);
+	}
 
 	public Sapling getSapling(int x, int y, int z, long chunkID) {
 		return WorldChunk.byId(chunkID).getSapling(x, y, z);
@@ -60,6 +64,10 @@ public class DAO {
 	public List<TreeComponent> getTreeComponents(Tree tree) {
 		List<TreeComponent> components = WorldChunk.getTreeComponents(tree);
 		return components;
+	}
+	
+	public boolean isTreeComponent(Tree tree, TreeComponent component) {
+		return WorldChunk.isTreeComponent(tree, component);
 	}
 
 	public TreeComponent getTreeComponent(int x, int y, int z, long chunkID) {

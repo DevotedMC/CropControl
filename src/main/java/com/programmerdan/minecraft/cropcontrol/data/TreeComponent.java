@@ -157,6 +157,7 @@ public class TreeComponent extends Locatable {
 		this.removed = true;
 		this.dirty = true;
 		TreeComponent.dirties.offer(new WeakReference<TreeComponent>(this));
+		WorldChunk.remove(this);
 	}
 
 	public static void flushDirty(Iterable<TreeComponent> components) {

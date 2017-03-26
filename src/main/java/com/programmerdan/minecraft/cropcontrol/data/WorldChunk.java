@@ -165,6 +165,10 @@ public class WorldChunk {
 		}
 		return tree;
 	}
+	
+	public static void remove(Tree tree) {
+		WorldChunk.universalTreeCache.remove(tree.getTreeID());
+	}
 
 	public void register(TreeComponent component) {
 		TreeComponent preExist = componentCacheLoc.remove((Locatable) component); // did we have one here already?
@@ -190,6 +194,15 @@ public class WorldChunk {
 		}
 	}
 	
+	public static void remove(TreeComponent component) {
+		Set<TreeComponent> treeComponents = WorldChunk.universalTreeComponentCache.get(component.getTreeID());
+		if (treeComponents == null) {
+			WorldChunk.universalTreeComponentCache.put(component.getTreeID(), Sets.newConcurrentHashSet());
+		} else {
+			treeComponents.remove(component);
+		}
+	}
+	
 	public TreeComponent getTreeComponent(int x, int y, int z) {
 		TreeComponent result = componentCacheLoc.get(new Locatable(chunkID, x, y, z));
 		return result;
@@ -206,6 +219,14 @@ public class WorldChunk {
 			list.addAll(set);
 		}
 		return list;
+	}
+	
+	public static boolean isTreeComponent(Tree tree, TreeComponent component) {
+		Set<TreeComponent> set = WorldChunk.universalTreeComponentCache.get(tree.getTreeID());
+		if (set != null) {
+			return set.contains(component);
+		}
+		return false;
 	}
 	
 	public static void unloadChunk(Chunk chunk) {
