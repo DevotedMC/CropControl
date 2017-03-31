@@ -18,6 +18,15 @@ import com.programmerdan.minecraft.cropcontrol.CreationError;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
+
+/**
+ * Basic data storage for a Sapling, which can grow into a tree. Soft deletion via flag w/ optional hard deletion later or keep 'em
+ * for history.
+ * 
+ * @author xFier
+ * @author ProgrammerDan
+ *
+ */
 public class Sapling extends Locatable {
 
 	private static ConcurrentLinkedQueue<WeakReference<Sapling>> dirties = new ConcurrentLinkedQueue<WeakReference<Sapling>>();
@@ -116,6 +125,7 @@ public class Sapling extends Locatable {
 		this.removed = true;
 		this.dirty = true;
 		Sapling.dirties.offer(new WeakReference<Sapling>(this));
+		WorldChunk.byId(this.chunkID).unregister(this);
 	}
 
 	public static void flushDirty(Iterable<Sapling> saplings) {

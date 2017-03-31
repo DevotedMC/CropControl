@@ -1,5 +1,13 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+/**
+ * At the core of fast hashing is Locatable, which gives us O(1) lookups of specific location objects without resorting to 
+ * othre cuboid sorting methods. 
+ * That's the theory at least.
+ * 
+ * @author ProgrammerDan
+ *
+ */
 public class Locatable {
 
 	protected long chunkID;
@@ -46,8 +54,12 @@ public class Locatable {
 	
 	@Override
 	public int hashCode() {
-		int base = super.hashCode();
-		base = 31*31*31*31*base + 31*31*31*x + 31*31*y + 31*z + (int)chunkID;
+		int base = 31*31*31*x + 31*31*y + 31*z + (int)chunkID;
 		return base;
+	}
+	
+	@Override
+	public String toString() {
+		return "" + hashCode() + "[" + chunkID + "," + x + "," + y + "," + z + "]";
 	}
 }

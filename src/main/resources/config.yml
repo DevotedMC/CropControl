@@ -8,9 +8,9 @@ database:
  connectionTimeout: 3000
  idleTimeout: 600000
  maxLifetime: 7200000
-dirtysave: 
- period: 12000
- delay: 6000
+ dirtysave: 
+  period: 12000
+  delay: 6000
 tools:
 biomes:
 drops:

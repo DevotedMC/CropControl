@@ -1,5 +1,11 @@
 package com.programmerdan.minecraft.cropcontrol;
 
+/**
+ * Used to indicate something went wrong when creating a new Data Object. Preferred over simply returning null in some cases.
+ * 
+ * @author ProgrammerDan
+ *
+ */
 public class CreationError extends RuntimeException {
 
 	private static final long serialVersionUID = 725722602896129633L;

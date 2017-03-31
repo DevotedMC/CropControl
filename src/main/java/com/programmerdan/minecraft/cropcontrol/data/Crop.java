@@ -18,6 +18,17 @@ import com.programmerdan.minecraft.cropcontrol.CreationError;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
+/**
+ * Crop is the base holder for all crops, even if spreadable, that effectively captures who placed the crop, 
+ * if it's ready for harvest, and other notable attributes.
+ * 
+ * Lightweight removal via boolean flag, with scheduled cleanup possible if desired (or keep the data for great
+ * farm tracking!).
+ *  
+ * @author xFier
+ * @author ProgrammerDan
+ *
+ */
 public class Crop extends Locatable {
 	
 	private static ConcurrentLinkedQueue<WeakReference<Crop>> dirties = new ConcurrentLinkedQueue<WeakReference<Crop>>();
@@ -130,6 +141,7 @@ public class Crop extends Locatable {
 		this.removed = true;
 		this.dirty = true;
 		Crop.dirties.offer(new WeakReference<Crop>(this));
+		WorldChunk.byId(this.chunkID).unregister(this);
 	}
 	
 	public static void flushDirty(Iterable<Crop> crops) {

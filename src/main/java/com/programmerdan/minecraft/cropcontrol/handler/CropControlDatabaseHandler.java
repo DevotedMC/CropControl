@@ -19,6 +19,7 @@ import vg.civcraft.mc.civmodcore.dao.ManagedDatasource;
 
 /**
  * Ties into the managed datasource processes of the CivMod core plugin.
+ * Sets  up the database for this plugin.
  * 
  * @author <a href="mailto:programmerdan@gmail.com">ProgrammerDan</a>
  *
@@ -189,6 +190,14 @@ public class CropControlDatabaseHandler {
 		}, delay + ((period * 4) / 5), period);
 
 		CropControl.getPlugin().info("Dirty save tasks started.");
+	}
+	
+	public void doShutdown() {
+		Crop.saveDirty();
+		Sapling.saveDirty();
+		Tree.saveDirty();
+		TreeComponent.saveDirty();
+		WorldChunk.doAllUnloads();
 	}
 	
 	public void preloadExistingChunks() {

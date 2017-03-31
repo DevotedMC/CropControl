@@ -6,6 +6,18 @@ import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler;
 
 import vg.civcraft.mc.civmodcore.ACivMod;
 
+/**
+ * Welcome to Crop Control! This is a companion mod to our other plugin, HiddenOre, and does for crops what HiddenOre does for ores.
+ * 
+ * It gives you complete control over the drops that crops generate, allowing you to give specific bonuses and penalties based
+ * on who planted vs. who harvested, how it was harvested, where; and this control extends to all growables, including trees, 
+ * crops, chorus fruit, and more.
+ * 
+ * Read the example configs for details. Requires a database.
+ * 
+ * @author ProgrammerDan, xFier
+ *
+ */
 public class CropControl extends ACivMod {
 	private static CropControl instance;
 	private CropControlEventHandler eventHandler;
@@ -23,8 +35,13 @@ public class CropControl extends ACivMod {
 		if (!this.isEnabled()) return;
 
 		registerEventHandler();
-
+	}
+	
+	@Override
+	public void onDisable() {
+		super.onDisable();
 		
+		databaseHandler.doShutdown();
 	}
 	
 	private void connectDatabase() {
@@ -55,6 +72,10 @@ public class CropControl extends ACivMod {
 		return CropControl.instance;
 	}
 	
+	/**
+	 * 
+	 * @return the singleton DAO for this CropControl.
+	 */
 	public static DAO getDAO() {
 		return CropControlDatabaseHandler.getDAO();
 	}

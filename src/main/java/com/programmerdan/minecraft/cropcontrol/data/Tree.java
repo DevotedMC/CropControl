@@ -18,6 +18,19 @@ import com.programmerdan.minecraft.cropcontrol.CreationError;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
+/**
+ * When a sapling grows, it becomes a tree. Some things (Chorus Fruit) start as trees. 
+ * Others aren't saplings but become trees (giant mushrooms).
+ * 
+ * This captures the _root_ of all of these semantically, and _basically_ is just a root holder
+ * for who dun placed the sapling / crop / block that generated this tree, and when that event occurred.
+ * 
+ * Soft deletion via flag, hard deletion possible after or just hang on to the records for history.
+ * 
+ * @author xFier
+ * @author ProgrammerDan
+ *
+ */
 public class Tree extends Locatable {
 	
 	private static ConcurrentLinkedQueue<WeakReference<Tree>> dirties = new ConcurrentLinkedQueue<WeakReference<Tree>>();
@@ -144,6 +157,7 @@ public class Tree extends Locatable {
 		this.dirty = true;
 		Tree.dirties.offer(new WeakReference<Tree>(this));
 		WorldChunk.remove(this);
+		WorldChunk.byId(this.chunkID).unregister(this);
 	}
 
 	public static void flushDirty(Iterable<Tree> trees) {

@@ -1,8 +1,6 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
@@ -10,7 +8,9 @@ import org.bukkit.block.Block;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
 /**
- * Accessor wrapper
+ * Accessor wrapper, some of these methods are legacy from a prior approach to data access based on lists.
+ * 
+ * I'll remove them as I confirm they are unused.
  * 
  * @author ProgrammerDan
  *
@@ -80,6 +80,14 @@ public class DAO {
 		int y = block.getY();
 		int z = block.getZ();
 		return (chunk.getCrop(x, y, z) != null) || (chunk.getSapling(x, y, z) != null) || (chunk.getTreeComponent(x, y, z) != null);
+	}
+
+	public boolean isBreakableTracked(Block block) {
+		WorldChunk chunk = WorldChunk.getChunk(block.getChunk());
+		int x = block.getX();
+		int y = block.getY();
+		int z = block.getZ();
+		return (chunk.getCrop(x, y, z) != null) || (chunk.getSapling(x, y, z) != null);
 	}
 
 }

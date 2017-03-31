@@ -6,10 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -18,6 +16,15 @@ import com.programmerdan.minecraft.cropcontrol.CreationError;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
+/**
+ * Every tree is composed of a number of Components fixed in actual space. This captures those elements for tracking purposes,
+ * and is soft deleted via flag when they are removed.
+ * 
+ *  
+ * @author xFier
+ * @author ProgrammerDan
+ *
+ */
 public class TreeComponent extends Locatable {
 	
 	private static ConcurrentLinkedQueue<WeakReference<TreeComponent>> dirties = new ConcurrentLinkedQueue<WeakReference<TreeComponent>>();
@@ -158,6 +165,7 @@ public class TreeComponent extends Locatable {
 		this.dirty = true;
 		TreeComponent.dirties.offer(new WeakReference<TreeComponent>(this));
 		WorldChunk.remove(this);
+		WorldChunk.byId(this.chunkID).unregister(this);
 	}
 
 	public static void flushDirty(Iterable<TreeComponent> components) {
