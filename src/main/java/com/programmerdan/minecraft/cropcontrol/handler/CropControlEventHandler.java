@@ -21,6 +21,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -28,6 +29,7 @@ import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockGrowEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -48,7 +50,9 @@ import org.bukkit.material.NetherWarts;
 import org.bukkit.util.Vector;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.config.RootConfig;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
+import com.programmerdan.minecraft.cropcontrol.data.Locatable;
 import com.programmerdan.minecraft.cropcontrol.data.Sapling;
 import com.programmerdan.minecraft.cropcontrol.data.Tree;
 import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
@@ -75,6 +79,8 @@ public class CropControlEventHandler implements Listener {
 	 */
 	private Map<Material, Boolean> harvestableCrops;
 	
+	private Set<Material> rootMaterials;
+	
 	public static final BlockFace[] directions = new BlockFace[] { 
 			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
 
@@ -85,6 +91,7 @@ public class CropControlEventHandler implements Listener {
 		this.config = config;
 
 		harvestableCrops = new HashMap<Material, Boolean>();
+		rootMaterials = new HashSet<Material>();
 
 		fillHarvestableCropsList();
 
@@ -104,6 +111,13 @@ public class CropControlEventHandler implements Listener {
 		harvestableCrops.put(Material.BROWN_MUSHROOM, false);
 		harvestableCrops.put(Material.RED_MUSHROOM, false);
 		harvestableCrops.put(Material.SUGAR_CANE_BLOCK, false);
+		
+		rootMaterials.add(Material.SOIL);
+		rootMaterials.add(Material.SAND);
+		rootMaterials.add(Material.NETHERRACK);
+		rootMaterials.add(Material.ENDER_STONE);
+		rootMaterials.add(Material.LOG);
+		
 	}
 
 	/*
@@ -451,34 +465,39 @@ public class CropControlEventHandler implements Listener {
 		int z = block.getZ();
 		WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
 
+		if (CropControl.getDAO().isTracked(block) == true) {
+			// We've got a replacement
+			CropControl.getPlugin().debug("Ghost object? Placement is overtop a tracked object at {0}, {1}, {2}", x, y, z);
+			handleRemoval(block, chunk);
+		}
 		if (harvestableCrops.containsKey(blockMaterial)) {
 			// we placed a block overtop an existing crop. Will be handled by a break event?
-			Crop crop = chunk.getCrop(x, y, z);
+			/*Crop crop = chunk.getCrop(x, y, z);
 			if (crop != null) {
 				crop.setRemoved();
 				CropControl.getPlugin().debug("Missed an event? Replacing a Crop at {0}, {1}, {2}", x, y, z);
 				//return;
-			}
+			}*/
 			
 			// We've placed a crop!
 			Crop.create(chunk, x, y, z, blockMaterial.toString(), getBaseCropState(blockMaterial),
 					e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial));
 		} else if (blockMaterial == Material.SAPLING) {
 			// we placed a block overtop an existing sapling. TODO: Do I need to remove sapling here, or will there be a break event?
-			Sapling sapling = chunk.getSapling(x, y, z);
+			/*Sapling sapling = chunk.getSapling(x, y, z);
 			if (sapling != null) {
 				sapling.setRemoved();
 				CropControl.getPlugin().debug("Missed an event? Replacing a Sapling at {0}, {1}, {2}", x, y, z);
 				//return;
-			}
+			}*/
 			// We've placed a sapling!
 			Sapling.create(chunk, x, y, z, getSaplingType(block.getData()),
 					e.getPlayer().getUniqueId(), System.currentTimeMillis(), false);
 		} else if (blockMaterial == Material.CHORUS_FLOWER) {
-			if (CropControl.getDAO().isTracked(block) == true) {
+			/*if (CropControl.getDAO().isTracked(block) == true) {
 				CropControl.getPlugin().debug("Ghost object? Placement is overtop a tracked object at {0}, {1}, {2}", x, y, z);
 				//return;
-			}
+			}*/
 
 			// First register the "tree"
 			Tree chorusPlant = Tree.create(chunk, x, y, z, Material.CHORUS_PLANT.toString(),
@@ -488,7 +507,36 @@ public class CropControlEventHandler implements Listener {
 			TreeComponent.create(chorusPlant, chunk, x, y, z, Material.CHORUS_PLANT.toString(),
 					e.getPlayer().getUniqueId(), false);
 		}
-
+	}
+	
+	/**
+	 * Generically handle a blanket, no-drop removal of tracking data. This does not attempt to cover edge cases, just removes things and prays.
+	 * 
+	 * @param block
+	 * @param chunk
+	 */
+	private void handleRemoval(final Block block, WorldChunk chunk) {
+		int x = block.getX();
+		int y = block.getY();
+		int z = block.getZ();
+		Crop crop = chunk.getCrop(x, y, z);
+		Sapling sapling = chunk.getSapling(x, y, z);
+		TreeComponent treeComponent = chunk.getTreeComponent(x, y, z);
+		if (crop != null) {
+			crop.setRemoved();
+		}
+		if (sapling != null) {
+			sapling.setRemoved();
+		}
+		if (treeComponent != null) {
+			Tree tree = CropControl.getDAO().getTree(treeComponent);
+			
+			treeComponent.setRemoved();
+			
+			if (CropControl.getDAO().getTreeComponents(treeComponent.getTreeID()).isEmpty()) {
+				tree.setRemoved();
+			}
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -496,7 +544,7 @@ public class CropControlEventHandler implements Listener {
 	public void onCropGrow(BlockGrowEvent e) {
 		Block block = e.getNewState().getBlock();
 
-		Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(CropControl.getPlugin(), new Runnable() {
+		Bukkit.getServer().getScheduler().runTaskAsynchronously(CropControl.getPlugin(), new Runnable() {
 			@Override
 			public void run() {
 				WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
@@ -538,7 +586,7 @@ public class CropControlEventHandler implements Listener {
 					}
 				}
 			}
-		}, 1L);
+		});
 
 	}
 
@@ -714,6 +762,13 @@ public class CropControlEventHandler implements Listener {
 		}
 	}
 
+	/**
+	 * Propagates cocoa breaks
+	 * 
+	 * @param block
+	 * @param type
+	 * @param player
+	 */
 	private void trySideBreak(Block block, BreakType type, UUID player) {
 		for (BlockFace face : directions) {
 			Block faceBlock = block.getRelative(face);
@@ -722,6 +777,21 @@ public class CropControlEventHandler implements Listener {
 			}
 		}
 	}
+	
+	/* *
+	 * TODO -- necessary for endgame of drop replacements
+	 * 
+	 * @param e
+	 */
+	/*@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled=true) 
+	public void onPhysics(BlockPhysicsEvent e) {
+		Block block = e.getBlock();
+		Material mainMat = block.getType();
+		Material chMat = e.getChangedType();
+		if (rootMaterials.contains(mainMat) || rootMaterials.contains(chMat)) {
+			
+		}
+	}*/
 	
 	/**
 	 * So far specifically handles these cases:
@@ -777,7 +847,13 @@ public class CropControlEventHandler implements Listener {
 	public void onBlockExplode(BlockExplodeEvent e) {
 		doExplodeHandler(e.blockList());
 	}
-	
+
+	/**
+	 * Handles explosion, registering all things that are tracked that either might break or have broken
+	 * based on explode.
+	 * 
+	 * @param blockList
+	 */
 	private void doExplodeHandler(List<Block> blockList) {
 		Set<Location> toBreakList = new HashSet<Location>();
 
@@ -818,11 +894,16 @@ public class CropControlEventHandler implements Listener {
 				continue;
 			}
 			
-			if (Material.SOIL.equals(block.getType()) ||  // wheat, carrots, potatoes, beetroot, melon stalk, pumpkin stalk
-					Material.NETHERRACK.equals(block.getType()) || // netherwart
-					Material.MYCEL.equals(block.getType()) || // mushroom
-					Material.SAND.equals(block.getType()) || // cactus, sugarcane
-					Material.ENDER_STONE.equals(block.getType())) { // chorus fruit
+			if (maybeSideTracked(block)) {
+				for (BlockFace face : directions) {
+					Block faceBlock = block.getRelative(face);
+					if (Material.COCOA.equals(faceBlock.getType())) {
+						toBreakList.add(faceBlock.getLocation());
+					}
+				}
+			} 
+			
+			if (maybeBelowTracked(block)) {
 				toBreakList.add(block.getRelative(BlockFace.UP).getLocation());
 			} else {
 				handleBreak(block, BreakType.EXPLOSION, null, null);
@@ -849,15 +930,13 @@ public class CropControlEventHandler implements Listener {
 	@EventHandler
 	public void onEntityChangeBlock(EntityChangeBlockEvent e) {
 		Block block = e.getBlock();
-		if (Material.SOIL.equals(block.getType()) ||  // wheat, carrots, potatoes, beetroot, melon stalk, pumpkin stalk
-				Material.NETHERRACK.equals(block.getType()) || // netherwart
-				Material.MYCEL.equals(block.getType()) || // mushroom
-				Material.SAND.equals(block.getType()) || // cactus, sugarcane
-				Material.ENDER_STONE.equals(block.getType())) { // chorus fruit
-			handleBreak(block.getRelative(BlockFace.UP), BreakType.NATURAL, null, null);
-		} else {
-			handleBreak(block, BreakType.NATURAL, null, null);
+		if (maybeSideTracked(block)) {
+			trySideBreak(block, BreakType.NATURAL, null);
 		}
+		if (maybeBelowTracked(block)) {
+			block = block.getRelative(BlockFace.UP);
+		}
+		handleBreak(block, BreakType.NATURAL, null, null);
 	}
 
 	@EventHandler
@@ -936,15 +1015,13 @@ public class CropControlEventHandler implements Listener {
 				continue;
 			} 
 			
-			if (Material.SOIL.equals(block.getType()) ||  // wheat, carrots, potatoes, beetroot, melon stalk, pumpkin stalk
-					Material.NETHERRACK.equals(block.getType()) || // netherwart
-					Material.MYCEL.equals(block.getType()) || // mushroom
-					Material.SAND.equals(block.getType()) || // cactus, sugarcane
-					Material.ENDER_STONE.equals(block.getType())) { // chorus fruit
-				handleBreak(block.getRelative(BlockFace.UP), BreakType.PISTON, null, null);
-			} else {
-				handleBreak(block, BreakType.PISTON, null, null);
+			if (maybeSideTracked(block)) {
+				trySideBreak(block, BreakType.PISTON, null);
 			}
+			if (maybeBelowTracked(block)) {
+				block = block.getRelative(BlockFace.UP);
+			}
+			handleBreak(block, BreakType.PISTON, null, null);
 		}
 		if (!movements.isEmpty()) {
 			for (Double update : movements.descendingKeySet()) {
@@ -1006,13 +1083,13 @@ public class CropControlEventHandler implements Listener {
 				// if tree base, move the whole tree
 
 				continue;
-			} else if (Material.SOIL.equals(block.getType()) ||  // wheat, carrots, potatoes, beetroot, melon stalk, pumpkin stalk
-					Material.NETHERRACK.equals(block.getType()) || // netherwart
-					Material.MYCEL.equals(block.getType()) || // mushroom
-					Material.SAND.equals(block.getType()) || // cactus, sugarcane
-					Material.ENDER_STONE.equals(block.getType())) { // chorus fruit
-				handleBreak(block.getRelative(BlockFace.UP), BreakType.PISTON, null, null);
 			} else {
+				if (maybeSideTracked(block)) {
+					trySideBreak(block, BreakType.PISTON, null);
+				}
+				if (maybeBelowTracked(block)) {
+					block = block.getRelative(BlockFace.UP);
+				}
 				handleBreak(block, BreakType.PISTON, null, null);
 			}
 		}
@@ -1132,6 +1209,7 @@ public class CropControlEventHandler implements Listener {
 			// Check if we care pre-break.
 			return;
 		}
+		// TODO does it need to be 1 tick? more? less?
 		Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(),
 				new Runnable() {
 					@Override
@@ -1286,7 +1364,7 @@ public class CropControlEventHandler implements Listener {
 				}, 1L);
 	}
 
-	public void drop(Block block, Crop crop, UUID player, BreakType breakType) {
+	/*public void drop(Block block, Crop crop, UUID player, BreakType breakType) {
 		Biome biome = block.getBiome();
 		boolean byPlayer = player != null;
 		boolean placed = byPlayer && player.equals(crop.getPlacer());
@@ -1312,6 +1390,50 @@ public class CropControlEventHandler implements Listener {
 	
 	public void drop(Block block, Tree tree, UUID player, BreakType breakType) {
 		
+	}*/
+	
+	private void drop(Block block, Locatable dropable, UUID player, BreakType breakType) {
+		Biome biome = block.getBiome();
+		UUID placePlayer = null; 
+		boolean byPlayer = player != null;
+		boolean placed = byPlayer;
+		boolean harvestable = false;
+		RootConfig config = null;
+		if (dropable instanceof Crop) {
+			Crop crop = (Crop) dropable;
+			placed &= player.equals(crop.getPlacer());
+			harvestable = crop.getHarvestable();
+			config = RootConfig.from(crop);
+		}
+		if (dropable instanceof Sapling) {
+			Sapling sapling = (Sapling) dropable;
+			placed &= player.equals(sapling.getPlacer());
+			harvestable = sapling.getHarvestable();
+			config = RootConfig.from(sapling);
+		}
+		if (dropable instanceof TreeComponent) {
+			TreeComponent component = (TreeComponent) dropable;
+			placed &= player.equals(component.getPlacer());
+			harvestable = component.isHarvestable();
+			config = RootConfig.from(component);
+		}
+		config.adjust(breakType);
+		config.adjust(placePlayer, player);
+		config.adjust(harvestable);
+		config.adjust(biome);
+		ItemStack toolUsed = null;
+		if (byPlayer) {
+			Player p = Bukkit.getPlayer(player);
+			if (p != null) {
+				toolUsed = p.getInventory().getItemInMainHand();
+				config.adjust(toolUsed);
+			}
+		}
+		
+		List<ItemStack> items = config.realizeDrops(breakType, placePlayer, player, harvestable, biome, toolUsed);
+		if (items != null) {
+			realDrop(block.getLocation(), items);
+		}
 	}
 	
 	public void realDrop(Location location, List<ItemStack> items) {
@@ -1320,7 +1442,7 @@ public class CropControlEventHandler implements Listener {
 		}
 	}
 
-	private enum BreakType {
+	public static enum BreakType {
 		PLAYER, WATER, LAVA, PISTON, EXPLOSION, NATURAL;
 	}
 
