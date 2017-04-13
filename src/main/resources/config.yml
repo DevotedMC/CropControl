@@ -4,85 +4,103 @@ database:
  database:
  user:
  password:
+ # How many connections to "reserve" for this plugin. I recommend at least 10.
  poolsize: 15
+ # How long to wait for any one query to complete. Change at your own peril.
  connectionTimeout: 3000
+ # How long to let a connection sit idle before recycling it.
  idleTimeout: 600000
+ # How long to keep a connection open at most, even if largely active
  maxLifetime: 7200000
+ # Dirty save is essential -- the period is # of ticks inbetween say attempts. Delay is # of ticks before first dirty save.
  dirtysave: 
   period: 12000
   delay: 6000
-tools:
-biomes:
+#tools: TODO
+# define the drops that you'll use in your crops: saplings: and trees: sections.
 drops:
+ # unique name required here
  wheatT1:
+  # list of itemstack templates
   template:
+  # base values; linear distribution of stack size multiplier from 1 to 4, chance is uniform cummulative capped at 100% so be careful on summations
   base:
    min: 1
    max: 4
    chance: 1.0
-#tools: TODO
 crops:
- WHEAT:
-  0:
+ # Crop Type must be one of : CARROT, CROPS, COCOA, BROWN_MUSHROOM, POTATO, PUMPKIN, PUMPKIN_STEM, SUGAR_CANE_BLOCK, 
+ #   BEETROOT_BLOCK, CACTUS, MELON_BLOCK, MELON_STEM, RED_MUSHROOM 
+ # Some crops like Wheat can have bindings for every stage of growth. Others have no stages and just don't include the stage setting.
+ #  Check the README.md for a complete list.
+ # Undefined stages will simply have no drop augments.
+ CROPS:
+  RIPE:
    drops:
     wheatT1:
+     # You'll see the chance / adjust / extend blocks throughout.
+     # Chance is a multiplier on chance-to-drop. All modifiers that apply are multiplied together.
+     # Adjust is an adder on minimum template size multiplier. All modifiers of this type are _added_ to the minimum multiplier.
+     # Extend is an adder on maximum template size multiplier. All modifiers of this type are _added_ to the maximum multiplier.
      chance: 0.5
      adjust: 0
+     extend: 0
+     # Control behavior in specific biomes. Please use the official Spigot Biome enumeration names. Invalid names will result in 
+     # warnings at runtime.
      biomes:
       FOREST:
        adjust: -1
        chance: 1.5
+       extend: 2
       BEACH:
        adjust: 1
        chance: 0.5
-   VANILLA: true
-  1-4:
-   drops:
-    wheatT2:
-     chance: 1.0
-     adjust: 0
-     biomes:
-      FOREST:
-       adjust: -1
-       chance: 2.0
-      BEACH:
+       extend: -1
+     # An enhancement of PLAYER break type, allows unique override of 
+     player:
+      same:
+       chance: 1.1
        adjust: 1
-       chance: 0.25
-   VANILLA: true
+       extend: 0
+      different:
+       chance: 0.5
+       adjust: 2
+     # Allow fine tuning of drops based on break type. Useful to suppress or enhance particular kinds of drop situations.
+     # Valid types: PLAYER, WATER, LAVA, PISTON, EXPLOSION, NATURAL as of v1.0
+     # If unconfigured, the type is unmodified.
+     breaktypes:
+      NATURAL:
+       adjust: 2
+       expand: 4 
+       chance: 0.1
+saplings:
+ # Sapling Type must be one of : OAK_SAPLING, SPRUCE_SAPLING, BIRCH_SAPLING, JUNGLE_SAPLING, ACACIA_SAPLING, DARK_OAK_SAPLING
+ OAK_SAPLING:
+  drops:
+   # chance / adjust / expand are always optional. If not set, they default to 1.0 / 0 / 0 respectively.
+   saplingT1:
+    chance: 1.0
+    biomes:
+     FOREST:
+      adjust: 2
+      extend: 4
+      chance: 2.0
+     OCEAN:
+      adjust: -1
+      extend: -4
+      chance: 0.1
+    breaktypes:
+     # You can use a breaktype PLAYER bonus if you don't care who breaks it so long as its a player.
+     PLAYER:
+      chance: 1.5
 trees:
- JUNGLE_LARGE:
-  sapling:
-   drops:
-    jungleT1:
-     chance: 0.25
-     adjust: -1
-     biomes:
-      JUNGLE:
-       adjust: 2
-       chance: 4
-   VANILLA: true
-  trunk:
-   drops:
-    jungleT2:
-     chance: 0.5
-     adjust: -1
-     biomes:
-      JUNGLE:
-       adjust: 2
-       chance: 2
-   VANILLA: true
-  leaf:
-   drops:
-    jungleT3:
-     chance: 0.1
-     adjust: 2
-     biomes:
-      JUNGLE:
-       adjust: 2
-       chance: 1.0
-   VANILLA: false
- JUNGLE_SMALL:
-  inherit:
-   from: JUNGLE_LARGE
-   adjust: 0
-   chance: 0.5
+ # See README.md for list of valid Tree typess
+ JUNGLE:
+  drops:
+   jungleT1:
+    chance: 0.25
+    adjust: -1
+    biomes:
+     JUNGLE:
+      adjust: 2
+      chance: 4

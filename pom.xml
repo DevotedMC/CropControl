@@ -4,11 +4,11 @@
 
 	<groupId>com.programmerdan.minecraft</groupId>
 	<artifactId>cropcontrol</artifactId>
-	<version>0.2.0</version>
+	<version>0.3.0</version>
 	<packaging>jar</packaging>
 	<name>CropControl</name>
 	<url>https://github.com/DevotedMC/CropControl</url>
-	<description>Modify crop and growable drops on break, including trees.</description>
+	<description>Augment crop and growable drops on break, including trees.</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

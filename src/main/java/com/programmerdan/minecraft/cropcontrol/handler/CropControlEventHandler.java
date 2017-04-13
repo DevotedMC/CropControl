@@ -678,6 +678,7 @@ public class CropControlEventHandler implements Listener {
 
 			for (BlockState state : blocks) {
 				WorldChunk partChunk = CropControl.getDAO().getChunk(state.getChunk());
+				// TODO: differentiate between leaves and trunks
 				TreeComponent.create(tree, partChunk, state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
 						tree.getPlacer(), true);
 			}
@@ -1417,16 +1418,11 @@ public class CropControlEventHandler implements Listener {
 			harvestable = component.isHarvestable();
 			config = RootConfig.from(component);
 		}
-		config.adjust(breakType);
-		config.adjust(placePlayer, player);
-		config.adjust(harvestable);
-		config.adjust(biome);
 		ItemStack toolUsed = null;
 		if (byPlayer) {
 			Player p = Bukkit.getPlayer(player);
 			if (p != null) {
 				toolUsed = p.getInventory().getItemInMainHand();
-				config.adjust(toolUsed);
 			}
 		}
 		
