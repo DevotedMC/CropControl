@@ -57,10 +57,13 @@ public class RootConfig {
 		config = new RootConfig();
 		config.baseSection = CropControl.getPlugin().getConfig().getConfigurationSection(index);
 		if (config.baseSection != null) {
-			config.baseDrops = new ConcurrentHashMap<String, DropModifiers>();
-			for (String key : config.baseSection.getKeys(false)) {
-				DropConfig.byIdent(key); // preload it.
-				config.baseDrops.put(key, config.new DropModifiers(config.baseSection.getConfigurationSection(key)));
+			ConfigurationSection drops = config.baseSection.getConfigurationSection("drops");
+			if (drops != null) {
+				config.baseDrops = new ConcurrentHashMap<String, DropModifiers>();
+				for (String key : drops.getKeys(false)) {
+					DropConfig.byIdent(key); // preload it.
+					config.baseDrops.put(key, config.new DropModifiers(drops.getConfigurationSection(key)));
+				}
 			}
 		}
 		rootConfigs.put(index, config);
@@ -69,6 +72,9 @@ public class RootConfig {
 	
 	public List<ItemStack> realizeDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool) {
 		LinkedList<ItemStack> outcome = new LinkedList<ItemStack>();
+		if (baseDrops == null || baseDrops.size() == 0) {
+			return outcome;
+		}
 		double cumChance = 0.0d;
 		double localChance = 0.0d;
 		int localMin = 0;

@@ -274,7 +274,7 @@ public class WorldChunk {
 		if (set != null) {
 			list.addAll(set);
 		}
-		CropControl.getPlugin().debug("Get Tree's components from {0}: {1}", treeId, list);
+		CropControl.getPlugin().debug("Get Tree components from {0}: {1}", treeId, list);
 		return list;
 	}
 	

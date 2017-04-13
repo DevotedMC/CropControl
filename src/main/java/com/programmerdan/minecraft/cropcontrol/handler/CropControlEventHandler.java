@@ -1397,24 +1397,23 @@ public class CropControlEventHandler implements Listener {
 		Biome biome = block.getBiome();
 		UUID placePlayer = null; 
 		boolean byPlayer = player != null;
-		boolean placed = byPlayer;
 		boolean harvestable = false;
 		RootConfig config = null;
 		if (dropable instanceof Crop) {
 			Crop crop = (Crop) dropable;
-			placed &= player.equals(crop.getPlacer());
+			placePlayer = crop.getPlacer();
 			harvestable = crop.getHarvestable();
 			config = RootConfig.from(crop);
 		}
 		if (dropable instanceof Sapling) {
 			Sapling sapling = (Sapling) dropable;
-			placed &= player.equals(sapling.getPlacer());
+			placePlayer = sapling.getPlacer();
 			harvestable = sapling.getHarvestable();
 			config = RootConfig.from(sapling);
 		}
 		if (dropable instanceof TreeComponent) {
 			TreeComponent component = (TreeComponent) dropable;
-			placed &= player.equals(component.getPlacer());
+			placePlayer = component.getPlacer();
 			harvestable = component.isHarvestable();
 			config = RootConfig.from(component);
 		}
