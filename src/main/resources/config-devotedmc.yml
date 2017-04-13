@@ -347,7 +347,7 @@ drops:
    chance: 0.125
  TestingPlaceholder:
   template:
-  - ==: org.bukkt.inventory.ItemStack
+  - ==: org.bukkit.inventory.ItemStack
     type: DIRT
     amount: 2
     meta:
