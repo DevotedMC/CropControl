@@ -167,6 +167,8 @@ public class RootConfig {
 			differentPlayer = new ModifierConfig(config.getConfigurationSection("player.different"));
 			samePlayer = new ModifierConfig(config.getConfigurationSection("player.same"));
 			
+			requireHarvestable = config.getBoolean("harvestableOnly", requireHarvestable);
+			
 			ConfigurationSection biomeConfigs = config.getConfigurationSection("biomes");
 			// unwraps biomes and divines modifier configs for each one listed.
 			if (biomeConfigs != null) {

@@ -3,6 +3,22 @@ CropControl
 
 Simple (relatively) augmentation of crop and tree drops. (Planned to control as well).
 
+Placements of growth-starting blocks are tracked, including who placed it (if available). Growth-starting blocks that spread also share-forward this placement information, so we can effectively answer if the player breaking a growable was the player who placed the seeds.
+
+Some edge cases, especially for Chorus Fruit, are not well supported at the moment. Known issues:
+
+* Chorus Flowers placed alongside existing Chorus Plant blocks will result in a ghost tree entry when the whole tree is later broken
+
+* Chorus plants broken by block placements over bend-junctions might not be captured at all, depending on nature of placement.
+
+We do currently make a best-effort to capture breaks and drops from pistons, flowing liquids, block placements, "supporting" block breaks,
+fire breaks, and direct breaks. 
+
+The nature of the break (was it by a person? Piston? Liquid? ) can be used to tweak the chance and size of any drops, as can the biome. As will
+be described, for many plants you can even control drop augments based on lifecycle.
+
+We also internally track a harvestable flag, to prevent players from accelerating augment opportunities by immediately breaking a block they just placed. This applies most strongly to saplings, mushroom, cactus, pumpkins, melons, sugar cane, and chorus fruit as they all "spread". The blocks they spread to will be marked as harvestable. It's configurable however if your augmentation cares. See example config for details.
+
 Configuration is straightforward.
 
 `database`: section defines the host and other connection primitives. See example config.

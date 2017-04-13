@@ -56,7 +56,7 @@ crops:
        adjust: 1
        chance: 0.5
        extend: -1
-     # An enhancement of PLAYER break type, allows unique override of 
+     # An enhancement of PLAYER break type, allows unique override based on if same player or diff player breaks it vs. planted it 
      player:
       same:
        chance: 1.1
@@ -73,6 +73,8 @@ crops:
        adjust: 2
        expand: 4 
        chance: 0.1
+ # Please note here that some CROPS are fixed as "not harvestable" regardless of stage, namely PUMPKIN_STEM and MELON_STEM. 
+ #  If you want unique drops for those, see the note in `saplings` about harvestableOnly
 saplings:
  # Sapling Type must be one of : OAK_SAPLING, SPRUCE_SAPLING, BIRCH_SAPLING, JUNGLE_SAPLING, ACACIA_SAPLING, DARK_OAK_SAPLING
  OAK_SAPLING:
@@ -93,6 +95,32 @@ saplings:
      # You can use a breaktype PLAYER bonus if you don't care who breaks it so long as its a player.
      PLAYER:
       chance: 1.5
+    # Internally if this is player placed or spread is tracked; for saplings you must turn this protection off for drops to be meaningful.
+    # By default or if not set, it is on, so only use it where necessary.
+    harvestableOnly: false
+ JUNGLE_SAPLING:
+  drops:
+   burntSaplingT1:
+    chance: 0.5
+    biomes:
+     JUNGLE:
+      adjust: 1
+      extend: 1
+      chance: 1.5
+    breaktypes:
+     LAVA:
+      chance: 1.0
+     PLAYER:
+      chance: 0.0
+     WATER:
+      chance: 0.0
+     NATURAL:
+      chance: 0.0
+     PISTON:
+      chance: 0.0
+     EXPLOSION:
+      chance: 0.5
+    harvestableOnly: false
 trees:
  # See README.md for list of valid Tree typess
  JUNGLE:
@@ -103,4 +131,4 @@ trees:
     biomes:
      JUNGLE:
       adjust: 2
-      chance: 4
+      extend: 4
