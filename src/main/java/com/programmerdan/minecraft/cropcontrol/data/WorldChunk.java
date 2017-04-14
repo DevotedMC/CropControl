@@ -289,7 +289,7 @@ public class WorldChunk {
 	public static void unloadChunk(Chunk chunk) {
 		long chunk_id = ((long) chunk.getX() << 32L) + (long) chunk.getZ();
 		UUID world_uuid = chunk.getWorld().getUID();
-		CropControl.getPlugin().debug("Registering unload for chunk {0}:{1}", world_uuid, chunk_id);
+		//CropControl.getPlugin().debug("Registering unload for chunk {0}:{1}", world_uuid, chunk_id);
 		Map<Long, WorldChunk> chunks = chunkCacheLoc.get(world_uuid);
 		if (chunks == null) {
 			return;
@@ -394,7 +394,7 @@ public class WorldChunk {
 				statement.setInt(3, chunk.getZ());
 				try (ResultSet rs = statement.executeQuery();) {
 					if (rs.next()) {
-						CropControl.getPlugin().debug("Retrieving existing chunk {0}:{1}:{2}", world_uuid, chunk_id, rs.getLong(1));
+						//CropControl.getPlugin().debug("Retrieving existing chunk {0}:{1}:{2}", world_uuid, chunk_id, rs.getLong(1));
 						cacheChunk = new WorldChunk();
 						cacheChunk.chunkX = chunk.getX();
 						cacheChunk.chunkZ = chunk.getZ();
@@ -455,7 +455,7 @@ public class WorldChunk {
 				statement.setLong(1, chunkID);
 				try (ResultSet rs = statement.executeQuery();) {
 					if (rs.next()) {
-						CropControl.getPlugin().debug("Retrieving existing chunk {0}", chunkID);
+						//CropControl.getPlugin().debug("Retrieving existing chunk {0}", chunkID);
 						cacheChunk = new WorldChunk();
 						cacheChunk.chunkX = rs.getInt(3);
 						cacheChunk.chunkZ = rs.getInt(4);

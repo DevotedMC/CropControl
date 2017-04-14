@@ -3,6 +3,7 @@ package com.programmerdan.minecraft.cropcontrol;
 import com.programmerdan.minecraft.cropcontrol.data.DAO;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler;
+import com.programmerdan.minecraft.cropcontrol.handler.RealisticBiomesEventHandler;
 
 import vg.civcraft.mc.civmodcore.ACivMod;
 
@@ -58,6 +59,10 @@ public class CropControl extends ACivMod {
 		try {
 			this.eventHandler = new CropControlEventHandler(getConfig());
 			this.getServer().getPluginManager().registerEvents(eventHandler, this);
+			
+			if (this.getServer().getPluginManager().isPluginEnabled("RealisticBiomes")) {
+				this.getServer().getPluginManager().registerEvents(new RealisticBiomesEventHandler(), this);
+			}
 		} catch (Exception e) {
 			this.severe("Failed to set up event capture / handling", e);
 			this.setEnabled(false);
@@ -87,6 +92,10 @@ public class CropControl extends ACivMod {
 	@Override
 	protected String getPluginName() {
 		return "CropControl";
+	}
+
+	public CropControlEventHandler getEventHandler() {
+		return this.eventHandler;
 	}
 
 }

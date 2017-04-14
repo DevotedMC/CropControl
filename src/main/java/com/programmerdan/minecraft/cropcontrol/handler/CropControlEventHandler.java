@@ -274,7 +274,7 @@ public class CropControlEventHandler implements Listener {
 		return null;
 	}
 
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onInteract(PlayerInteractEvent e) {
 		if (e.getHand() != EquipmentSlot.HAND || e.getAction() != Action.RIGHT_CLICK_BLOCK)
 			return;
@@ -455,7 +455,7 @@ public class CropControlEventHandler implements Listener {
 	 * 
 	 */
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlaceBlock(BlockPlaceEvent e) {
 		Block block = e.getBlock();
 
@@ -539,8 +539,7 @@ public class CropControlEventHandler implements Listener {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onCropGrow(BlockGrowEvent e) {
 		Block block = e.getNewState().getBlock();
 
@@ -590,7 +589,7 @@ public class CropControlEventHandler implements Listener {
 
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockSpread(BlockSpreadEvent e) {
 		Block source = e.getSource();
 		WorldChunk sourceChunk = CropControl.getDAO().getChunk(source.getChunk());
@@ -628,7 +627,7 @@ public class CropControlEventHandler implements Listener {
 
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true) // RB is at HIGH and NORMAL
 	public void onTreeGrow(StructureGrowEvent e) {
 		Location structureLocation = e.getLocation();
 		int x = structureLocation.getBlockX();
@@ -806,7 +805,7 @@ public class CropControlEventHandler implements Listener {
 	 * 
 	 * @param e The event
 	 */
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent e) {
 		Block block = e.getBlock();
 		Player player = e.getPlayer();
@@ -831,7 +830,7 @@ public class CropControlEventHandler implements Listener {
 	 * 
 	 * @param e The event
 	 */
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockBurn(BlockBurnEvent e) {
 		Block block = e.getBlock();
 		if (maybeSideTracked(block)) {
@@ -844,7 +843,7 @@ public class CropControlEventHandler implements Listener {
 		
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockExplode(BlockExplodeEvent e) {
 		doExplodeHandler(e.blockList());
 	}
@@ -918,17 +917,17 @@ public class CropControlEventHandler implements Listener {
 		}
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityExplode(EntityExplodeEvent e) {
 		doExplodeHandler(e.blockList());
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onLeafDecay(LeavesDecayEvent e) {
 		handleBreak(e.getBlock(), BreakType.NATURAL, null, null);
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityChangeBlock(EntityChangeBlockEvent e) {
 		Block block = e.getBlock();
 		if (maybeSideTracked(block)) {
@@ -940,7 +939,7 @@ public class CropControlEventHandler implements Listener {
 		handleBreak(block, BreakType.NATURAL, null, null);
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerBucketEmpty(PlayerBucketEmptyEvent e) {
 		UUID uuid = null;
 		if (e.getPlayer() != null) {
@@ -953,7 +952,7 @@ public class CropControlEventHandler implements Listener {
 			handleBreak(e.getBlockClicked().getRelative(e.getBlockFace()), BreakType.WATER, uuid, null);
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockFromTo(BlockFromToEvent e) {
 		if (e.getToBlock().getType() == Material.WATER || e.getToBlock().getType() == Material.STATIONARY_WATER) {
 			handleBreak(e.getBlock(), BreakType.WATER, null, null);
@@ -962,7 +961,7 @@ public class CropControlEventHandler implements Listener {
 		}
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPistionExtend(BlockPistonExtendEvent e) {
 		// We need to order movements of moved components from furthest to nearest
 		TreeMap<Double, Runnable> movements = new TreeMap<Double, Runnable>();
@@ -997,6 +996,7 @@ public class CropControlEventHandler implements Listener {
 								@Override
 								public void run() {
 									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+									CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
 								}
 							}
 					);
@@ -1006,7 +1006,9 @@ public class CropControlEventHandler implements Listener {
 								@Override
 								public void run() {
 									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+									CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
 									tree.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+									CropControl.getPlugin().debug("Moved tree from {0} {1} {2} to {3}", x, y, z, tree);
 								}
 							}
 					);
@@ -1032,7 +1034,7 @@ public class CropControlEventHandler implements Listener {
 		}
 	}
 	
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPistonRetract(BlockPistonRetractEvent e) {
 		// We need to order movements of moved components from furthest to nearest
 		TreeMap<Double, Runnable> movements = new TreeMap<Double, Runnable>();
@@ -1067,6 +1069,7 @@ public class CropControlEventHandler implements Listener {
 								@Override
 								public void run() {
 									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+									CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
 								}
 							}
 					);
@@ -1076,7 +1079,9 @@ public class CropControlEventHandler implements Listener {
 								@Override
 								public void run() {
 									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+									CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
 									tree.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+									CropControl.getPlugin().debug("Moved tree from {0} {1} {2} to {3}", x, y, z, tree);
 								}
 							}
 					);
@@ -1457,7 +1462,7 @@ public class CropControlEventHandler implements Listener {
 	 * 
 	 * Or something along those lines.
 	 */
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onChunkLoad(ChunkLoadEvent e) {
 		Chunk chunk = e.getChunk();
 		
@@ -1465,7 +1470,7 @@ public class CropControlEventHandler implements Listener {
 
 	}
 
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onChunkUnload(ChunkUnloadEvent e) {
 		Chunk chunk = e.getChunk();
 		

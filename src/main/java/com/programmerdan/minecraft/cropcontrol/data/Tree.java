@@ -104,34 +104,12 @@ public class Tree extends Locatable {
 	}
 
 	public void updateLocation(long chunkID, int x, int y, int z) {
+		WorldChunk.byId(this.chunkID).unregister(this);
 		this.chunkID = chunkID;
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.dirty = true;
-		Tree.dirties.offer(new WeakReference<Tree>(this));
-	}
-
-	public void setChunkID(long chunkID) {
-		this.chunkID = chunkID;
-		this.dirty = true;
-		Tree.dirties.offer(new WeakReference<Tree>(this));
-	}
-
-	public void setX(int x) {
-		this.x = x;
-		this.dirty = true;
-		Tree.dirties.offer(new WeakReference<Tree>(this));
-	}
-
-	public void setY(int y) {
-		this.y = y;
-		this.dirty = true;
-		Tree.dirties.offer(new WeakReference<Tree>(this));
-	}
-
-	public void setZ(int z) {
-		this.z = z;
+		WorldChunk.byId(chunkID).register(this);
 		this.dirty = true;
 		Tree.dirties.offer(new WeakReference<Tree>(this));
 	}
