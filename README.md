@@ -19,6 +19,16 @@ be described, for many plants you can even control drop augments based on lifecy
 
 We also internally track a harvestable flag, to prevent players from accelerating augment opportunities by immediately breaking a block they just placed. This applies most strongly to saplings, mushroom, cactus, pumpkins, melons, sugar cane, and chorus fruit as they all "spread". The blocks they spread to will be marked as harvestable. It's configurable however if your augmentation cares. See example config for details.
 
+### Compatibility
+
+This plugin is currently compatible with Spigot / Craftbukkit 1.10.2
+
+Please note that any plugin that modifies crop behavior will interfere with this plugin's operation.
+
+**RealisticBiomes:** To ensure compatibility, modifications were made to RealisticBiomes. Dee the com.programmerdan.minecraft.cropcontrol.handler.RealisticBiomesEventHandler for one route, and the corresponding code in RealisticBiomes. As a result, Realistic Biomes is a compile-time dependency. It is not required during runtime.
+
+## Configuration
+
 Configuration is straightforward.
 
 `database`: section defines the host and other connection primitives. See example config.
@@ -55,23 +65,23 @@ Minecraft 1.10.2:
 
 `NETHER_WARTS`. In-game netherwart. Stages: `SEEDED`, `STAGE_ONE`, `STAGE_TWO`, `RIPE`.
 
-`MELON_STEM`. In-game melon stem. Stages: `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`.
+`MELON_STEM`. In-game melon stem. Stages: `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`. Flagged Unharvestable.
 
 `MELON_BLOCK`. In-game melon. No stages.
 
-`PUMPKIN_STEM`. In-game pumpkin stem. Stages: `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`.
+`PUMPKIN_STEM`. In-game pumpkin stem. Stages: `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`. Flagged Unharvestable.
 
 `PUMPKIN_BLOCK`. In-game pumpkin. No stages.
 
 `COCOA`. In-game cocoa plant. Stages: `SMALL`, `MEDIUM`, `LARGE`.
 
-`CACTUS`. In-game cacuts. No stages.
+`CACTUS`. In-game cacuts. No stages. Base flagged Unharvestable.
 
-`SUGAR_CANE_BLOCK`. In-game sugarcane. No stages.
+`SUGAR_CANE_BLOCK`. In-game sugarcane. No stages. Base flagged Unharvestable.
 
-`BROWN_MUSHROOM`. In-game brown mushroom. No stages.
+`BROWN_MUSHROOM`. In-game brown mushroom. No stages. Original placed flagged Unharvestable.
 
-`RED_MUSHROOM`. In-game red mushroom. No stages.
+`RED_MUSHROOM`. In-game red mushroom. No stages. Original placed flagged Unharvestable.
 
 ## Valid Saplings list
 

@@ -134,7 +134,7 @@ public class RootConfig {
 			}
 			
 			if (dice >= cumChance && dice < cumChance + localChance) {
-				int multiplier = (int) (Math.round(Math.random() * ((double) (localMin + localMax))) - localMin);
+				int multiplier = (int) (Math.round(Math.random() * ((double) (localMax - localMin))) + localMin);
 				CropControl.getPlugin().debug("Generated a drop for {0} at chance {1} with multiplier {2}", dropIdent, localChance, multiplier);
 				outcome.addAll(dropConfig.getDrops(multiplier));
 				break;

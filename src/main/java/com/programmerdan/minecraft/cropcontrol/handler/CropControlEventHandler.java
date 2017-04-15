@@ -280,6 +280,8 @@ public class CropControlEventHandler implements Listener {
 			return;
 
 		Player p = e.getPlayer();
+		
+		if (!p.hasPermission("cropcontrol.debug") ) return;
 
 		Block block = e.getClickedBlock();
 		int x = block.getX();
@@ -663,16 +665,16 @@ public class CropControlEventHandler implements Listener {
 
 			// Done in the case of Multiple saplings (Big Jungle trees etc)
 			for (BlockState state : e.getBlocks()) {
-				if (state.getBlock().getType() != Material.SAPLING)
-					continue;
-				WorldChunk testChunk = CropControl.getDAO().getChunk(state.getChunk());
-				Sapling testSapling = testChunk.getSapling(state.getX(), state.getY(), state.getZ());
-				if (testSapling == null) {
-					CropControl.getPlugin().debug("Found a sapling part of a recognized structure that wasn't itself tracked at {0}", state.getLocation());
-					continue;
+				if (state.getY() == sapling.getY()) {
+					WorldChunk testChunk = CropControl.getDAO().getChunk(state.getChunk());
+					Sapling testSapling = testChunk.getSapling(state.getX(), state.getY(), state.getZ());
+					if (testSapling == null) {
+						//CropControl.getPlugin().debug("Found a sapling part of a recognized structure that wasn't itself tracked at {0}", state.getLocation());
+						continue;
+					}
+					
+					testSapling.setRemoved();
 				}
-				
-				testSapling.setRemoved();
 			}
 
 			for (BlockState state : blocks) {
@@ -909,10 +911,7 @@ public class CropControlEventHandler implements Listener {
 				handleBreak(block, BreakType.EXPLOSION, null, null);
 			}
 		}
-		// if this has anything, it has a set of sets of parts of connected to-drops. Not a single stem; so need the
-		//   code to not require a single start as there isn't one.
 		if (toBreakList.size() > 0) {
-			// TODO: null first param.
 			handleBreak(null, BreakType.EXPLOSION, null, toBreakList);
 		}
 	}
@@ -1236,8 +1235,8 @@ public class CropControlEventHandler implements Listener {
 	
 								if (type == Material.SUGAR_CANE_BLOCK || type == Material.CACTUS) {
 									for (Location location : returnUpwardsBlocks(startBlock, type)) {
-										Bukkit.broadcastMessage(
-												ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
+										Bukkit.broadcast(
+												ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")", "cropcontrol.debug");
 										
 										WorldChunk upChunk = CropControl.getDAO().getChunk(location.getChunk());
 										Crop upCrop = upChunk.getCrop(location.getBlockX(), location.getBlockY(), location.getBlockZ());
@@ -1248,7 +1247,7 @@ public class CropControlEventHandler implements Listener {
 										upCrop.setRemoved();
 									}
 								} else {
-									Bukkit.broadcastMessage(ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
+									Bukkit.broadcast(ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")", "cropcontrol.debug");
 									CropControl.getPlugin().debug("Broke crop {0} by {1}", crop, breaker);
 	
 									drop(startBlock, crop, breaker, breakType);
@@ -1267,7 +1266,7 @@ public class CropControlEventHandler implements Listener {
 									return;
 								}
 	
-								Bukkit.broadcastMessage(ChatColor.GREEN + "Broke Sapling (" + breakType.toString() + ")");
+								Bukkit.broadcast(ChatColor.GREEN + "Broke Sapling (" + breakType.toString() + ")", "cropcontrol.debug");
 								CropControl.getPlugin().debug("Broke sapling {0} by {1}", sapling, breaker);
 	
 								drop(startBlock, sapling, breaker, breakType);
@@ -1291,8 +1290,8 @@ public class CropControlEventHandler implements Listener {
 	
 								if (type == Material.CHORUS_PLANT) {
 									for (Location location : returnUpwardsChorusBlocks(startBlock)) {
-										Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Broke Tree Component ("
-												+ breakType.toString() + ")");
+										Bukkit.broadcast(ChatColor.DARK_GREEN + "Broke Tree Component ("
+												+ breakType.toString() + ")", "cropcontrol.debug");
 
 										TreeComponent upComponent = CropControl.getDAO().getChunk(location.getChunk())
 												.getTreeComponent(location.getBlockX(), location.getBlockY(), location.getBlockZ());
@@ -1305,8 +1304,8 @@ public class CropControlEventHandler implements Listener {
 
 									}
 								} else {
-									Bukkit.broadcastMessage(
-											ChatColor.DARK_GREEN + "Broke Tree Component (" + breakType.toString() + ")");
+									Bukkit.broadcast(
+											ChatColor.DARK_GREEN + "Broke Tree Component (" + breakType.toString() + ")", "cropcontrol.debug");
 									CropControl.getPlugin().debug("Broke tree component {0} by {1}", treeComponent, breaker);
 	
 									drop(startBlock, treeComponent, breaker, breakType);
@@ -1314,8 +1313,7 @@ public class CropControlEventHandler implements Listener {
 									treeComponent.setRemoved();
 								}
 								if (CropControl.getDAO().getTreeComponents(tree).isEmpty()) {
-									Bukkit.broadcastMessage(
-											ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")");
+									Bukkit.broadcast(ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")", "cropcontrol.debug");
 									CropControl.getPlugin().debug("Broke tree {0} by {1}", tree, breaker);
 
 									tree.setRemoved();										
@@ -1334,28 +1332,37 @@ public class CropControlEventHandler implements Listener {
 								
 								Crop crop = chunk.getCrop(x, y, z);
 								if (crop != null) {
-									Bukkit.broadcastMessage(
-											ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")");
+									Bukkit.broadcast(ChatColor.YELLOW + "Broke Crop (" + breakType.toString() + ")", "cropcontrol.debug");
 	
 									drop(location.getBlock(), crop, breaker, breakType);
 									
 									crop.setRemoved();
 									continue;
 								}
+
+								Sapling sapling = chunk.getSapling(x, y, z);
+								if (sapling != null) {
+									Bukkit.broadcast(ChatColor.YELLOW + "Broke Sapling (" + breakType.toString() + ")", "cropcontrol.debug");
+	
+									drop(location.getBlock(), sapling, breaker, breakType);
+									
+									sapling.setRemoved();
+									continue;
+								}
 								
 								TreeComponent treeComponent = chunk.getTreeComponent(x, y, z);
 								
 								if (treeComponent != null) {
-									Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Broke Tree Component ("
-											+ breakType.toString() + ")");
+									Bukkit.broadcast(ChatColor.DARK_GREEN + "Broke Tree Component ("
+											+ breakType.toString() + ")", "cropcontrol.debug");
 	
 									drop(location.getBlock(), treeComponent, breaker, breakType);
 	
 									treeComponent.setRemoved();
 									
 									if (CropControl.getDAO().getTreeComponents(treeComponent.getTreeID()).isEmpty()) {
-										Bukkit.broadcastMessage(
-												ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")");
+										Bukkit.broadcast(
+												ChatColor.AQUA + "Broke Tree (" + breakType.toString() + ")", "cropcontrol.debug");
 	
 										CropControl.getDAO().getTree(treeComponent).setRemoved();
 									}
@@ -1370,34 +1377,6 @@ public class CropControlEventHandler implements Listener {
 				}, 1L);
 	}
 
-	/*public void drop(Block block, Crop crop, UUID player, BreakType breakType) {
-		Biome biome = block.getBiome();
-		boolean byPlayer = player != null;
-		boolean placed = byPlayer && player.equals(crop.getPlacer());
-		boolean harvestable = crop.getHarvestable();
-		ItemStack toolUsed = null;
-		if (byPlayer) {
-			Player p = Bukkit.getPlayer(player);
-			if (p != null) {
-				toolUsed = p.getInventory().getItemInMainHand();
-			}
-		}
-		
-		// Resolve drops  
-	}
-	
-	public void drop(Block block, Sapling sapling, UUID player, BreakType breakType) {
-		
-	}
-	
-	public void drop(Block block, TreeComponent component, UUID player, BreakType breakType) {
-		
-	}
-	
-	public void drop(Block block, Tree tree, UUID player, BreakType breakType) {
-		
-	}*/
-	
 	private void drop(Block block, Locatable dropable, UUID player, BreakType breakType) {
 		Biome biome = block.getBiome();
 		UUID placePlayer = null; 
@@ -1454,13 +1433,11 @@ public class CropControlEventHandler implements Listener {
 	 * 
 	 */
 
-	/*
-	 * This is where we should (in my humble opinion) be getting data from the
-	 * DB, Such that when a chunk is loaded we load all of the crops, saplings,
-	 * trees & tree componenets. And therefore when a chunk is unloaded we save
-	 * it all to the DB,
+	/**
+	 * This is where we pre-load data for each chunk. If it's already in the loaded cache, nothing happens. If it was previously
+	 * staged for unload, this cancels that.
 	 * 
-	 * Or something along those lines.
+	 * @param e The chunk to load.
 	 */
 	@EventHandler(ignoreCancelled = true)
 	public void onChunkLoad(ChunkLoadEvent e) {
@@ -1470,6 +1447,11 @@ public class CropControlEventHandler implements Listener {
 
 	}
 
+	/**
+	 * Marks a loaded chunk as pending unload. It'll be unloaded later en-masse.
+	 * 
+	 * @param e The chunk to unload.
+	 */
 	@EventHandler(ignoreCancelled = true)
 	public void onChunkUnload(ChunkUnloadEvent e) {
 		Chunk chunk = e.getChunk();

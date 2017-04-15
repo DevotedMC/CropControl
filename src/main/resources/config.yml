@@ -30,7 +30,7 @@ drops:
    chance: 1.0
 crops:
  # Crop Type must be one of : CARROT, CROPS, COCOA, BROWN_MUSHROOM, POTATO, PUMPKIN, PUMPKIN_STEM, SUGAR_CANE_BLOCK, 
- #   BEETROOT_BLOCK, CACTUS, MELON_BLOCK, MELON_STEM, RED_MUSHROOM 
+ #   BEETROOT_BLOCK, CACTUS, MELON_BLOCK, MELON_STEM, RED_MUSHROOM, NETHER_WARTS
  # Some crops like Wheat can have bindings for every stage of growth. Others have no stages and just don't include the stage setting.
  #  Check the README.md for a complete list.
  # Undefined stages will simply have no drop augments.

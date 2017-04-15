@@ -358,6 +358,72 @@ drops:
    min: 1
    max: 5
    chance: 0.05
+ Immature:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CLAY_BALL
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Immature crop
+  base:
+   chance: 0.8
+ RareImmature:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CLAY_BALL
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Rare Immature crop
+  base:
+   chance: 0.2
+ Growing:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: DEAD_BUSH
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Growing crop
+  base:
+   chance: 0.8
+ RareGrowing:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: DEAD_BUSH
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Rare Growing crop
+  base:
+   chance: 0.2
+ Mature:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: RED_ROSE
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Beautiful Flower
+  base:
+   chance: 0.8
+ RareMature:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: YELLOW_FLOWER
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Lovely Flower
+  base:
+   chance: 0.2
 trees:
  TREE:
   drops:
@@ -534,4 +600,323 @@ trees:
    BirchTrunkT3:
     player:
      same: 1.1
-
+# Speculative Sections for advanced testing
+crops:
+ CARROT: 
+  SEEDED:
+   drops:
+    Immature:
+    RareImmature:
+  GERMINATED:
+   drops:
+    Growing:
+    RareGrowing: 
+  VERY_SMALL:
+   drops:
+    Growing:
+    RareGrowing:
+  SMALL:
+   drops:
+    Growing:
+    RareGrowing:
+  MEDIUM:
+   drops:
+    Growing:
+    RareGrowing:
+  TALL:
+   drops:
+    Growing:
+    RareGrowing:
+  VERY_TALL:
+   drops:
+    Growing:
+    RareGrowing:
+  RIPE:
+   drops:
+    Mature:
+    RareMature: 
+ CROPS: 
+  SEEDED:
+   drops:
+    Immature:
+    RareImmature:
+  GERMINATED:
+   drops:
+    Growing:
+    RareGrowing: 
+  VERY_SMALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  SMALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  MEDIUM:
+   drops:
+    Growing:
+    RareGrowing: 
+  TALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  VERY_TALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  RIPE:
+   drops:
+    Mature:
+    RareMature: 
+ COCOA:
+  SMALL:
+   drops:
+    Immature:
+    RareImmature:
+  MEDIUM:
+   drops:
+    Growing:
+    RareGrowing: 
+  LARGE:
+   drops:
+    Mature:
+    RareMature: 
+ BROWN_MUSHROOM:
+  drops:
+   Mature:
+    harvestableOnly: true
+   RareMature:
+    harvestableOnly: true
+   Immature:
+    harvestableOnly: false 
+   RareImmature:
+    harvestableOnly: false
+ POTATO:
+  SEEDED:
+   drops:
+    Immature:
+    RareImmature:
+  GERMINATED:
+   drops:
+    Growing:
+    RareGrowing: 
+  VERY_SMALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  SMALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  MEDIUM:
+   drops:
+    Growing:
+    RareGrowing: 
+  TALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  VERY_TALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  RIPE:
+   drops:
+    Mature:
+    RareMature: 
+ PUMPKIN:
+  drops:
+   Mature:
+   RareMature:
+ PUMPKIN_STEM:
+  0:
+   drops:
+    Immature:
+     harvestableOnly: false 
+    RareImmature:
+     harvestableOnly: false 
+  1:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  2:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  3:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  4:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  5:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  6:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  7:
+   drops:
+    Mature:
+     harvestableOnly: false 
+    RareMature: 
+     harvestableOnly: false 
+ SUGAR_CANE_BLOCK:
+  drops:
+   Mature:
+    harvestableOnly: true
+   RareMature:
+    harvestableOnly: true
+   Immature:
+    harvestableOnly: false 
+   RareImmature:
+    harvestableOnly: false
+ BEETROOT_BLOCK:
+  SEEDED:
+   drops:
+    Immature:
+    RareImmature:
+  SMALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  TALL:
+   drops:
+    Growing:
+    RareGrowing: 
+  RIPE:
+   drops:
+    Mature:
+    RareMature: 
+ CACTUS:
+  drops:
+   Mature:
+    harvestableOnly: true
+   RareMature:
+    harvestableOnly: true
+   Immature:
+    harvestableOnly: false 
+   RareImmature:
+    harvestableOnly: false
+ MELON_BLOCK:
+  drops:
+   Mature:
+   RareMature:
+ MELON_STEM:
+  0:
+   drops:
+    Immature:
+     harvestableOnly: false 
+    RareImmature:
+     harvestableOnly: false 
+  1:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  2:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  3:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  4:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  5:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  6:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  7:
+   drops:
+    Mature:
+     harvestableOnly: false 
+    RareMature: 
+     harvestableOnly: false 
+ RED_MUSHROOM:
+  drops:
+   Mature:
+    harvestableOnly: true
+   RareMature:
+    harvestableOnly: true
+   Immature:
+    harvestableOnly: false 
+   RareImmature:
+    harvestableOnly: false
+ NETHER_WARTS:
+  SEEDED:
+   drops:
+    Immature:
+    RareImmature:
+  STAGE_ONE:
+   drops:
+    Growing:
+    RareGrowing: 
+  STAGE_TWO:
+   drops:
+    Growing:
+    RareGrowing: 
+  RIPE:
+   drops:
+    Mature:
+    RareMature: 
+saplings:
+ # Sapling Type must be one of : OAK_SAPLING, SPRUCE_SAPLING, BIRCH_SAPLING, JUNGLE_SAPLING, ACACIA_SAPLING, DARK_OAK_SAPLING
+ OAK_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ SPRUCE_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ BIRCH_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ JUNGLE_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ ACACIA_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ DARK_OAK_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
