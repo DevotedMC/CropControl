@@ -79,7 +79,7 @@ public class RootConfig {
 		if (baseDrops == null || baseDrops.size() == 0) {
 			return "No drops configured for " + index;
 		}
-		StringBuffer message = new StringBuffer("Drops configured for " + index + ":");
+		StringBuffer message = new StringBuffer("Drops configured for " + index + ":\n");
 		double cumChance = 0.0d;
 		double localChance = 0.0d;
 		int localMin = 0;
