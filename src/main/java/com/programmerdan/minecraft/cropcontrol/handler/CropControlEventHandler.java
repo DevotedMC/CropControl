@@ -330,7 +330,9 @@ public class CropControlEventHandler implements Listener {
 						.color(ChatColor.RED).append("\nCropState: " + crop.getCropState()).color(ChatColor.RED)
 						.append("\nPlacer: " + crop.getPlacer()).color(ChatColor.RED)
 						.append("\nTimeStamp: " + crop.getTimeStamp()).color(ChatColor.RED)
-						.append("\nHarvestable: " + crop.getHarvestable()).color(ChatColor.RED);
+						.append("\nHarvestable: " + crop.getHarvestable()).color(ChatColor.RED)
+						.append("\nNatural Drops: " + 
+								RootConfig.from(crop).predictDrops(BreakType.NATURAL, crop.getPlacer(), null, crop.getHarvestable(), block.getBiome(), null));
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
 
@@ -357,7 +359,9 @@ public class CropControlEventHandler implements Listener {
 						.append("\nSaplingType: " + sapling.getSaplingType()).color(ChatColor.RED)
 						.append("\nPlacer: " + sapling.getPlacer()).color(ChatColor.RED)
 						.append("\nTimeStamp: " + sapling.getTimeStamp()).color(ChatColor.RED)
-						.append("\nHarvestable: " + sapling.getHarvestable()).color(ChatColor.RED);
+						.append("\nHarvestable: " + sapling.getHarvestable()).color(ChatColor.RED)
+						.append("\nNatural Drops: " + 
+								RootConfig.from(sapling).predictDrops(BreakType.NATURAL, sapling.getPlacer(), null, sapling.getHarvestable(), block.getBiome(), null));
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
 
@@ -412,7 +416,10 @@ public class CropControlEventHandler implements Listener {
 								.append("\nZ: " + treeComponent.getZ())
 								.append("\nTreeType: " + treeComponent.getTreeType())
 								.append("\nPlacer: " + treeComponent.getPlacer())
-								.append("\nHarvestable: " + treeComponent.isHarvestable());
+								.append("\nHarvestable: " + treeComponent.isHarvestable())
+								.append("\nNatural Drops: " + 
+										RootConfig.from(treeComponent).predictDrops(BreakType.NATURAL, treeComponent.getPlacer(), null, treeComponent.isHarvestable(), block.getBiome(), null));
+
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
 

@@ -9,7 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.bukkit.block.Biome;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
@@ -26,6 +28,8 @@ public class RootConfig {
 	private ConfigurationSection baseSection = null;
 	
 	private ConcurrentHashMap<String, DropModifiers> baseDrops = null;
+	
+	private String index;
 	
 	public static void reload() {
 		rootConfigs.clear();
@@ -55,6 +59,7 @@ public class RootConfig {
 			return config;
 		} 
 		config = new RootConfig();
+		config.index = index;
 		config.baseSection = CropControl.getPlugin().getConfig().getConfigurationSection(index);
 		if (config.baseSection != null) {
 			ConfigurationSection drops = config.baseSection.getConfigurationSection("drops");
@@ -68,6 +73,82 @@ public class RootConfig {
 		}
 		rootConfigs.put(index, config);
 		return config;
+	}
+	
+	public String predictDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool) {
+		if (baseDrops == null || baseDrops.size() == 0) {
+			return "No drops configured for " + index;
+		}
+		StringBuffer message = new StringBuffer("Drops configured for " + index + ":");
+		double cumChance = 0.0d;
+		double localChance = 0.0d;
+		int localMin = 0;
+		int localMax = 0;
+		int counted = 0;
+		for (String dropIdent: baseDrops.keySet()) {
+			// for drop, divine the overall chance of drop.
+			DropConfig dropConfig = DropConfig.byIdent(dropIdent);
+			DropModifiers dropMod = baseDrops.get(dropIdent);
+			
+			// if only drop for harvestible, skip this drop. and don't increase local chance
+			if (!harvestable && dropMod.requireHarvestable) {
+				message.append("Skip ").append(dropIdent).append(" mismatch harvest\n");
+				continue;
+			}
+			
+			localChance = dropConfig.getChance() * dropMod.base.chanceMod; // baseline.
+			localMin = dropConfig.getMultiplierMin() + dropMod.base.stackAdjust;
+			localMax = dropConfig.getMutliplierMax() + dropMod.base.stackExpand;
+			
+			if (dropMod.biomes.containsKey(biome)) { // biome
+				ModifierConfig modifier = dropMod.biomes.get(biome);
+				localChance *= modifier.chanceMod;
+				localMin += modifier.stackAdjust;
+				localMax += modifier.stackExpand;
+			}
+			
+			if (dropMod.breaks.containsKey(breakType)) { // break
+				ModifierConfig modifier = dropMod.breaks.get(breakType);
+				localChance *= modifier.chanceMod;
+				localMin += modifier.stackAdjust;
+				localMax += modifier.stackExpand;
+			}
+			
+			// TODO: adjust chance based on tool.
+			
+			if (BreakType.PLAYER.equals(breakType)) { // player (if applies)
+				if (placer != null && placer.equals(breaker)) {
+					localChance *= dropMod.samePlayer.chanceMod;
+					localMin += dropMod.samePlayer.stackAdjust;
+					localMax += dropMod.samePlayer.stackExpand;
+				} else {
+					localChance *= dropMod.differentPlayer.chanceMod;
+					localMin += dropMod.differentPlayer.stackAdjust;
+					localMax += dropMod.differentPlayer.stackExpand;
+				}
+			}
+			
+			if (localMax < localMin) localMax = localMin;
+			
+			// If no chance of drop or drop size would be * 0, move on.
+			if (localChance <= 0) {
+				message.append("Skip ").append(dropIdent).append(" no chance\n");
+				continue;
+			}
+			if (localMin <= localMax && localMax <= 0) {
+				message.append("Skip ").append(dropIdent).append(" zero drops [").append(localChance).append("]\n");
+				cumChance += localChance;
+				counted  ++;
+				continue;
+			}
+			
+			message.append("Chance ").append(dropIdent).append(" (").append(localMin).append(",").append(localMax).append(") [").append(localChance).append("]\n");
+
+			counted ++;
+			cumChance += localChance;
+		}
+		message.append("Overall ").append(counted).append(" potential, [").append(cumChance).append("] max likelihood");
+		return message.toString();
 	}
 	
 	public List<ItemStack> realizeDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool) {

@@ -606,81 +606,157 @@ crops:
   SEEDED:
    drops:
     Immature:
+     player:
+      same: 1.1
     RareImmature:
+     player:
+      same: 1.1
   GERMINATED:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   VERY_SMALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing:
+     player:
+      same: 1.1
   SMALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing:
+     player:
+      same: 1.1
   MEDIUM:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing:
+     player:
+      same: 1.1
   TALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing:
+     player:
+      same: 1.1
   VERY_TALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing:
+     player:
+      same: 1.1
   RIPE:
    drops:
     Mature:
+     player:
+      same: 1.1
     RareMature: 
+     player:
+      same: 1.1
  CROPS: 
   SEEDED:
    drops:
     Immature:
+     player:
+      same: 1.1
     RareImmature:
+     player:
+      same: 1.1
   GERMINATED:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   VERY_SMALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   SMALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   MEDIUM:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   TALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   VERY_TALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   RIPE:
    drops:
     Mature:
+     player:
+      same: 1.1
     RareMature: 
+     player:
+      same: 1.1
  COCOA:
   SMALL:
    drops:
     Immature:
+     player:
+      same: 1.1
     RareImmature:
+     player:
+      same: 1.1
   MEDIUM:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   LARGE:
    drops:
     Mature:
+     player:
+      same: 1.1
     RareMature: 
+     player:
+      same: 1.1
  BROWN_MUSHROOM:
   drops:
    Mature:
@@ -695,39 +771,75 @@ crops:
   SEEDED:
    drops:
     Immature:
+     player:
+      same: 1.1
     RareImmature:
+     player:
+      same: 1.1
   GERMINATED:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   VERY_SMALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   SMALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   MEDIUM:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   TALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   VERY_TALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   RIPE:
    drops:
     Mature:
+     player:
+      same: 1.1
     RareMature: 
+     player:
+      same: 1.1
  PUMPKIN:
   drops:
    Mature:
+     player:
+      same: 1.1
    RareMature:
+     player:
+      same: 1.1
  PUMPKIN_STEM:
   0:
    drops:
@@ -791,19 +903,35 @@ crops:
   SEEDED:
    drops:
     Immature:
+     player:
+      same: 1.1
     RareImmature:
+     player:
+      same: 1.1
   SMALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   TALL:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   RIPE:
    drops:
     Mature:
+     player:
+      same: 1.1
     RareMature: 
+     player:
+      same: 1.1
  CACTUS:
   drops:
    Mature:
@@ -817,7 +945,11 @@ crops:
  MELON_BLOCK:
   drops:
    Mature:
+     player:
+      same: 1.1
    RareMature:
+     player:
+      same: 1.1
  MELON_STEM:
   0:
    drops:
@@ -881,19 +1013,35 @@ crops:
   SEEDED:
    drops:
     Immature:
+     player:
+      same: 1.1
     RareImmature:
+     player:
+      same: 1.1
   STAGE_ONE:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   STAGE_TWO:
    drops:
     Growing:
+     player:
+      same: 1.1
     RareGrowing: 
+     player:
+      same: 1.1
   RIPE:
    drops:
     Mature:
+     player:
+      same: 1.1
     RareMature: 
+     player:
+      same: 1.1
 saplings:
  # Sapling Type must be one of : OAK_SAPLING, SPRUCE_SAPLING, BIRCH_SAPLING, JUNGLE_SAPLING, ACACIA_SAPLING, DARK_OAK_SAPLING
  OAK_SAPLING:
