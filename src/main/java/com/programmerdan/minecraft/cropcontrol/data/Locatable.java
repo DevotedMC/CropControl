@@ -2,7 +2,7 @@ package com.programmerdan.minecraft.cropcontrol.data;
 
 /**
  * At the core of fast hashing is Locatable, which gives us O(1) lookups of specific location objects without resorting to 
- * othre cuboid sorting methods. 
+ * other cuboid sorting methods. 
  * That's the theory at least.
  * 
  * @author ProgrammerDan

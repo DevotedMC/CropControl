@@ -10,7 +10,7 @@ import vg.civcraft.mc.civmodcore.ACivMod;
 /**
  * Welcome to Crop Control! This is a companion mod to our other plugin, HiddenOre, and does for crops what HiddenOre does for ores.
  * 
- * It gives you complete control over the drops that crops generate, allowing you to give specific bonuses and penalties based
+ * It gives you augmentation control over the drops that crops generate, allowing you to give specific bonuses and penalties based
  * on who planted vs. who harvested, how it was harvested, where; and this control extends to all growables, including trees, 
  * crops, chorus fruit, and more.
  * 

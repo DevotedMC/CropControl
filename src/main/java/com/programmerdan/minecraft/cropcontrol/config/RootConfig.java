@@ -1,17 +1,13 @@
 package com.programmerdan.minecraft.cropcontrol.config;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.bukkit.block.Biome;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
@@ -20,6 +16,12 @@ import com.programmerdan.minecraft.cropcontrol.data.Sapling;
 import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
 
+/**
+ * Root configuration for a config relative to a type of crop / sapling / tree in terms of drop natures.
+ * 
+ * @author Programmerdan
+ *
+ */
 public class RootConfig {
 	
 	private static ConcurrentHashMap<String, RootConfig> rootConfigs = new ConcurrentHashMap<String, RootConfig>();

@@ -9,6 +9,12 @@ import org.bukkit.inventory.ItemStack;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 
+/**
+ * This configures a specific drop
+ * 
+ * @author ProgrammerDan
+ *
+ */
 public class DropConfig {
 	private static ConcurrentHashMap<String, DropConfig> configs = new ConcurrentHashMap<String, DropConfig>();
 	private static DropConfig nonce = new DropConfig();
