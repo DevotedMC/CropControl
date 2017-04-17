@@ -21,6 +21,8 @@ Some edge cases, especially for Chorus Fruit, are not well supported at the mome
 
 Basically, maybe don't use Chorus plants right now, they are still kind of broken. Other then that things seem to work quite well.
 
+We're testing Physics-capture for breaks, those are represented by BreakType PHYSICS; this captures things like light level breaks, other plugins modifying blocks & forcing updates, etc.
+
 We do currently make a best-effort to capture breaks and drops from pistons, flowing liquids, block placements, "supporting" block breaks,
 fire breaks, and direct breaks. 
 
@@ -161,6 +163,24 @@ Similar to Saplings, only list the trees you care to augment. As of Minecraft 1.
 `MEGA_REDWOOD`: 4x4 redwood tree
 
 `TALL_BIRCH`: Extra tall Birch tree
+
+## Valid Break Types
+
+`NATURAL`: Decay caused break, or a mob broke it.
+
+`PLAYER`: A player broke it directly (or first-order indirectly -- breaking supporting block is still considered a player-break)
+
+`PHYSICS`: During a block update the block failed its internal physics check and was broken
+
+`FIRE`: The block was burned or the supporting block was burned (COCOA on a log, the log burned up)
+
+`PISTON`: A Piston broke it
+
+`LAVA`: Lava washed it away
+
+`WATER`: Water washed it away
+
+`EXPLOSION`: Something blew it up
 
 More Details
 ============

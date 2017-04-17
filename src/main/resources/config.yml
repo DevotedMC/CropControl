@@ -120,6 +120,10 @@ saplings:
       chance: 0.0
      EXPLOSION:
       chance: 0.5
+     FIRE:
+      chance: 1.0
+     PHYSICS:
+      chance: 0.0
     harvestableOnly: false
 trees:
  # See README.md for list of valid Tree typess
