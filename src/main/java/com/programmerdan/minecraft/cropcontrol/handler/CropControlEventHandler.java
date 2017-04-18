@@ -536,6 +536,8 @@ public class CropControlEventHandler implements Listener {
 				CropControl.getPlugin().debug("Ghost object? Placement is overtop a tracked object at {0}, {1}, {2}", x, y, z);
 				//return;
 			}*/
+			
+			// TODO: Check if connected to an existing chorus tree.
 
 			// First register the "tree"
 			Tree chorusPlant = Tree.create(chunk, x, y, z, Material.CHORUS_PLANT.toString(),
@@ -544,6 +546,17 @@ public class CropControlEventHandler implements Listener {
 			// Then the component in the tree.
 			TreeComponent.create(chorusPlant, chunk, x, y, z, Material.CHORUS_PLANT.toString(),
 					e.getPlayer().getUniqueId(), false);
+		} else if (blockMaterial.isSolid()){ // check for cactus.
+			for (BlockFace face : CropControlEventHandler.directions) {
+				Block adj = block.getRelative(face);
+				if (Material.CACTUS.equals(adj.getType())) {
+					Location loc = adj.getLocation();
+					if (!pendingChecks.contains(loc)) {
+						pendingChecks.add(loc);
+						handleBreak(block, BreakType.PLAYER, e.getPlayer().getUniqueId(), null);
+					}		
+				}
+			}
 		}
 	}
 	
@@ -903,6 +916,7 @@ public class CropControlEventHandler implements Listener {
 			// We'll check the adjacency of the _location_ and see if any blocks around us we care about; for all the ones we
 			// care about we checkBreak.
 			if (Material.SUGAR_CANE_BLOCK.equals(e.getChangedType())) {
+				if (chMat.equals(e.getChangedType())) return; // handled elsewhere.
 				// So for sugar_cane, we need to figure out if its about to break. We want to do this the easy way, though.
 				// So step 1: check adjacent above and adjacent even for sugarcane (not below).
 				// Step 2: For each found sugarcane, just fire a checkbreak. Let's not get complicated.
@@ -924,6 +938,8 @@ public class CropControlEventHandler implements Listener {
 					}
 				}
 			} else if (Material.CACTUS.equals(e.getChangedType())) {
+				if (chMat.equals(e.getChangedType())) return; // handled elsewhere
+				
 				// Cactus is a little simpler. It breaks on adjacent placements; that's what would trigger this event. 
 				for (BlockFace face : CropControlEventHandler.directions) {
 					// We look around face-adjacent places and trigger a break-check for any cactus found.
