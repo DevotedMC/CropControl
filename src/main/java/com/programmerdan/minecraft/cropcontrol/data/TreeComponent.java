@@ -149,6 +149,8 @@ public class TreeComponent extends Locatable {
 	public static void flushDirty(Iterable<TreeComponent> components) {
 		if (components != null) {
 			int batchSize = 0;
+			int totalSave = 0;
+			int totalSkip = 0;
 			try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 					PreparedStatement saveComponent = connection.prepareStatement("UPDATE crops_tree_component SET chunk_id = ?, x = ?, y = ?, z = ?, harvestable = ?, removed = ? WHERE tree_component_id = ?");) {
 				for (TreeComponent treeComponent : components) {
@@ -163,13 +165,16 @@ public class TreeComponent extends Locatable {
 						saveComponent.setLong(7, treeComponent.getTreeComponentID());
 						saveComponent.addBatch();
 						batchSize ++;
+						totalSave ++;
+					} else {
+						totalSkip ++;
 					}
 					if (batchSize > 0 && batchSize % 100 == 0) {
 						int[] batchRun = saveComponent.executeBatch();
 						if (batchRun.length != batchSize) {
-							CropControl.getPlugin().severe("Some elements of the Tree Component dirty batch didn't save? " + batchSize + " vs " + batchRun.length);
+							CropControl.getPlugin().severe("Some elements of the Tree Component dirty flush didn't save? " + batchSize + " vs " + batchRun.length);
 						} else {
-							CropControl.getPlugin().debug("Tree Component batch: {0} saves", batchRun.length);
+							CropControl.getPlugin().debug("Tree Component flush: {0} saves", batchRun.length);
 						}
 						batchSize = 0;
 					}
@@ -177,19 +182,22 @@ public class TreeComponent extends Locatable {
 				if (batchSize > 0 && batchSize % 100 > 0) {
 					int[] batchRun = saveComponent.executeBatch();
 					if (batchRun.length != batchSize) {
-						CropControl.getPlugin().severe("Some elements of the Tree Component dirty batch didn't save? " + batchSize + " vs " + batchRun.length);
+						CropControl.getPlugin().severe("Some elements of the Tree Component dirty flush didn't save? " + batchSize + " vs " + batchRun.length);
 					} else {
-						CropControl.getPlugin().debug("Tree Component batch: {0} saves", batchRun.length);
+						CropControl.getPlugin().debug("Tree Component flush: {0} saves", batchRun.length);
 					}
 				}
+				CropControl.getPlugin().debug("Tree Component flush: {0} saves {1} skips", totalSave, totalSkip);
 			} catch (SQLException se) {
-				CropControl.getPlugin().severe("Save of Tree Component dirty batch failed!: ", se);
+				CropControl.getPlugin().severe("Save of Tree Component dirty flush failed!: ", se);
 			}
 		}
 	}
 	
 	public static void saveDirty() {
 		int batchSize = 0;
+		int totalSave = 0;
+		int totalSkip = 0;
 		try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 				PreparedStatement saveComponent = connection.prepareStatement("UPDATE crops_tree_component SET chunk_id = ?, x = ?, y = ?, z = ?, harvestable = ?, removed = ? WHERE tree_component_id = ?");) {
 			while (!TreeComponent.dirties.isEmpty()) {
@@ -206,6 +214,9 @@ public class TreeComponent extends Locatable {
 					saveComponent.setLong(7, treeComponent.getTreeComponentID());
 					saveComponent.addBatch();
 					batchSize ++;
+					totalSave ++;
+				} else {
+					totalSkip ++;
 				}
 				if (batchSize > 0 && batchSize % 100 == 0) {
 					int[] batchRun = saveComponent.executeBatch();
@@ -225,6 +236,7 @@ public class TreeComponent extends Locatable {
 					CropControl.getPlugin().debug("Tree Component batch: {0} saves", batchRun.length);
 				}
 			}
+			CropControl.getPlugin().debug("Tree Component batch: {0} saves {1} skips", totalSave, totalSkip);
 		} catch (SQLException se) {
 			CropControl.getPlugin().severe("Save of Tree Component dirty batch failed!: ", se);
 		}

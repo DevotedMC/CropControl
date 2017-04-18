@@ -131,6 +131,8 @@ public class Sapling extends Locatable {
 	public static void flushDirty(Iterable<Sapling> saplings) {
 		if (saplings != null) {
 			int batchSize = 0;
+			int totalSave = 0;
+			int totalSkip = 0;
 			try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 					PreparedStatement saveSapling = connection.prepareStatement("UPDATE crops_sapling SET removed = ? WHERE sapling_id = ?");) {
 				for (Sapling sapling : saplings) {
@@ -140,6 +142,9 @@ public class Sapling extends Locatable {
 						saveSapling.setLong(2, sapling.getSaplingID());
 						saveSapling.addBatch();
 						batchSize ++;
+						totalSave ++;
+					} else {
+						totalSkip ++;
 					}
 					if (batchSize > 0 && batchSize % 100 == 0) {
 						int[] batchRun = saveSapling.executeBatch();
@@ -159,6 +164,7 @@ public class Sapling extends Locatable {
 						CropControl.getPlugin().debug("Sapling flush: {0} saves", batchRun.length);
 					}
 				}
+				CropControl.getPlugin().debug("Sapling flush: {0} saves {1} skips", totalSave, totalSkip);
 			} catch (SQLException se) {
 				CropControl.getPlugin().severe("Save of Sapling dirty flush failed!: ", se);
 			}
@@ -167,6 +173,8 @@ public class Sapling extends Locatable {
 	
 	public static void saveDirty() {
 		int batchSize = 0;
+		int totalSave = 0;
+		int totalSkip = 0;
 		try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 				PreparedStatement saveSapling = connection.prepareStatement("UPDATE crops_sapling SET removed = ? WHERE sapling_id = ?");) {
 			while (!Sapling.dirties.isEmpty()) {
@@ -178,6 +186,9 @@ public class Sapling extends Locatable {
 					saveSapling.setLong(2, sapling.getSaplingID());
 					saveSapling.addBatch();
 					batchSize ++;
+					totalSave ++;
+				} else {
+					totalSkip ++;
 				}
 				if (batchSize > 0 && batchSize % 100 == 0) {
 					int[] batchRun = saveSapling.executeBatch();
@@ -197,6 +208,7 @@ public class Sapling extends Locatable {
 					CropControl.getPlugin().debug("Sapling batch: {0} saves", batchRun.length);
 				}
 			}
+			CropControl.getPlugin().debug("Sapling batch: {0} saves {1} skips", totalSave, totalSkip);
 		} catch (SQLException se) {
 			CropControl.getPlugin().severe("Save of Sapling dirty batch failed!: ", se);
 		}

@@ -147,6 +147,8 @@ public class Crop extends Locatable {
 	public static void flushDirty(Iterable<Crop> crops) {
 		if (crops != null) {
 			int batchSize = 0;
+			int totalSave = 0;
+			int totalSkip = 0;
 			try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 					PreparedStatement saveCrop = connection.prepareStatement("UPDATE crops_crop SET state = ?, removed = ? WHERE crop_id = ?");) {
 				for (Crop crop : crops) {
@@ -157,6 +159,9 @@ public class Crop extends Locatable {
 						saveCrop.setLong(3, crop.getCropID());
 						saveCrop.addBatch();
 						batchSize ++;
+						totalSave ++;
+					} else {
+						totalSkip ++;
 					}
 					if (batchSize > 0 && batchSize % 100 == 0) {
 						int[] batchRun = saveCrop.executeBatch();
@@ -176,6 +181,7 @@ public class Crop extends Locatable {
 						CropControl.getPlugin().debug("Crop flush: {0} saves", batchRun.length);
 					}
 				}
+				CropControl.getPlugin().debug("Crop flush: {0} saves {1} skips", totalSave, totalSkip);
 			} catch (SQLException se) {
 				CropControl.getPlugin().severe("Save of Crop dirty flush failed!: ", se);
 			}
@@ -185,6 +191,8 @@ public class Crop extends Locatable {
 
 	public static void saveDirty() {
 		int batchSize = 0;
+		int totalSave = 0;
+		int totalSkip = 0;
 		try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 				PreparedStatement saveCrop = connection.prepareStatement("UPDATE crops_crop SET state = ?, removed = ? WHERE crop_id = ?");) {
 			while (!Crop.dirties.isEmpty()) {
@@ -197,6 +205,9 @@ public class Crop extends Locatable {
 					saveCrop.setLong(3, crop.getCropID());
 					saveCrop.addBatch();
 					batchSize ++;
+					totalSave ++;
+				} else {
+					totalSkip ++;
 				}
 				if (batchSize > 0 && batchSize % 100 == 0) {
 					int[] batchRun = saveCrop.executeBatch();
@@ -216,6 +227,7 @@ public class Crop extends Locatable {
 					CropControl.getPlugin().debug("Crop batch: {0} saves", batchRun.length);
 				}
 			}
+			CropControl.getPlugin().debug("Crop batch: {0} saves {1} skips", totalSave, totalSkip);
 		} catch (SQLException se) {
 			CropControl.getPlugin().severe("Save of Crop dirty batch failed!: ", se);
 		}

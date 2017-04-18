@@ -141,6 +141,8 @@ public class Tree extends Locatable {
 	public static void flushDirty(Iterable<Tree> trees) {
 		if (trees != null) {
 			int batchSize = 0;
+			int totalSave = 0;
+			int totalSkip = 0;
 			try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 					PreparedStatement saveTree = connection.prepareStatement("UPDATE crops_tree SET chunk_id = ?, x = ?, y = ?, z = ?, removed = ? WHERE tree_id = ?");) {
 				for (Tree tree : trees) {
@@ -154,6 +156,9 @@ public class Tree extends Locatable {
 						saveTree.setLong(6, tree.getTreeID());
 						saveTree.addBatch();
 						batchSize ++;
+						totalSave ++;
+					} else {
+						totalSkip ++;
 					}
 					if (batchSize > 0 && batchSize % 100 == 0) {
 						int[] batchRun = saveTree.executeBatch();
@@ -173,6 +178,7 @@ public class Tree extends Locatable {
 						CropControl.getPlugin().debug("Tree flush: {0} saves", batchRun.length);
 					}
 				}
+				CropControl.getPlugin().debug("Tree flush: {0} saves {1} skips", totalSave, totalSkip);
 			} catch (SQLException se) {
 				CropControl.getPlugin().severe("Save of Tree dirty flush failed!: ", se);
 			}
@@ -181,6 +187,8 @@ public class Tree extends Locatable {
 	
 	public static void saveDirty() {
 		int batchSize = 0;
+		int totalSave = 0;
+		int totalSkip = 0;
 		try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 				PreparedStatement saveTree = connection.prepareStatement("UPDATE crops_tree SET chunk_id = ?, x = ?, y = ?, z = ?, removed = ? WHERE tree_id = ?");) {
 			while (!Tree.dirties.isEmpty()) {
@@ -196,6 +204,9 @@ public class Tree extends Locatable {
 					saveTree.setLong(6, tree.getTreeID());
 					saveTree.addBatch();
 					batchSize ++;
+					totalSave ++;
+				} else {
+					totalSkip ++;
 				}
 				if (batchSize > 0 && batchSize % 100 == 0) {
 					int[] batchRun = saveTree.executeBatch();
@@ -215,6 +226,7 @@ public class Tree extends Locatable {
 					CropControl.getPlugin().debug("Tree batch: {0} saves", batchRun.length);
 				}
 			}
+			CropControl.getPlugin().debug("Tree batch: {0} saves {1} skips", totalSave, totalSkip);
 		} catch (SQLException se) {
 			CropControl.getPlugin().severe("Save of Tree dirty batch failed!: ", se);
 		}
