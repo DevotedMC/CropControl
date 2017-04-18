@@ -151,7 +151,7 @@ public class Sapling extends Locatable {
 						batchSize = 0;
 					}
 				}
-				if (batchSize > 0 && batchSize % 100 > 0) {
+				if (batchSize > 0) {
 					int[] batchRun = saveSapling.executeBatch();
 					if (batchRun.length != batchSize) {
 						CropControl.getPlugin().severe("Some elements of the Sapling dirty flush didn't save? " + batchSize + " vs " + batchRun.length);
@@ -189,7 +189,7 @@ public class Sapling extends Locatable {
 					batchSize = 0;
 				}
 			}
-			if (batchSize > 0 && batchSize % 100 > 0) {
+			if (batchSize > 0) { // && batchSize % 100 > 0) {
 				int[] batchRun = saveSapling.executeBatch();
 				if (batchRun.length != batchSize) {
 					CropControl.getPlugin().severe("Some elements of the Sapling dirty batch didn't save? " + batchSize + " vs " + batchRun.length);
@@ -226,6 +226,10 @@ public class Sapling extends Locatable {
 					sapling.harvestable = results.getBoolean(9);
 					sapling.removed = results.getBoolean(10);
 					sapling.dirty = false;
+					if (sapling.removed) {
+						CropControl.getPlugin().warning("A removed Sapling was loaded at {0}, {1}, {2}", sapling.x, sapling.y, sapling.z);
+						continue;
+					}
 					saplings.add(sapling);
 				}
 			}

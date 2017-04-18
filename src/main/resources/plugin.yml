@@ -2,7 +2,7 @@ name: ${project.name}
 version: ${project.version}
 authors: [ProgrammerDan, xFier]
 depend: [CivModCore]
-softdepend: [RealisticBiomes]
+softdepend: [RealisticBiomes, Citadel]
 main: com.programmerdan.minecraft.cropcontrol.CropControl
 description: Fills the gaps left by RealisticBiomes and HiddenOre; augment drops for player-grown plants and trees
 commands:

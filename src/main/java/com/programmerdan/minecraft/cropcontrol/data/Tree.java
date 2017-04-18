@@ -207,7 +207,7 @@ public class Tree extends Locatable {
 					batchSize = 0;
 				}
 			}
-			if (batchSize > 0 && batchSize % 100 > 0) {
+			if (batchSize > 0) {// && batchSize % 100 > 0) {
 				int[] batchRun = saveTree.executeBatch();
 				if (batchRun.length != batchSize) {
 					CropControl.getPlugin().severe("Some elements of the Tree dirty batch didn't save? " + batchSize + " vs " + batchRun.length);
@@ -243,6 +243,10 @@ public class Tree extends Locatable {
 					tree.timeStamp = results.getTimestamp(8);
 					tree.removed = results.getBoolean(9);
 					tree.dirty = false;
+					if (tree.removed) {
+						CropControl.getPlugin().warning("A removed Tree was loaded at {0}, {1}, {2}", tree.x, tree.y, tree.z);
+						continue;
+					}
 					trees.add(tree);
 				}
 			}
@@ -275,6 +279,9 @@ public class Tree extends Locatable {
 					}
 					tree.timeStamp = results.getTimestamp(8);
 					tree.removed = results.getBoolean(9);
+					if (tree.removed) {
+						CropControl.getPlugin().warning("A removed Tree was force loaded at {0}, {1}, {2}", tree.x, tree.y, tree.z);
+					}
 					tree.dirty = false;
 				} else {
 					throw new CreationError(Tree.class, "Unable to retrieve tree by ID");

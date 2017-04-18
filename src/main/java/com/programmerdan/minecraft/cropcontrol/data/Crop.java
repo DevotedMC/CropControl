@@ -246,6 +246,10 @@ public class Crop extends Locatable {
 					crop.harvestable = results.getBoolean(10);
 					crop.removed = results.getBoolean(11);
 					crop.dirty = false;
+					if (crop.removed) {
+						CropControl.getPlugin().warning("A removed crop was loaded at {0}, {1}, {2}", crop.x, crop.y, crop.z);
+						continue;
+					}
 					crops.add(crop);
 				}
 			}

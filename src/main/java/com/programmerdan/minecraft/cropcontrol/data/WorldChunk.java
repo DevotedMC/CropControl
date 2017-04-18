@@ -1,5 +1,6 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -53,6 +54,11 @@ public class WorldChunk {
 	private static Map<UUID, Map<Long, WorldChunk>> chunkCacheLoc = new ConcurrentHashMap<UUID, Map<Long, WorldChunk>>(); // using transposed x,z
 	
 	private static ConcurrentLinkedQueue<WorldChunk> unloadQueue = new ConcurrentLinkedQueue<WorldChunk>();
+	
+	private ConcurrentLinkedQueue<Crop> removedCropQueue = new ConcurrentLinkedQueue<Crop>();
+	private ConcurrentLinkedQueue<Sapling> removedSaplingQueue = new ConcurrentLinkedQueue<Sapling>();
+	private ConcurrentLinkedQueue<TreeComponent> removedTreeComponentQueue = new ConcurrentLinkedQueue<TreeComponent>();
+	private ConcurrentLinkedQueue<Tree> removedTreeQueue = new ConcurrentLinkedQueue<Tree>();
 
 	private long chunkID;
 	private UUID worldID;
@@ -91,21 +97,21 @@ public class WorldChunk {
 	private void stuff() {
 		List<Crop> crops = Crop.preload(this);
 		for (Crop crop : crops) {
-			CropControl.getPlugin().debug("Loading crop at {0}: {1}", (Locatable) crop, crop);
+			//CropControl.getPlugin().debug("Loading crop at {0}: {1}", (Locatable) crop, crop);
 			cropCacheLoc.put(new Locatable(crop.getChunkID(), crop.getX(), crop.getY(), crop.getZ()), crop);
 			cropCacheID.put(crop.getCropID(), crop);
 		}
 		
 		List<Sapling> saplings = Sapling.preload(this);
 		for (Sapling sapling: saplings) {
-			CropControl.getPlugin().debug("Loading sapling at {0}: {1}", (Locatable) sapling, sapling);
+			//CropControl.getPlugin().debug("Loading sapling at {0}: {1}", (Locatable) sapling, sapling);
 			saplingCacheLoc.put(new Locatable(sapling.getChunkID(), sapling.getX(), sapling.getY(), sapling.getZ()), sapling);
 			saplingCacheID.put(sapling.getSaplingID(), sapling);			
 		}
 		
 		List<Tree> trees = Tree.preload(this);
 		for (Tree tree: trees) {
-			CropControl.getPlugin().debug("Loading tree at {0}: {1}", (Locatable) tree, tree);
+			//CropControl.getPlugin().debug("Loading tree at {0}: {1}", (Locatable) tree, tree);
 			treeCacheLoc.put(new Locatable(tree.getChunkID(), tree.getX(), tree.getY(), tree.getZ()), tree);
 			treeCacheID.put(tree.getTreeID(), tree);
 			WorldChunk.universalTreeCache.put(tree.getTreeID(), tree);
@@ -113,7 +119,7 @@ public class WorldChunk {
 		
 		List<TreeComponent> components = TreeComponent.preload(this);
 		for (TreeComponent component : components) {
-			CropControl.getPlugin().debug("Loading tree component at {0}: {1}", (Locatable) component, component);
+			//CropControl.getPlugin().debug("Loading tree component at {0}: {1}", (Locatable) component, component);
 			componentCacheLoc.put(new Locatable(component.getChunkID(), component.getX(), component.getY(), component.getZ()), component);
 			componentCacheID.put(component.getTreeComponentID(), component);
 			Set<TreeComponent> treeComponents = WorldChunk.universalTreeComponentCache.get(component.getTreeID());
@@ -142,13 +148,14 @@ public class WorldChunk {
 		Crop preExist = cropCacheLoc.remove((Locatable) crop); // did we have one here already?
 		if (preExist != null) {
 			cropCacheID.remove(preExist.getCropID());
+			removedCropQueue.offer(preExist);
 			CropControl.getPlugin().debug("Removed crop {0}", crop);
 		}
 	}
 	
 	public Crop getCrop(int x, int y, int z) {
 		Crop result = cropCacheLoc.get(new Locatable(chunkID, x, y, z));
-		CropControl.getPlugin().debug("Get crop at {0},{1},{2},{3}: {4}", chunkID, x, y, z, result);
+		//CropControl.getPlugin().debug("Get crop at {0},{1},{2},{3}: {4}", chunkID, x, y, z, result);
 		return result;
 	}
 
@@ -168,6 +175,7 @@ public class WorldChunk {
 		Sapling preExist = saplingCacheLoc.remove((Locatable) sapling); // did we have one here already?
 		if (preExist != null) {
 			saplingCacheID.remove(preExist.getSaplingID());
+			removedSaplingQueue.offer(preExist);
 			CropControl.getPlugin().debug("Removed sapling {0}", sapling);
 			//saplingCacheLoc.remove(new Locatable(sapling.getChunkID(), sapling.getX(), sapling.getY(), sapling.getZ()));
 		}
@@ -175,7 +183,7 @@ public class WorldChunk {
 	
 	public Sapling getSapling(int x, int y, int z) {
 		Sapling result = saplingCacheLoc.get(new Locatable(chunkID, x, y, z));
-		CropControl.getPlugin().debug("Get Sapling at {0},{1},{2},{3}: {4}", chunkID, x, y, z, result);
+		//CropControl.getPlugin().debug("Get Sapling at {0},{1},{2},{3}: {4}", chunkID, x, y, z, result);
 		return result;
 	}
 
@@ -196,6 +204,7 @@ public class WorldChunk {
 		Tree preExist = treeCacheLoc.remove((Locatable) tree); // did we have one here already?
 		if (preExist != null) {
 			treeCacheID.remove(preExist.getTreeID());
+			removedTreeQueue.offer(preExist);
 			CropControl.getPlugin().debug("Removed tree {0}", tree);
 			//treeCacheLoc.remove(new Locatable(tree.getChunkID(), tree.getX(), tree.getY(), tree.getZ()));
 		}
@@ -203,7 +212,7 @@ public class WorldChunk {
 	
 	public Tree getTree(int x, int y, int z) {
 		Tree result = treeCacheLoc.get(new Locatable(chunkID, x, y, z));
-		CropControl.getPlugin().debug("Get Tree at {0},{1},{2},{3}: {4}", chunkID, x, y, z, result);
+		//CropControl.getPlugin().debug("Get Tree at {0},{1},{2},{3}: {4}", chunkID, x, y, z, result);
 		return result;
 	}
 	
@@ -212,7 +221,7 @@ public class WorldChunk {
 		if (tree == null) {
 			tree = Tree.byId(treeID);
 		}
-		CropControl.getPlugin().debug("Get tree {0}: {1}", treeID, tree);
+		//CropControl.getPlugin().debug("Get tree {0}: {1}", treeID, tree);
 		return tree;
 	}
 	
@@ -243,6 +252,7 @@ public class WorldChunk {
 		TreeComponent preExist = componentCacheLoc.remove((Locatable) component); // did we have one here already?
 		if (preExist != null) {
 			componentCacheID.remove(preExist.getTreeID());
+			removedTreeComponentQueue.offer(preExist);
 			CropControl.getPlugin().debug("Removed treecomponent {0}", component);
 			//componentCacheLoc.remove(new Locatable(component.getChunkID(), component.getX(), component.getY(), component.getZ()));
 		}
@@ -259,12 +269,12 @@ public class WorldChunk {
 	
 	public TreeComponent getTreeComponent(int x, int y, int z) {
 		TreeComponent result = componentCacheLoc.get(new Locatable(chunkID, x, y, z));
-		CropControl.getPlugin().debug("Get TreeComponent at {0},{1},{2},{3}: {4}", chunkID, x, y, z, result);
+		//CropControl.getPlugin().debug("Get TreeComponent at {0},{1},{2},{3}: {4}", chunkID, x, y, z, result);
 		return result;
 	}
 	
 	public static List<TreeComponent> getTreeComponents(Tree tree) {
-		CropControl.getPlugin().debug("Getting treecomponents for tree {0}", tree);
+		//CropControl.getPlugin().debug("Getting treecomponents for tree {0}", tree);
 		return getTreeComponents(tree.getTreeID());
 	}
 	
@@ -274,7 +284,7 @@ public class WorldChunk {
 		if (set != null) {
 			list.addAll(set);
 		}
-		CropControl.getPlugin().debug("Get Tree components from {0}: {1}", treeId, list);
+		//CropControl.getPlugin().debug("Get Tree components from {0}: {1}", treeId, list);
 		return list;
 	}
 	
@@ -332,12 +342,13 @@ public class WorldChunk {
 			if (chunks == null) {
 				continue;
 			}
-			CropControl.getPlugin().debug("Actually unloading for chunk {0}:{1}", world_uuid, chunk_id);
+			
 			WorldChunk cacheChunk = chunks.remove(chunk_id);
 			if (cacheChunk != null) {
 				chunkCacheID.remove(unload.getChunkID());
 			}
-			
+			CropControl.getPlugin().debug("Actually unloading for chunk {0}:{1},{2}:{3}:{4}", world_uuid, cacheChunk.chunkX,
+					cacheChunk.chunkZ, chunk_id, cacheChunk.chunkID);
 			// empty the collections
 			unload.componentCacheID.clear();
 			unload.componentCacheLoc.clear();
@@ -354,11 +365,21 @@ public class WorldChunk {
 			Tree.flushDirty(trees);
 			TreeComponent.flushDirty(components);
 			
+			Crop.flushDirty(unload.removedCropQueue);
+			Sapling.flushDirty(unload.removedSaplingQueue);
+			Tree.flushDirty(unload.removedTreeQueue);
+			TreeComponent.flushDirty(unload.removedTreeComponentQueue);
+			
 			// excessive local cleanup
 			crops = null;
 			saplings = null;
 			trees = null;
 			components = null;
+			
+			unload.removedCropQueue.clear();
+			unload.removedSaplingQueue.clear();
+			unload.removedTreeComponentQueue.clear();
+			unload.removedTreeQueue.clear();
 			
 			unloads ++;
 			
@@ -400,6 +421,8 @@ public class WorldChunk {
 						cacheChunk.chunkZ = chunk.getZ();
 						cacheChunk.chunkID = rs.getLong(1);
 						cacheChunk.worldID = world_uuid;
+						CropControl.getPlugin().debug("Loaded existing chunk {0}:{1},{2}:{3}:{4}", world_uuid, cacheChunk.chunkX, 
+								cacheChunk.chunkZ, chunk_id, cacheChunk.chunkID);
 					}
 				}
 			} catch (SQLException se) {
@@ -418,7 +441,8 @@ public class WorldChunk {
 				statement.execute();
 				try (ResultSet rs = statement.getGeneratedKeys()) {
 					if (rs.next()) {
-						CropControl.getPlugin().debug("Registered new chunk {0}:{1}:{2}", world_uuid, chunk_id, rs.getLong(1));
+						CropControl.getPlugin().debug("Registered new chunk {0}:{1},{2}:{3}:{4}", world_uuid, chunk.getX(), 
+								chunk.getZ(), chunk_id, rs.getLong(1));
 						cacheChunk = new WorldChunk();
 						cacheChunk.chunkX = chunk.getX();
 						cacheChunk.chunkZ = chunk.getZ();
@@ -455,12 +479,13 @@ public class WorldChunk {
 				statement.setLong(1, chunkID);
 				try (ResultSet rs = statement.executeQuery();) {
 					if (rs.next()) {
-						//CropControl.getPlugin().debug("Retrieving existing chunk {0}", chunkID);
 						cacheChunk = new WorldChunk();
 						cacheChunk.chunkX = rs.getInt(3);
 						cacheChunk.chunkZ = rs.getInt(4);
 						cacheChunk.chunkID = rs.getLong(1);
 						cacheChunk.worldID = UUID.fromString(rs.getString(2));
+						CropControl.getPlugin().debug("Loaded existing chunk by ID {0}:{1},{2}:{3}:{4}", cacheChunk.worldID, 
+								cacheChunk.chunkX, cacheChunk.chunkZ, cacheChunk.getChunkLocID(), cacheChunk.chunkID);
 					} else {
 						throw new CreationError(WorldChunk.class, "ID of Chunk referenced but nothing found");
 					}

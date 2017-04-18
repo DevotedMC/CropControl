@@ -254,6 +254,11 @@ public class TreeComponent extends Locatable {
 					component.harvestable = results.getBoolean(9);
 					component.removed = results.getBoolean(10);
 					component.dirty = false;
+					if (component.removed) {
+						CropControl.getPlugin().warning("A removed Component was loaded at {0}, {1}, {2}", 
+								component.x, component.y, component.z);
+						continue;
+					}
 					components.add(component);
 				}
 			}

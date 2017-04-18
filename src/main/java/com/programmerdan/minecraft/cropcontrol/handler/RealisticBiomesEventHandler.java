@@ -1,5 +1,6 @@
 package com.programmerdan.minecraft.cropcontrol.handler;
 
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -25,7 +26,11 @@ public class RealisticBiomesEventHandler implements Listener {
 	@EventHandler
 	public void onCropGrow(RealisticBiomesBlockGrowEvent e) {
 		CropControl.getPlugin().debug("Captured RB Grow Event Wrapper");
-		CropControl.getPlugin().getEventHandler().onCropGrow( e.getEvent() );
+		try {
+			CropControl.getPlugin().getEventHandler().onCropGrow( e.getEvent() );
+		} catch (Exception g) {
+			CropControl.getPlugin().warning("Failed to handle RB Grow Event:", g);
+		}
 	}
 	
 	/* Doesn't override Spread */
@@ -38,7 +43,12 @@ public class RealisticBiomesEventHandler implements Listener {
 	@EventHandler
 	public void onTreeGrow(RealisticBiomesStructureGrowEvent e) {
 		CropControl.getPlugin().debug("Captured RB Structure Grow Event Wrapper");
-		CropControl.getPlugin().getEventHandler().onTreeGrow( e.getEvent() );
+		try {
+			CropControl.getPlugin().getEventHandler().onTreeGrow( e.getEvent() );
+		} catch (Exception g) {
+			CropControl.getPlugin().warning("Failed to handle RB Tree Grow Event:", g);
+		}
+
 	}
 	
 	/* All other interaction events perform modifications to the backing world but should otherwise be fine
@@ -53,7 +63,15 @@ public class RealisticBiomesEventHandler implements Listener {
 	 */
 	@EventHandler
 	public void onBlockBreak(RealisticBiomesBlockBreakEvent e) {
-		CropControl.getPlugin().debug("Captured RB Block Break Event Wrapper");
-		CropControl.getPlugin().getEventHandler().onBlockBreak( e.getEvent() );
+		CropControl.getPlugin().debug("Captured RB Block Break Event Wrapper - defer");
+		try {
+			Bukkit.getScheduler().runTaskLater( CropControl.getPlugin(), new Runnable() {
+				public void run() {
+					CropControl.getPlugin().getEventHandler().onBlockBreak( e.getEvent() );
+				}
+			}, 1L);
+		} catch (Exception g) {
+			CropControl.getPlugin().warning("Failed to handle RB Break Event:", g);
+		}
 	}
 }

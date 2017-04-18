@@ -86,6 +86,10 @@ public class CropControlEventHandler implements Listener {
 	
 	public static final BlockFace[] directions = new BlockFace[] { 
 			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
+	
+	public static final BlockFace[] traverse = new BlockFace[] {
+			BlockFace.UP, BlockFace.SELF
+	};
 
 	public static final BlockFace[] growDirections = new BlockFace[] { 
 			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.UP };
@@ -546,8 +550,8 @@ public class CropControlEventHandler implements Listener {
 	/**
 	 * Generically handle a blanket, no-drop removal of tracking data. This does not attempt to cover edge cases, just removes things and prays.
 	 * 
-	 * @param block
-	 * @param chunk
+	 * @param block The block of interest
+	 * @param chunk The chunk the block lives in.
 	 */
 	private void handleRemoval(final Block block, WorldChunk chunk) {
 		int x = block.getX();
@@ -573,6 +577,15 @@ public class CropControlEventHandler implements Listener {
 		}
 	}
 
+	/**
+	 * Implementation note: For columnar plants, I do a second check one-below if the block
+	 * immediately under the "grown" block isn't a known crop. This is due to our RB integration
+	 * and as defense against any future implementations; as the <i>handling</i> of the event
+	 * is async, there is some risk that grow events are processed out of order when received
+	 * en masse, like RB does.
+	 * 
+	 * @param e The grow event.
+	 */
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onCropGrow(BlockGrowEvent e) {
 		Block block = e.getNewState().getBlock();
@@ -615,6 +628,17 @@ public class CropControlEventHandler implements Listener {
 							
 							Crop.create(chunk, x,y,z,  block.getType().toString(), null,
 									placerUUID, System.currentTimeMillis(), true);
+						} else { // go one lower, might have been async out of order ..
+							Block finalCheck = otherBlock.getRelative(BlockFace.DOWN);
+							if (block.getType().equals(finalCheck.getType())) { // same ballpark
+								Crop finalCrop = chunk.getCrop(finalCheck.getX(), finalCheck.getY(), finalCheck.getZ());
+								if (finalCrop != null) {
+									UUID placerUUID = finalCrop.getPlacer();
+									
+									Crop.create(chunk, x,y,z,  block.getType().toString(), null,
+											placerUUID, System.currentTimeMillis(), true);									
+								}
+							}
 						}
 					}
 				}
@@ -679,6 +703,7 @@ public class CropControlEventHandler implements Listener {
 		List<BlockState> blocks = new ArrayList<BlockState>();
 	
 		if (sapling != null) {
+			sapling.setRemoved();
 			// Because dirt & saplings are part of the structure
 			for (BlockState state : e.getBlocks()) {
 				if (state.getType() == Material.LOG || state.getType() == Material.LOG_2
@@ -831,7 +856,7 @@ public class CropControlEventHandler implements Listener {
 	}
 	
 	/**
-	 * Physics checks; launches a break task if the material under review might be interesting.
+	 * Physics checks; launches a break task if the material under review might be breaking and not covered by some other test.
 	 * 
 	 * Note that basically all physics related checks involve breaks. Some are 
 	 * immediate and can be cancelled; others you only know what's going on if you check the material
@@ -841,19 +866,82 @@ public class CropControlEventHandler implements Listener {
 	 * So for our purposes as we're just augmenting drops at present, we'll look for things we
 	 * care about, and register a break-check if it looks interesting.
 	 * 
-	 * It is worth noting that in every instance I checked, ChangedType was reliably the type of the
-	 * block that was being physic'd.
-	 * 
+	 * Currently tracked: 
+	 * <ul><li>Too little light on crops</li><li>Too much light on mushrooms (with wrong soil)</li>
+	 * <li>No water adjacent to sugarcane</li><li>Solid blocks adjacent to cactus</li></ul> 
+	 *  
 	 * @param e The physics event.
 	 */
+	@SuppressWarnings("deprecation")
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled=true) 
 	public void onPhysics(BlockPhysicsEvent e) {
 		Block block = e.getBlock();
-		Material chMat = e.getChangedType();
+		Material chMat = block.getType(); //getChangedType();
 		Location loc = block.getLocation();
-		if (maybeTracked(chMat) && !pendingChecks.contains(loc)) {
+		boolean checkBreak = false;
+		if (maybeTracked(chMat) && !pendingChecks.contains(loc)) { // do we even slightly care?
+			// Check light levels.
+			if (Material.CROPS.equals(chMat) || Material.POTATO.equals(chMat) || Material.CARROT.equals(chMat) || Material.BEETROOT.equals(chMat)) {
+				if (block.getLightLevel() < 8) {
+					checkBreak = true;
+				}
+			} else if (Material.RED_MUSHROOM.equals(chMat) || Material.BROWN_MUSHROOM.equals(chMat)) {
+				Block below = block.getRelative(BlockFace.DOWN);
+				Material belowM = below.getType();
+				if (!Material.MYCEL.equals(belowM) && !Material.DIRT.equals(belowM)) {
+					checkBreak = true;
+				} else if (Material.DIRT.equals(belowM) && below.getData() != 2) {
+					checkBreak = true;
+				}
+			}
+		}
+		if (checkBreak) {
 			pendingChecks.add(loc);
 			handleBreak(block, BreakType.PHYSICS, null, null);
+		} else { // we haven't found a break condition yet. However, what follows aren't light level checks but rather
+			// block checks, so these are controlled by physics firing _adjacent_ to the block. Basically it's a crapshoot.
+			// We'll check the adjacency of the _location_ and see if any blocks around us we care about; for all the ones we
+			// care about we checkBreak.
+			if (Material.SUGAR_CANE_BLOCK.equals(e.getChangedType())) {
+				// So for sugar_cane, we need to figure out if its about to break. We want to do this the easy way, though.
+				// So step 1: check adjacent above and adjacent even for sugarcane (not below).
+				// Step 2: For each found sugarcane, just fire a checkbreak. Let's not get complicated.
+				
+				for (BlockFace a : CropControlEventHandler.traverse) { // we look in all the face-adjacent places above and even with
+					Block vert = block.getRelative(a);
+					for (BlockFace face : CropControlEventHandler.directions) {
+						Block adj = vert.getRelative(face);
+						Material adjM = adj.getType();
+						if (Material.SUGAR_CANE_BLOCK.equals(adjM)) {
+							pendingChecks.add(adj.getLocation());
+							// So, the physics check can take a tick to resolve. We mark our interest but defer resolution.
+							Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), new Runnable() {
+								public void run() {
+									handleBreak(adj, BreakType.PHYSICS, null, null);
+								}
+							}, 1L);
+						}
+					}
+				}
+			} else if (Material.CACTUS.equals(e.getChangedType())) {
+				// Cactus is a little simpler. It breaks on adjacent placements; that's what would trigger this event. 
+				for (BlockFace face : CropControlEventHandler.directions) {
+					// We look around face-adjacent places and trigger a break-check for any cactus found.
+					Block adj = block.getRelative(face);
+					Material adjM = adj.getType();
+					if (Material.CACTUS.equals(adjM)) {
+						pendingChecks.add(adj.getLocation());
+						// So, the physics check can take a tick to resolve. We mark our interest but defer resolution.
+						Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), new Runnable() {
+							public void run() {
+								handleBreak(adj, BreakType.PHYSICS, null, null);
+							}
+						}, 1L);
+					}
+				}
+			} else if (Material.CHORUS_FLOWER.equals(e.getChangedType()) || Material.CHORUS_PLANT.equals(e.getChangedType())) {
+				// TODO: this one is complicated; it's more like sugarcane I guess? Still need rules.
+			}
 		}
 	}
 	

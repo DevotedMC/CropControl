@@ -41,6 +41,8 @@ Please note that any plugin that modifies crop behavior will interfere with this
 
 **RealisticBiomes:** To ensure compatibility, modifications were made to RealisticBiomes. See the com.programmerdan.minecraft.cropcontrol.handler.RealisticBiomesEventHandler for one route, and the corresponding code in RealisticBiomes. As a result, RealisticBiomes is a compile-time dependency. It is not required during runtime. Compatibility begins at version 1.3.0 of RealisticBiomes.
 
+**Citadel:** Citadel forces breaks via Acid blocks without firing Bukkit's break event. It does, however, fire an Acid event with much the same information; for compatibility, we capture that Acid event if Citadel is installed on your server. It is not required at runtime, just for compile. Compatibility begins at 3.7.02 of Citadel.
+
 ## Configuration
 
 Configuration is straightforward.
