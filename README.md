@@ -43,6 +43,8 @@ Please note that any plugin that modifies crop behavior will interfere with this
 
 **Citadel:** Citadel forces breaks via Acid blocks without firing Bukkit's break event. It does, however, fire an Acid event with much the same information; for compatibility, we capture that Acid event if Citadel is installed on your server. It is not required at runtime, just for compile. Compatibility begins at 3.7.02 of Citadel.
 
+In general, we also fire off a CropControlDropEvent whenever breaking a thing results in drops. Handlers of the event can modify the drops or cacnel the event entirely, allowing smooth integration with outside plugins.
+
 ## Configuration
 
 Configuration is straightforward.

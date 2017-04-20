@@ -345,6 +345,345 @@ drops:
    min: 1
    max: 1
    chance: 0.125
+#CROPS
+ BeetrootT1:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: BEETROOT
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Withered Beetroot
+     lore:
+     - Withered Beetroot T1
+  base:
+   min: 1
+   max: 1
+   chance: 0.5
+ BeetrootT2:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: BEETROOT
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Average Beetroot
+     lore:
+     - Average Beetroot T2
+  base:
+   min: 1
+   max: 1
+   chance: 0.25
+ BeetrootT3:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: BEETROOT
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Ripe Beetroot
+     lore:
+     - Ripe Beetroot T3
+  base:
+   min: 1
+   max: 1
+   chance: 0.125
+ PumpkinT1:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: PUMPKIN
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Withered Pumpkin
+     lore:
+     - Withered Pumpkin T1
+  base:
+   min: 1
+   max: 1
+   chance: 0.5
+ PumpkinT2:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: PUMPKIN
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Average Pumpkin
+     lore:
+     - Average Pumpkin T2
+  base:
+   min: 1
+   max: 1
+   chance: 0.25
+ PumpkinT3:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: PUMPKIN
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Ripe Pumpkin
+     lore:
+     - Ripe Pumpkin T3
+  base:
+   min: 1
+   max: 1
+   chance: 0.125
+ SugarCaneT1:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: SUGAR_CANE_BLOCK
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Withered Sugar Cane
+     lore:
+     - Withered Sugar Cane T1
+  base:
+   min: 1
+   max: 1
+   chance: 0.5
+ SugarCaneT2:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: SUGAR_CANE_BLOCK
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Average Sugar Cane
+     lore:
+     - Average Sugar Cane T2
+  base:
+   min: 1
+   max: 1
+   chance: 0.25
+ SugarCaneT3:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: SUGAR_CANE_BLOCK
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Ripe Sugar Cane
+     lore:
+     - Ripe Sugar Cane T3
+  base:
+   min: 1
+   max: 1
+   chance: 0.125
+ PotatoT1:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: POTATO
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Withered Potato
+     lore:
+     - Withered Potato T1
+  base:
+   min: 1
+   max: 1
+   chance: 0.5
+ PotatoT2:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: POTATO
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Average Potato
+     lore:
+     - Average Potato T2
+  base:
+   min: 1
+   max: 1
+   chance: 0.25
+ PotatoT3:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: POTATO
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Ripe Potato
+     lore:
+     - Ripe Potato T3
+  base:
+   min: 1
+   max: 1
+   chance: 0.125
+ CarrotT1:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CARROT
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Withered Carrot
+     lore:
+     - Withered Carrot T1
+  base:
+   min: 1
+   max: 1
+   chance: 0.5
+ CarrotT2:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CARROT
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Average Carrot
+     lore:
+     - Average Carrot T2
+  base:
+   min: 1
+   max: 1
+   chance: 0.25
+ CarrotT3:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CARROT
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Ripe Carrot
+     lore:
+     - Ripe Carrot T3
+  base:
+   min: 1
+   max: 1
+   chance: 0.125
+ CocoaBeanT1:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: INK_SACK
+    amount: 1
+    damage: 3
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Withered Cocoa Bean
+     lore:
+     - Withered Cocoa Bean T1
+  base:
+   min: 1
+   max: 1
+   chance: 0.5
+ CocoaBeanT2:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: INK_SACK
+    amount: 1
+    damage: 3
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Average Cocoa Bean
+     lore:
+     - Average Cocoa Bean T2
+  base:
+   min: 1
+   max: 1
+   chance: 0.25
+ CocoaBeanT3:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: INK_SACK
+    amount: 1
+    damage: 3
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Ripe Cocoa Bean
+     lore:
+     - Ripe Cocoa Bean T3
+  base:
+   min: 1
+   max: 1
+   chance: 0.125
+ CactusT1:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CACTUS
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Withered Cactus
+     lore:
+     - Withered Cactus T1
+  base:
+   min: 1
+   max: 1
+   chance: 0.5
+ CactusT2:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CACTUS
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Average Cactus
+     lore:
+     - Average Cactus T2
+  base:
+   min: 1
+   max: 1
+   chance: 0.25
+ CactusT3:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CACTUS
+    amount: 1
+    damage: 0
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Ripe Cactus
+     lore:
+     - Ripe Cactus T3
+  base:
+   min: 1
+   max: 1
+   chance: 0.125
+
+# Testing only.
  TestingPlaceholder:
   template:
   - ==: org.bukkit.inventory.ItemStack
@@ -429,30 +768,36 @@ trees:
   drops:
    OakTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    OakBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    OakTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    MixedTwigsT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
     chance: 0.0001
     biomes:
      FOREST:
       chance: 100.0
    UncommonBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
     chance: 0.0001
     biomes:
      FOREST:
       chance: 100.0
    RareTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
     chance: 0.0001
     biomes:
      FOREST:
@@ -461,145 +806,184 @@ trees:
   drops:
    OakTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    OakBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    OakTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  REDWOOD:
   drops:
    SpruceTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    SpruceBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    SpruceTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  TALL_REDWOOD:
   drops:
    SpruceTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    SpruceBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    SpruceTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  BIRCH:
   drops:
    BirchTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    BirchBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    BirchTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  JUNGLE:
   drops:
    JungleTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    JungleBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    JungleTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  SMALL_JUNGLE:
   drops:
    JungleTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    JungleBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    JungleTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  COCOA_TREE:
   drops:
    JungleTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    JungleBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    JungleTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  JUNGLE_BUSH:
   drops:
    JungleTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    JungleBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    JungleTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  SWAMP:
   drops:
    OakTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    OakBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    OakTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  ACACIA:
   drops:
    AcaciaTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    AcaciaBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    AcaciaTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  DARK_OAK:
   drops:
    DarkOakTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    DarkOakBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    DarkOakTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  MEGA_REDWOOD:
   drops:
    SpruceTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    SpruceBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    SpruceTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
  TALL_BIRCH:
   drops:
    BirchTwigT1:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    BirchBarkT2:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
    BirchTrunkT3:
     player:
-     same: 1.1
+     different:
+      chance: 1.1
 # Speculative Sections for advanced testing
 crops:
  CARROT: 
@@ -607,156 +991,202 @@ crops:
    drops:
     Immature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareImmature:
      player:
-      same: 1.1
+      same: 
+       chance: 1.1
   GERMINATED:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   VERY_SMALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   SMALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   MEDIUM:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   TALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   VERY_TALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   RIPE:
    drops:
-    Mature:
+    CarrotT1:
      player:
-      same: 1.1
-    RareMature: 
+      different:
+       chance: 1.1
+    CarrotT2:
      player:
-      same: 1.1
+      different:
+       chance: 1.1
+    CarrotT3:
+     player:
+      different:
+       chance: 1.1
  CROPS: 
   SEEDED:
    drops:
     Immature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareImmature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   GERMINATED:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   VERY_SMALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   SMALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   MEDIUM:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   TALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   VERY_TALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   RIPE:
    drops:
     Mature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareMature: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
  COCOA:
   SMALL:
    drops:
     Immature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareImmature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   MEDIUM:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   LARGE:
    drops:
-    Mature:
+    CocoaBeanT1:
      player:
-      same: 1.1
-    RareMature: 
+      different:
+       chance: 1.1
+    CocoaBeanT2:
      player:
-      same: 1.1
+      different:
+       chance: 1.1
+    CocoaBeanT3:
+     player:
+      different:
+       chance: 1.1
  BROWN_MUSHROOM:
   drops:
    Mature:
@@ -772,74 +1202,100 @@ crops:
    drops:
     Immature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareImmature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   GERMINATED:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   VERY_SMALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   SMALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   MEDIUM:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   TALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   VERY_TALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   RIPE:
    drops:
-    Mature:
+    PotatoT1:
      player:
-      same: 1.1
-    RareMature: 
+      different:
+       chance: 1.1
+    PotatoT2:
      player:
-      same: 1.1
+      different:
+       chance: 1.1
+    PotatoT3:
+     player:
+      different:
+       chance: 1.1
  PUMPKIN:
   drops:
-   Mature:
-     player:
-      same: 1.1
-   RareMature:
-     player:
-      same: 1.1
+   PumpkinT1:
+    player:
+     different:
+      chance: 1.1
+   PumpkinT2:
+    player:
+     different:
+      chance: 1.1
+   PumpkinT3:
+    player:
+     different:
+      chance: 1.1
  PUMPKIN_STEM:
   0:
    drops:
@@ -891,53 +1347,81 @@ crops:
      harvestableOnly: false 
  SUGAR_CANE_BLOCK:
   drops:
-   Mature:
-    harvestableOnly: true
-   RareMature:
-    harvestableOnly: true
-   Immature:
-    harvestableOnly: false 
-   RareImmature:
-    harvestableOnly: false
+   SugarCaneT1:
+    player:
+     different:
+      chance: 1.1
+   SugarCaneT2:
+    player:
+     different:
+      chance: 1.1
+   SugarCaneT3:
+    player:
+     different:
+      chance: 1.1
+    Immature:
+     harvestableOnly: false 
+    RareImmature: 
+     harvestableOnly: false 
  BEETROOT_BLOCK:
   SEEDED:
    drops:
     Immature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareImmature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   SMALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   TALL:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   RIPE:
    drops:
-    Mature:
+    BeetrootT1:
      player:
-      same: 1.1
-    RareMature: 
+      different:
+       chance: 1.1
+    BeetrootT2:
      player:
-      same: 1.1
+      different:
+       chance: 1.1
+    BeetrootT3:
+     player:
+      different:
+       chance: 1.1
  CACTUS:
   drops:
-   Mature:
-    harvestableOnly: true
-   RareMature:
-    harvestableOnly: true
+   CactusT1:
+    player:
+     different:
+      chance: 1.1
+   CactusT2:
+    player:
+     different:
+      chance: 1.1
+   CactusT3:
+    player:
+     different:
+      chance: 1.1
    Immature:
     harvestableOnly: false 
    RareImmature:
@@ -945,11 +1429,13 @@ crops:
  MELON_BLOCK:
   drops:
    Mature:
-     player:
-      same: 1.1
+    player:
+     same:
+      chance: 1.1
    RareMature:
-     player:
-      same: 1.1
+    player:
+     same:
+      chance: 1.1
  MELON_STEM:
   0:
    drops:
@@ -1014,34 +1500,42 @@ crops:
    drops:
     Immature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareImmature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   STAGE_ONE:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   STAGE_TWO:
    drops:
     Growing:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareGrowing: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
   RIPE:
    drops:
     Mature:
      player:
-      same: 1.1
+      same:
+       chance: 1.1
     RareMature: 
      player:
-      same: 1.1
+      same:
+       chance: 1.1
 saplings:
  # Sapling Type must be one of : OAK_SAPLING, SPRUCE_SAPLING, BIRCH_SAPLING, JUNGLE_SAPLING, ACACIA_SAPLING, DARK_OAK_SAPLING
  OAK_SAPLING:
