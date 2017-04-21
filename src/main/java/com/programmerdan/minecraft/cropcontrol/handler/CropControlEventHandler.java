@@ -1692,7 +1692,8 @@ public class CropControlEventHandler implements Listener {
 				toString.append(amount).append("x");
 			}
 			
-			toString.append(material.toString());
+			toString.append(itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName() ? 
+						itemStack.getItemMeta().getDisplayName() : material.toString());
 			toString.append(":").append(durability);
 			toString.append("]");
 		}

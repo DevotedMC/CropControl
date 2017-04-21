@@ -71,6 +71,10 @@ public class CropControlDropEvent extends Event implements Cancellable {
 		return this.dropable;
 	}
 	
+	public UUID getPlayer() {
+		return this.player;
+	}
+	
 	public List<ItemStack> getItems() {
 		return this.items;
 	}
