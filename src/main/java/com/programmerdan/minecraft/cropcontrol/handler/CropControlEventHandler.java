@@ -90,7 +90,7 @@ public class CropControlEventHandler implements Listener {
 			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
 	
 	public static final BlockFace[] traverse = new BlockFace[] {
-			BlockFace.SELF, BlockFace.UP
+			BlockFace.DOWN, BlockFace.SELF, BlockFace.UP
 	};
 
 	public static final BlockFace[] growDirections = new BlockFace[] { 
@@ -918,28 +918,54 @@ public class CropControlEventHandler implements Listener {
 			// We'll check the adjacency of the _location_ and see if any blocks around us we care about; for all the ones we
 			// care about we checkBreak.
 			if (Material.SUGAR_CANE_BLOCK.equals(e.getChangedType())) {
-				if (chMat.equals(e.getChangedType())) return; // handled elsewhere.
+				CropControl.getPlugin().debug(" {0}, {1}, {2} PHYS", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+				if (chMat.equals(e.getChangedType())) {
+					for (BlockFace a : CropControlEventHandler.traverse) {
+						Location adjL = block.getRelative(a).getLocation();
+						if (!pendingChecks.contains(adjL)) {
+							pendingChecks.add(adjL);
+							CropControl.getPlugin().debug(" DIR {0}, {1}, {2} -- {3}, {4}, {5} PEND", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+							// So, the physics check can take a tick to resolve. We mark our interest but defer resolution.
+							Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), new Runnable() {
+								public void run() {
+									CropControl.getPlugin().debug(" {0}, {1}, {2} -- {3}, {4}, {5} PHYS", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+									handleBreak(adjL.getBlock(), BreakType.PHYSICS, null, null);
+								}
+							}, 1L);
+						} else {
+							CropControl.getPlugin().debug(" DIR {0}, {1}, {2} -- {3}, {4}, {5} SKIP", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+						}
+					}
+					return; // ok
+				}
 				// So for sugar_cane, we need to figure out if its about to break. We want to do this the easy way, though.
 				// So step 1: check adjacent above and adjacent even for sugarcane (not below).
 				// Step 2: For each found sugarcane, just fire a checkbreak. Let's not get complicated.
 				
-				for (BlockFace a : CropControlEventHandler.traverse) { // we look in all the face-adjacent places above and even with
-					Block vert = block.getRelative(a);
-					for (BlockFace face : CropControlEventHandler.directions) {
-						Block adj = vert.getRelative(face);
-						Material adjM = adj.getType();
-						Location adjL = adj.getLocation();
-						if (Material.SUGAR_CANE_BLOCK.equals(adjM) && !pendingChecks.contains(adjL)) {
-							pendingChecks.add(adjL);
-							// So, the physics check can take a tick to resolve. We mark our interest but defer resolution.
-							Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), new Runnable() {
-								public void run() {
-									handleBreak(adj, BreakType.PHYSICS, null, null);
-								}
-							}, 1L);
+				/*for (BlockFace face : CropControlEventHandler.directions) {
+					Block vert = block.getRelative(face);
+					if (Material.SUGAR_CANE_BLOCK.equals(vert.getType())) {
+						for (BlockFace a : CropControlEventHandler.traverse) { // just assume and pend below and up, let the checker suss it out. // we look in all the face-adjacent places above and even with
+							Block adj = vert.getRelative(a);
+							//Material adjM = adj.getType();
+							Location adjL = adj.getLocation();
+							
+							if (!pendingChecks.contains(adjL)) {
+								pendingChecks.add(adjL);
+								CropControl.getPlugin().debug(" {0}, {1}, {2} -- {3}, {4}, {5} PEND", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+								// So, the physics check can take a tick to resolve. We mark our interest but defer resolution.
+								Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), new Runnable() {
+									public void run() {
+										CropControl.getPlugin().debug(" {0}, {1}, {2} -- {3}, {4}, {5} PHYS", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+										handleBreak(adjL.getBlock(), BreakType.PHYSICS, null, null);
+									}
+								}, 1L);
+							} else {
+								CropControl.getPlugin().debug(" {0}, {1}, {2} -- {3}, {4}, {5} SKIP", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+							}
 						}
 					}
-				}
+				}*/
 			} else if (Material.CACTUS.equals(e.getChangedType())) {
 				if (chMat.equals(e.getChangedType())) return; // handled elsewhere
 				
@@ -961,6 +987,32 @@ public class CropControlEventHandler implements Listener {
 				}
 			} else if (Material.CHORUS_FLOWER.equals(e.getChangedType()) || Material.CHORUS_PLANT.equals(e.getChangedType())) {
 				// TODO: this one is complicated; it's more like sugarcane I guess? Still need rules.
+			} else {
+				// do a quick check for sugar cane in the surrounding area and pend if you find some
+				/*for (BlockFace a : CropControlEventHandler.traverse) { // we look in all the face-adjacent places above and even with
+					Block vert = block.getRelative(a);
+					for (BlockFace face : CropControlEventHandler.directions) {
+						Block adj = vert.getRelative(face);
+						Material adjM = adj.getType();
+						Location adjL = adj.getLocation();
+						if (Material.SUGAR_CANE_BLOCK.equals(adjM) && !pendingChecks.contains(adjL)) {
+							pendingChecks.add(adjL);
+							CropControl.getPlugin().debug(" PHYS {0}, {1}, {2} -- {3}, {4}, {5} PEND", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+							// So, the physics check can take a tick to resolve. We mark our interest but defer resolution.
+							Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), new Runnable() {
+								public void run() {
+									CropControl.getPlugin().debug(" PHYS {0}, {1}, {2} -- {3}, {4}, {5} PHYS", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+									handleBreak(adjL.getBlock(), BreakType.PHYSICS, null, null);
+								}
+							}, 1L);
+						} /*else if (pendingChecks.contains(adjL)) {
+							CropControl.getPlugin().debug(" {0}, {1}, {2} -- {3}, {4}, {5} SKIP", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ());
+						} else {
+							CropControl.getPlugin().debug(" {0}, {1}, {2} -- {3}, {4}, {5} IGNO: {6}", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), adjL.getBlockX(), adjL.getBlockY(), adjL.getBlockZ(), adjM);
+						}* /
+					}
+				}*/
+				
 			}
 		}
 	}
@@ -1447,6 +1499,7 @@ public class CropControlEventHandler implements Listener {
 
 	public void handleBreak(final Block startBlock, final BreakType breakType, final UUID breaker, final Set<Location> altBlocks) {
 		if (startBlock != null && !CropControl.getDAO().isTracked(startBlock)) {
+			CropControl.getPlugin().debug("Rejecting break at {0}", startBlock.getLocation());
 			pendingChecks.remove(startBlock.getLocation());
 			
 			// Check if we care pre-break.
