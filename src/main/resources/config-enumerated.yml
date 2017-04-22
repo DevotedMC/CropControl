@@ -682,6 +682,87 @@ drops:
    min: 1
    max: 1
    chance: 0.125
+
+# Testing only.
+ TestingPlaceholder:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: DIRT
+    amount: 2
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Rare Testing Object
+  base:
+   min: 1
+   max: 5
+   chance: 0.05
+ Immature:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CLAY_BALL
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Immature crop
+  base:
+   chance: 0.8
+ RareImmature:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: CLAY_BALL
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Rare Immature crop
+  base:
+   chance: 0.2
+ Growing:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: DEAD_BUSH
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Growing crop
+  base:
+   chance: 0.8
+ RareGrowing:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: DEAD_BUSH
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Rare Growing crop
+  base:
+   chance: 0.2
+ Mature:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: RED_ROSE
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Beautiful Flower
+  base:
+   chance: 0.8
+ RareMature:
+  template:
+  - ==: org.bukkit.inventory.ItemStack
+    type: YELLOW_FLOWER
+    amount: 1
+    meta:
+     ==: ItemMeta
+     meta-type: UNSPECIFIC
+     display-name: Lovely Flower
+  base:
+   chance: 0.2
 trees:
  TREE:
   drops:
@@ -701,31 +782,25 @@ trees:
     player:
      different:
       chance: 1.1
-    chance: 0.01
+    chance: 0.0001
     biomes:
      FOREST:
-      chance: 100.0
-     FOREST_HILLS:
       chance: 100.0
    UncommonBarkT2:
     player:
      different:
       chance: 1.1
-    chance: 0.01
+    chance: 0.0001
     biomes:
      FOREST:
-      chance: 100.0
-     FOREST_HILLS:
       chance: 100.0
    RareTrunkT3:
     player:
      different:
       chance: 1.1
-    chance: 0.01
+    chance: 0.0001
     biomes:
      FOREST:
-      chance: 100.0
-     FOREST_HILLS:
       chance: 100.0
  BIG_TREE:
   drops:
@@ -912,6 +987,76 @@ trees:
 # Speculative Sections for advanced testing
 crops:
  CARROT: 
+  SEEDED:
+   drops:
+    Immature:
+     player:
+      same:
+       chance: 1.1
+    RareImmature:
+     player:
+      same: 
+       chance: 1.1
+  GERMINATED:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  VERY_SMALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing:
+     player:
+      same:
+       chance: 1.1
+  SMALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing:
+     player:
+      same:
+       chance: 1.1
+  MEDIUM:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing:
+     player:
+      same:
+       chance: 1.1
+  TALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing:
+     player:
+      same:
+       chance: 1.1
+  VERY_TALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing:
+     player:
+      same:
+       chance: 1.1
   RIPE:
    drops:
     CarrotT1:
@@ -926,7 +1071,108 @@ crops:
      player:
       different:
        chance: 1.1
+ CROPS: 
+  SEEDED:
+   drops:
+    Immature:
+     player:
+      same:
+       chance: 1.1
+    RareImmature:
+     player:
+      same:
+       chance: 1.1
+  GERMINATED:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  VERY_SMALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  SMALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  MEDIUM:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  TALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  VERY_TALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  RIPE:
+   drops:
+    Mature:
+     player:
+      same:
+       chance: 1.1
+    RareMature: 
+     player:
+      same:
+       chance: 1.1
  COCOA:
+  SMALL:
+   drops:
+    Immature:
+     player:
+      same:
+       chance: 1.1
+    RareImmature:
+     player:
+      same:
+       chance: 1.1
+  MEDIUM:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
   LARGE:
    drops:
     CocoaBeanT1:
@@ -941,7 +1187,87 @@ crops:
      player:
       different:
        chance: 1.1
+ BROWN_MUSHROOM:
+  drops:
+   Mature:
+    harvestableOnly: true
+   RareMature:
+    harvestableOnly: true
+   Immature:
+    harvestableOnly: false 
+   RareImmature:
+    harvestableOnly: false
  POTATO:
+  SEEDED:
+   drops:
+    Immature:
+     player:
+      same:
+       chance: 1.1
+    RareImmature:
+     player:
+      same:
+       chance: 1.1
+  GERMINATED:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  VERY_SMALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  SMALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  MEDIUM:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  TALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  VERY_TALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
   RIPE:
    drops:
     PotatoT1:
@@ -970,6 +1296,55 @@ crops:
     player:
      different:
       chance: 1.1
+ PUMPKIN_STEM:
+  0:
+   drops:
+    Immature:
+     harvestableOnly: false 
+    RareImmature:
+     harvestableOnly: false 
+  1:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  2:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  3:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  4:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  5:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  6:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  7:
+   drops:
+    Mature:
+     harvestableOnly: false 
+    RareMature: 
+     harvestableOnly: false 
  SUGAR_CANE_BLOCK:
   drops:
    SugarCaneT1:
@@ -984,7 +1359,41 @@ crops:
     player:
      different:
       chance: 1.1
+    Immature:
+     harvestableOnly: false 
+    RareImmature: 
+     harvestableOnly: false 
  BEETROOT_BLOCK:
+  SEEDED:
+   drops:
+    Immature:
+     player:
+      same:
+       chance: 1.1
+    RareImmature:
+     player:
+      same:
+       chance: 1.1
+  SMALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  TALL:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
   RIPE:
    drops:
     BeetrootT1:
@@ -1013,3 +1422,143 @@ crops:
     player:
      different:
       chance: 1.1
+   Immature:
+    harvestableOnly: false 
+   RareImmature:
+    harvestableOnly: false
+ MELON_BLOCK:
+  drops:
+   Mature:
+    player:
+     same:
+      chance: 1.1
+   RareMature:
+    player:
+     same:
+      chance: 1.1
+ MELON_STEM:
+  0:
+   drops:
+    Immature:
+     harvestableOnly: false 
+    RareImmature:
+     harvestableOnly: false 
+  1:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  2:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  3:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  4:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  5:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  6:
+   drops:
+    Growing:
+     harvestableOnly: false 
+    RareGrowing: 
+     harvestableOnly: false 
+  7:
+   drops:
+    Mature:
+     harvestableOnly: false 
+    RareMature: 
+     harvestableOnly: false 
+ RED_MUSHROOM:
+  drops:
+   Mature:
+    harvestableOnly: true
+   RareMature:
+    harvestableOnly: true
+   Immature:
+    harvestableOnly: false 
+   RareImmature:
+    harvestableOnly: false
+ NETHER_WARTS:
+  SEEDED:
+   drops:
+    Immature:
+     player:
+      same:
+       chance: 1.1
+    RareImmature:
+     player:
+      same:
+       chance: 1.1
+  STAGE_ONE:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  STAGE_TWO:
+   drops:
+    Growing:
+     player:
+      same:
+       chance: 1.1
+    RareGrowing: 
+     player:
+      same:
+       chance: 1.1
+  RIPE:
+   drops:
+    Mature:
+     player:
+      same:
+       chance: 1.1
+    RareMature: 
+     player:
+      same:
+       chance: 1.1
+saplings:
+ # Sapling Type must be one of : OAK_SAPLING, SPRUCE_SAPLING, BIRCH_SAPLING, JUNGLE_SAPLING, ACACIA_SAPLING, DARK_OAK_SAPLING
+ OAK_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ SPRUCE_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ BIRCH_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ JUNGLE_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ ACACIA_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
+ DARK_OAK_SAPLING:
+  drops:
+   TestingPlaceholder:
+    harvestableOnly: false
