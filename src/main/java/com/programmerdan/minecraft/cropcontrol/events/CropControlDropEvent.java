@@ -12,6 +12,12 @@ import org.bukkit.inventory.ItemStack;
 import com.programmerdan.minecraft.cropcontrol.data.Locatable;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
 
+/**
+ * This event is called whenever CropControl is about to drop an item related to a
+ * configured plant. 
+ * 
+ * @author ProgrammerDan
+ */
 public class CropControlDropEvent extends Event implements Cancellable {
 	private static final HandlerList handlers = new HandlerList();
 
@@ -30,7 +36,8 @@ public class CropControlDropEvent extends Event implements Cancellable {
 	 * @param player The UUID of the player responsible, if any
 	 * @param items A replaceable list of items. The list after all handlers will be dropped.
 	 */
-	public CropControlDropEvent(final Location location, final BreakType breakType, final Locatable dropable, final UUID player, List<ItemStack> items) {
+	public CropControlDropEvent(final Location location, final BreakType breakType, 
+			final Locatable dropable, final UUID player, List<ItemStack> items) {
 		this.location = location;
 		this.breakType = breakType;
 		this.dropable = dropable;

@@ -25,7 +25,7 @@ public class RealisticBiomesEventHandler implements Listener {
 	 */
 	@EventHandler
 	public void onCropGrow(RealisticBiomesBlockGrowEvent e) {
-		CropControl.getPlugin().debug("Captured RB Grow Event Wrapper");
+		//CropControl.getPlugin().debug("Captured RB Grow Event Wrapper");
 		try {
 			CropControl.getPlugin().getEventHandler().onCropGrow( e.getEvent() );
 		} catch (Exception g) {
@@ -42,7 +42,7 @@ public class RealisticBiomesEventHandler implements Listener {
 	 */
 	@EventHandler
 	public void onTreeGrow(RealisticBiomesStructureGrowEvent e) {
-		CropControl.getPlugin().debug("Captured RB Structure Grow Event Wrapper");
+		//CropControl.getPlugin().debug("Captured RB Structure Grow Event Wrapper");
 		try {
 			CropControl.getPlugin().getEventHandler().onTreeGrow( e.getEvent() );
 		} catch (Exception g) {
@@ -63,7 +63,7 @@ public class RealisticBiomesEventHandler implements Listener {
 	 */
 	@EventHandler
 	public void onBlockBreak(RealisticBiomesBlockBreakEvent e) {
-		CropControl.getPlugin().debug("Captured RB Block Break Event Wrapper - defer");
+		//CropControl.getPlugin().debug("Captured RB Block Break Event Wrapper - defer");
 		try {
 			Bukkit.getScheduler().runTaskLater( CropControl.getPlugin(), new Runnable() {
 				public void run() {

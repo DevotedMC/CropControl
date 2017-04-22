@@ -144,10 +144,10 @@ public class Crop extends Locatable {
 		WorldChunk.byId(this.chunkID).unregister(this);
 	}
 	
-	public static void flushDirty(Iterable<Crop> crops) {
+	public static int flushDirty(Iterable<Crop> crops) {
+		int totalSave = 0;
 		if (crops != null) {
 			int batchSize = 0;
-			int totalSave = 0;
 			int totalSkip = 0;
 			try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 					PreparedStatement saveCrop = connection.prepareStatement("UPDATE crops_crop SET state = ?, removed = ? WHERE crop_id = ?");) {
@@ -167,8 +167,8 @@ public class Crop extends Locatable {
 						int[] batchRun = saveCrop.executeBatch();
 						if (batchRun.length != batchSize) {
 							CropControl.getPlugin().severe("Some elements of the Crop dirty flush didn't save? " + batchSize + " vs " + batchRun.length);
-						} else {
-							CropControl.getPlugin().debug("Crop flush: {0} saves", batchRun.length);
+						//} else {
+							//CropControl.getPlugin().debug("Crop flush: {0} saves", batchRun.length);
 						}
 						batchSize = 0;
 					}
@@ -177,19 +177,19 @@ public class Crop extends Locatable {
 					int[] batchRun = saveCrop.executeBatch();
 					if (batchRun.length != batchSize) {
 						CropControl.getPlugin().severe("Some elements of the Crop dirty flush didn't save? " + batchSize + " vs " + batchRun.length);
-					} else {
-						CropControl.getPlugin().debug("Crop flush: {0} saves", batchRun.length);
+					//} else {
+						//CropControl.getPlugin().debug("Crop flush: {0} saves", batchRun.length);
 					}
 				}
-				CropControl.getPlugin().debug("Crop flush: {0} saves {1} skips", totalSave, totalSkip);
+				//CropControl.getPlugin().debug("Crop flush: {0} saves {1} skips", totalSave, totalSkip);
 			} catch (SQLException se) {
 				CropControl.getPlugin().severe("Save of Crop dirty flush failed!: ", se);
-			}
-			
+			}	
 		}
+		return totalSave;
 	}
 
-	public static void saveDirty() {
+	public static int saveDirty() {
 		int batchSize = 0;
 		int totalSave = 0;
 		int totalSkip = 0;
@@ -213,8 +213,8 @@ public class Crop extends Locatable {
 					int[] batchRun = saveCrop.executeBatch();
 					if (batchRun.length != batchSize) {
 						CropControl.getPlugin().severe("Some elements of the Crop dirty batch didn't save? " + batchSize + " vs " + batchRun.length);
-					} else {
-						CropControl.getPlugin().debug("Crop batch: {0} saves", batchRun.length);
+					//} else {
+						//CropControl.getPlugin().debug("Crop batch: {0} saves", batchRun.length);
 					}
 					batchSize = 0;
 				}
@@ -223,14 +223,15 @@ public class Crop extends Locatable {
 				int[] batchRun = saveCrop.executeBatch();
 				if (batchRun.length != batchSize) {
 					CropControl.getPlugin().severe("Some elements of the Crop dirty batch didn't save? " + batchSize + " vs " + batchRun.length);
-				} else {
-					CropControl.getPlugin().debug("Crop batch: {0} saves", batchRun.length);
+				//} else {
+					//CropControl.getPlugin().debug("Crop batch: {0} saves", batchRun.length);
 				}
 			}
-			CropControl.getPlugin().debug("Crop batch: {0} saves {1} skips", totalSave, totalSkip);
+			//CropControl.getPlugin().debug("Crop batch: {0} saves {1} skips", totalSave, totalSkip);
 		} catch (SQLException se) {
 			CropControl.getPlugin().severe("Save of Crop dirty batch failed!: ", se);
 		}
+		return totalSave;
 	}
 
 	public static List<Crop> preload(WorldChunk chunk) {

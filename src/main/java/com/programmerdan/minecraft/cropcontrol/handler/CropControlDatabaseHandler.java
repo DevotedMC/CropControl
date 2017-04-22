@@ -96,56 +96,6 @@ public class CropControlDatabaseHandler {
 		return true;
 	}
 
-	/*
-	 * Rough data model:
-	 * 
-	 * [worldchunks]
-	 * cid BIGINT
-	 * world uuid
-	 * chunk_x INT 
-	 * chunk_z INT
-	 * 
-	 * [crop]
-	 * crid BIGINT
-	 * cid BIGINT
-	 * x SMALL
-	 * y INT
-	 * z SMALL
-	 * type STRING
-	 * stage SMALL
-	 * placed UUID
-	 * time LONG
-	 * 
-	 * 
-	 * [sapling]
-	 * sid BIGINT
-	 * cid BIGINT
-	 * x SMALL
-	 * y INT
-	 * z SMALL
-	 * type STRING
-	 * placed UUID
-	 * time LONG
-	 * 
-	 * [tree]
-	 * tid BIGINT
-	 * cid BIGINT
-	 * type STRING
-	 * placed UUID
-	 * time LONG
-	 * 
-	 * [tree_component]
-	 * tcid BIGINT
-	 * tid BIGINT
-	 * cid BIGINT
-	 * x SMALL
-	 * y INT
-	 * z SMALL
-	 * type SMALL
-	 * 
-	 *   
-	 */
-
 	private void activateDirtySave(ConfigurationSection config) {
 		long period = 5*60*1000l;
 		long delay = 5*60*1000l;
@@ -213,12 +163,6 @@ public class CropControlDatabaseHandler {
 	 */
 	private void initializeTables() {
 		data.registerMigration(0,  false,
-				/*
-				 * 	private long chunkID;
-	private UUID worldID;
-	private int chunkX;
-	private int chunkZ;
-				 */
 				"CREATE TABLE crops_chunk(" +
 				" chunk_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
 				" world VARCHAR(36) NOT NULL," +
@@ -226,18 +170,7 @@ public class CropControlDatabaseHandler {
 				" z BIGINT NOT NULL," +
 				" INDEX crops_world_chunk(world, x, z)" +
 				");",
-				/*
-				 * 	private long cropID;
-	private long chunkID;
-	private int x;
-	private int y;
-	private int z;
-	private String cropType;
-	private String cropState;
-	private UUID placer;
-	private long timeStamp;
-	private boolean harvestable;
-				 */
+
 				"CREATE TABLE crops_crop(" +
 				" crop_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
 				" chunk_id BIGINT NOT NULL REFERENCES crops_chunk(chunk_id)," +
@@ -253,17 +186,7 @@ public class CropControlDatabaseHandler {
 				" INDEX crops_crop_inner(chunk_id, x, y, z)," + 
 				" INDEX crops_crop_owner(chunk_id, placer)" + 
 				");",
-				/*
-				 * 	private long saplingID;
-	private long chunkID;
-	private int x;
-	private int y;
-	private int z;
-	private String saplingType;
-	private UUID placer;
-	private long timeStamp;
-	private boolean harvestable;
-				 */
+
 				"CREATE TABLE crops_sapling(" +
 				" sapling_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
 				" chunk_id BIGINT NOT NULL REFERENCES crops_chunk(chunk_id)," +
@@ -278,16 +201,7 @@ public class CropControlDatabaseHandler {
 				" INDEX crops_sapling_inner(chunk_id, x, y, z)," +
 				" INDEX crops_sapling_owner(chunk_id, placer)" +
 				");",
-				/*
-				 * 	private long treeID;
-	private long chunkID;
-	private int x;
-	private int y;
-	private int z;
-	private String treeType;
-	private UUID placer;
-	private long timeStamp;
-				 */
+
 				"CREATE TABLE crops_tree(" +
 				" tree_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
 				" chunk_id BIGINT NOT NULL REFERENCES crops_chunk(chunk_id)," +
@@ -301,17 +215,7 @@ public class CropControlDatabaseHandler {
 				" INDEX crops_tree_inner(chunk_id, x, y, z)," +
 				" INDEX crops_tree_owner(chunk_id, placer)" +
 				");",
-				/*
-				 * 	private long treeComponentID;
-	private long treeID;
-	private long chunkID;
-	private int x;
-	private int y;
-	private int z;
-	private String treeType;
-	private UUID placer;
-	private boolean harvestable;
-				 */
+
 				"CREATE TABLE crops_tree_component(" +
 				" tree_component_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY," +
 				" tree_id BIGINT NOT NULL REFERENCES crops_tree(tree_id)," +
@@ -326,8 +230,7 @@ public class CropControlDatabaseHandler {
 				" INDEX crops_tree_component_inner(tree_id, chunk_id, x, y, z)," +
 				" INDEX crops_tree_component_inner2(chunk_id, x, y, z)," +
 				" INDEX crops_tree_component_owner(tree_id, chunk_id, placer)" +
-				");");
-		
+				");");		
 	}
 	
 	/**

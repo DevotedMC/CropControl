@@ -22,8 +22,12 @@ public class CitadelEventHandler implements Listener {
 	
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled=true)
 	public void handleAcidBreak(AcidBlockEvent e) {
-		Location acided = e.getDestroyedBlockReinforcement().getLocation();
-		
-		CropControl.getPlugin().getEventHandler().onBlockBreak(new BlockBreakEvent( acided.getBlock(), e.getPlayer() ) );
+		try {
+			Location acided = e.getDestroyedBlockReinforcement().getLocation();
+			
+			CropControl.getPlugin().getEventHandler().onBlockBreak(new BlockBreakEvent( acided.getBlock(), e.getPlayer() ) );
+		} catch (Exception g) {
+			CropControl.getPlugin().warning("Failed to handle Citadel Acid Block Event:", g);
+		}
 	}
 }

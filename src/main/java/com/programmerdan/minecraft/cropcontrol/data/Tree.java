@@ -138,10 +138,10 @@ public class Tree extends Locatable {
 		WorldChunk.byId(this.chunkID).unregister(this);
 	}
 
-	public static void flushDirty(Iterable<Tree> trees) {
+	public static int flushDirty(Iterable<Tree> trees) {
+		int totalSave = 0;
 		if (trees != null) {
 			int batchSize = 0;
-			int totalSave = 0;
 			int totalSkip = 0;
 			try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 					PreparedStatement saveTree = connection.prepareStatement("UPDATE crops_tree SET chunk_id = ?, x = ?, y = ?, z = ?, removed = ? WHERE tree_id = ?");) {
@@ -164,8 +164,8 @@ public class Tree extends Locatable {
 						int[] batchRun = saveTree.executeBatch();
 						if (batchRun.length != batchSize) {
 							CropControl.getPlugin().severe("Some elements of the Tree dirty flush didn't save? " + batchSize + " vs " + batchRun.length);
-						} else {
-							CropControl.getPlugin().debug("Tree flush: {0} saves", batchRun.length);
+						//} else {
+							//CropControl.getPlugin().debug("Tree flush: {0} saves", batchRun.length);
 						}
 						batchSize = 0;
 					}
@@ -174,18 +174,19 @@ public class Tree extends Locatable {
 					int[] batchRun = saveTree.executeBatch();
 					if (batchRun.length != batchSize) {
 						CropControl.getPlugin().severe("Some elements of the Tree dirty flush didn't save? " + batchSize + " vs " + batchRun.length);
-					} else {
-						CropControl.getPlugin().debug("Tree flush: {0} saves", batchRun.length);
+					//} else {
+						//CropControl.getPlugin().debug("Tree flush: {0} saves", batchRun.length);
 					}
 				}
-				CropControl.getPlugin().debug("Tree flush: {0} saves {1} skips", totalSave, totalSkip);
+				//CropControl.getPlugin().debug("Tree flush: {0} saves {1} skips", totalSave, totalSkip);
 			} catch (SQLException se) {
 				CropControl.getPlugin().severe("Save of Tree dirty flush failed!: ", se);
 			}
 		}
+		return totalSave;
 	}
 	
-	public static void saveDirty() {
+	public static int saveDirty() {
 		int batchSize = 0;
 		int totalSave = 0;
 		int totalSkip = 0;
@@ -212,8 +213,8 @@ public class Tree extends Locatable {
 					int[] batchRun = saveTree.executeBatch();
 					if (batchRun.length != batchSize) {
 						CropControl.getPlugin().severe("Some elements of the Tree dirty batch didn't save? " + batchSize + " vs " + batchRun.length);
-					} else {
-						CropControl.getPlugin().debug("Tree batch: {0} saves", batchRun.length);
+					//} else {
+						//CropControl.getPlugin().debug("Tree batch: {0} saves", batchRun.length);
 					}
 					batchSize = 0;
 				}
@@ -222,14 +223,15 @@ public class Tree extends Locatable {
 				int[] batchRun = saveTree.executeBatch();
 				if (batchRun.length != batchSize) {
 					CropControl.getPlugin().severe("Some elements of the Tree dirty batch didn't save? " + batchSize + " vs " + batchRun.length);
-				} else {
-					CropControl.getPlugin().debug("Tree batch: {0} saves", batchRun.length);
+				//} else {
+					//CropControl.getPlugin().debug("Tree batch: {0} saves", batchRun.length);
 				}
 			}
-			CropControl.getPlugin().debug("Tree batch: {0} saves {1} skips", totalSave, totalSkip);
+			//CropControl.getPlugin().debug("Tree batch: {0} saves {1} skips", totalSave, totalSkip);
 		} catch (SQLException se) {
 			CropControl.getPlugin().severe("Save of Tree dirty batch failed!: ", se);
 		}
+		return totalSave;
 	}
 
 	public static List<Tree> preload(WorldChunk chunk) {

@@ -4,7 +4,7 @@
 
 	<groupId>com.programmerdan.minecraft</groupId>
 	<artifactId>cropcontrol</artifactId>
-	<version>0.9.5</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 	<name>CropControl</name>
 	<url>https://github.com/DevotedMC/CropControl</url>

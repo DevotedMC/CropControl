@@ -323,6 +323,10 @@ public class WorldChunk {
 	public static void doUnloads(Long maxTime) {
 		int unloads = 0;
 		long start = System.currentTimeMillis();
+		long cropz = 0l;
+		long saplingz = 0l;
+		long treez = 0l;
+		long componentz = 0l;
 		
 		while (!unloadQueue.isEmpty()) {
 			WorldChunk unload = unloadQueue.poll();
@@ -347,8 +351,8 @@ public class WorldChunk {
 			if (cacheChunk != null) {
 				chunkCacheID.remove(unload.getChunkID());
 			}
-			CropControl.getPlugin().debug("Actually unloading for chunk {0}:{1},{2}:{3}:{4}", world_uuid, cacheChunk.chunkX,
-					cacheChunk.chunkZ, chunk_id, cacheChunk.chunkID);
+			/* CropControl.getPlugin().debug("Actually unloading for chunk {0}:{1},{2}:{3}:{4}", world_uuid, cacheChunk.chunkX,
+					cacheChunk.chunkZ, chunk_id, cacheChunk.chunkID);*/
 			// empty the collections
 			unload.componentCacheID.clear();
 			unload.componentCacheLoc.clear();
@@ -360,15 +364,15 @@ public class WorldChunk {
 			unload.cropCacheLoc.clear();
 			
 			// save collections to disk.
-			Crop.flushDirty(crops);
-			Sapling.flushDirty(saplings);
-			Tree.flushDirty(trees);
-			TreeComponent.flushDirty(components);
+			cropz += Crop.flushDirty(crops);
+			saplingz += Sapling.flushDirty(saplings);
+			treez += Tree.flushDirty(trees);
+			componentz += TreeComponent.flushDirty(components);
 			
-			Crop.flushDirty(unload.removedCropQueue);
-			Sapling.flushDirty(unload.removedSaplingQueue);
-			Tree.flushDirty(unload.removedTreeQueue);
-			TreeComponent.flushDirty(unload.removedTreeComponentQueue);
+			cropz += Crop.flushDirty(unload.removedCropQueue);
+			saplingz += Sapling.flushDirty(unload.removedSaplingQueue);
+			treez += Tree.flushDirty(unload.removedTreeQueue);
+			componentz += TreeComponent.flushDirty(unload.removedTreeComponentQueue);
 			
 			// excessive local cleanup
 			crops = null;
@@ -387,7 +391,8 @@ public class WorldChunk {
 				break;
 			}
 		}
-		CropControl.getPlugin().debug("Unloaded {0} chunks in {1} ms", unloads, (System.currentTimeMillis() - start));
+		CropControl.getPlugin().debug("Unloaded {0} chunks in {1} ms, saved {2} crops, {3} saplings, {4} components, {5} trees",
+				unloads, (System.currentTimeMillis() - start), cropz, saplingz, componentz, treez);
 	}
 	
 	public static WorldChunk getChunk(Chunk chunk) {
@@ -421,8 +426,8 @@ public class WorldChunk {
 						cacheChunk.chunkZ = chunk.getZ();
 						cacheChunk.chunkID = rs.getLong(1);
 						cacheChunk.worldID = world_uuid;
-						CropControl.getPlugin().debug("Loaded existing chunk {0}:{1},{2}:{3}:{4}", world_uuid, cacheChunk.chunkX, 
-								cacheChunk.chunkZ, chunk_id, cacheChunk.chunkID);
+						/*CropControl.getPlugin().debug("Loaded existing chunk {0}:{1},{2}:{3}:{4}", world_uuid, cacheChunk.chunkX, 
+								cacheChunk.chunkZ, chunk_id, cacheChunk.chunkID);*/
 					}
 				}
 			} catch (SQLException se) {
@@ -484,8 +489,8 @@ public class WorldChunk {
 						cacheChunk.chunkZ = rs.getInt(4);
 						cacheChunk.chunkID = rs.getLong(1);
 						cacheChunk.worldID = UUID.fromString(rs.getString(2));
-						CropControl.getPlugin().debug("Loaded existing chunk by ID {0}:{1},{2}:{3}:{4}", cacheChunk.worldID, 
-								cacheChunk.chunkX, cacheChunk.chunkZ, cacheChunk.getChunkLocID(), cacheChunk.chunkID);
+						/*CropControl.getPlugin().debug("Loaded existing chunk by ID {0}:{1},{2}:{3}:{4}", cacheChunk.worldID, 
+								cacheChunk.chunkX, cacheChunk.chunkZ, cacheChunk.getChunkLocID(), cacheChunk.chunkID);*/
 					} else {
 						throw new CreationError(WorldChunk.class, "ID of Chunk referenced but nothing found");
 					}
