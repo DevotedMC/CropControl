@@ -701,32 +701,14 @@ trees:
     player:
      different:
       chance: 1.1
-    chance: 0.01
-    biomes:
-     FOREST:
-      chance: 100.0
-     FOREST_HILLS:
-      chance: 100.0
    UncommonBarkT2:
     player:
      different:
       chance: 1.1
-    chance: 0.01
-    biomes:
-     FOREST:
-      chance: 100.0
-     FOREST_HILLS:
-      chance: 100.0
    RareTrunkT3:
     player:
      different:
       chance: 1.1
-    chance: 0.01
-    biomes:
-     FOREST:
-      chance: 100.0
-     FOREST_HILLS:
-      chance: 100.0
  BIG_TREE:
   drops:
    OakTwigT1:
@@ -752,6 +734,18 @@ trees:
      different:
       chance: 1.1
    SpruceTrunkT3:
+    player:
+     different:
+      chance: 1.1
+   MixedTwigsT1:
+    player:
+     different:
+      chance: 1.1
+   UncommonBarkT2:
+    player:
+     different:
+      chance: 1.1
+   RareTrunkT3:
     player:
      different:
       chance: 1.1
@@ -783,6 +777,18 @@ trees:
     player:
      different:
       chance: 1.1
+   MixedTwigsT1:
+    player:
+     different:
+      chance: 1.1
+   UncommonBarkT2:
+    player:
+     different:
+      chance: 1.1
+   RareTrunkT3:
+    player:
+     different:
+      chance: 1.1
  JUNGLE:
   drops:
    JungleTwigT1:
@@ -808,6 +814,18 @@ trees:
      different:
       chance: 1.1
    JungleTrunkT3:
+    player:
+     different:
+      chance: 1.1
+   MixedTwigsT1:
+    player:
+     different:
+      chance: 1.1
+   UncommonBarkT2:
+    player:
+     different:
+      chance: 1.1
+   RareTrunkT3:
     player:
      different:
       chance: 1.1
@@ -864,6 +882,18 @@ trees:
      different:
       chance: 1.1
    AcaciaTrunkT3:
+    player:
+     different:
+      chance: 1.1
+   MixedTwigsT1:
+    player:
+     different:
+      chance: 1.1
+   UncommonBarkT2:
+    player:
+     different:
+      chance: 1.1
+   RareTrunkT3:
     player:
      different:
       chance: 1.1
