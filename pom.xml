@@ -4,7 +4,7 @@
 
 	<groupId>com.programmerdan.minecraft</groupId>
 	<artifactId>cropcontrol</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 	<name>CropControl</name>
 	<url>https://github.com/DevotedMC/CropControl</url>
@@ -83,6 +83,12 @@
 			<groupId>vg.civcraft.mc.citadel</groupId>
 			<artifactId>Citadel</artifactId>
 			<version>3.7.02</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.aleksey</groupId>
+			<artifactId>castlegates</artifactId>
+			<version>1.0.12-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

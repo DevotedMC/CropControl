@@ -1020,16 +1020,18 @@ public class CropControlEventHandler implements Listener {
 
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockExplode(BlockExplodeEvent e) {
-		doExplodeHandler(e.blockList());
+		doExplodeHandler(e.blockList(), BreakType.EXPLOSION, null);
 	}
 
 	/**
 	 * Handles explosion, registering all things that are tracked that either might break or have broken
 	 * based on explode.
 	 * 
-	 * @param blockList
+	 * @param blockList The list of blocks to be broken
+	 * @param breakType What kind of break it was
+	 * @param player Who triggered it (if applicable)
 	 */
-	private void doExplodeHandler(List<Block> blockList) {
+	public void doExplodeHandler(List<Block> blockList, BreakType breakType, UUID player) {
 		Set<Location> toBreakList = new HashSet<Location>();
 
 		for (Block block : blockList) {
@@ -1051,7 +1053,7 @@ public class CropControlEventHandler implements Listener {
 					Location loc = block.getLocation();
 					if (!pendingChecks.contains(loc)) {
 						pendingChecks.add(loc);
-						handleBreak(block, BreakType.EXPLOSION, null, null);
+						handleBreak(block, breakType, player, null);
 					}
 				}
 				continue;
@@ -1071,7 +1073,7 @@ public class CropControlEventHandler implements Listener {
 					Location loc = block.getLocation();
 					if (!pendingChecks.contains(loc)) {
 						pendingChecks.add(loc);
-						handleBreak(block, BreakType.EXPLOSION, null, null);
+						handleBreak(block, breakType, player, null);
 					}
 				}
 				continue;
@@ -1092,18 +1094,18 @@ public class CropControlEventHandler implements Listener {
 				Location loc = block.getLocation();
 				if (!pendingChecks.contains(loc)) {
 					pendingChecks.add(loc);
-					handleBreak(block, BreakType.EXPLOSION, null, null);
+					handleBreak(block, breakType, player, null);
 				}
 			}
 		}
 		if (toBreakList.size() > 0) {
-			handleBreak(null, BreakType.EXPLOSION, null, toBreakList);
+			handleBreak(null, breakType, player, toBreakList);
 		}
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityExplode(EntityExplodeEvent e) {
-		doExplodeHandler(e.blockList());
+		doExplodeHandler(e.blockList(), BreakType.EXPLOSION, null);
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
@@ -1443,7 +1445,7 @@ public class CropControlEventHandler implements Listener {
 
 	public void handleBreak(final Block startBlock, final BreakType breakType, final UUID breaker, final Set<Location> altBlocks) {
 		if (startBlock != null && !CropControl.getDAO().isTracked(startBlock)) {
-			CropControl.getPlugin().debug("Rejecting break at {0}", startBlock.getLocation());
+			//CropControl.getPlugin().debug("Rejecting break at {0}", startBlock.getLocation());
 			pendingChecks.remove(startBlock.getLocation());
 			
 			// Check if we care pre-break.

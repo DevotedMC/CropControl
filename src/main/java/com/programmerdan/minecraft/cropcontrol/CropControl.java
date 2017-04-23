@@ -1,6 +1,7 @@
 package com.programmerdan.minecraft.cropcontrol;
 
 import com.programmerdan.minecraft.cropcontrol.data.DAO;
+import com.programmerdan.minecraft.cropcontrol.handler.CastleGatesEventHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CitadelEventHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler;
@@ -67,6 +68,10 @@ public class CropControl extends ACivMod {
 
 			if (this.getServer().getPluginManager().isPluginEnabled("Citadel")) {
 				this.getServer().getPluginManager().registerEvents(new CitadelEventHandler(), this);
+			}
+
+			if (this.getServer().getPluginManager().isPluginEnabled("CastleGates")) {
+				this.getServer().getPluginManager().registerEvents(new CastleGatesEventHandler(), this);
 			}
 		} catch (Exception e) {
 			this.severe("Failed to set up event capture / handling", e);
