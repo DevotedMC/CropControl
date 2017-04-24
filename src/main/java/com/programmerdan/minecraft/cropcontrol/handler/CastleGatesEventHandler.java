@@ -36,7 +36,7 @@ public class CastleGatesEventHandler implements Listener {
 			for (Location location : e.getImpacted()) {
 				blocks.add(location.getBlock());
 			}
-			CropControl.getPlugin().getEventHandler().doExplodeHandler(blocks, BreakType.PISTON, null);
+			CropControl.getPlugin().getEventHandler().doMultiblockHandler(blocks, BreakType.PISTON, null);
 		} catch (Exception g) {
 			CropControl.getPlugin().warning("Failed to handle CastleGates Draw Gate Event:", g);
 		}
@@ -54,7 +54,7 @@ public class CastleGatesEventHandler implements Listener {
 			for (Location location : e.getImpacted()) {
 				blocks.add(location.getBlock());
 			}
-			CropControl.getPlugin().getEventHandler().doExplodeHandler(blocks, BreakType.PISTON, null);
+			CropControl.getPlugin().getEventHandler().doMultiblockHandler(blocks, BreakType.PISTON, null);
 		} catch (Exception g) {
 			CropControl.getPlugin().warning("Failed to handle CastleGates Undraw Gate Event:", g);
 		}

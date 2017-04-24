@@ -1020,18 +1020,18 @@ public class CropControlEventHandler implements Listener {
 
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockExplode(BlockExplodeEvent e) {
-		doExplodeHandler(e.blockList(), BreakType.EXPLOSION, null);
+		doMultiblockHandler(e.blockList(), BreakType.EXPLOSION, null);
 	}
 
 	/**
-	 * Handles explosion, registering all things that are tracked that either might break or have broken
-	 * based on explode.
+	 * Handles multiblock breaks, registering all things that are tracked that either might break or have broken
+	 * based on explode/other break similar to explode
 	 * 
 	 * @param blockList The list of blocks to be broken
 	 * @param breakType What kind of break it was
 	 * @param player Who triggered it (if applicable)
 	 */
-	public void doExplodeHandler(List<Block> blockList, BreakType breakType, UUID player) {
+	public void doMultiblockHandler(List<Block> blockList, BreakType breakType, UUID player) {
 		Set<Location> toBreakList = new HashSet<Location>();
 
 		for (Block block : blockList) {
@@ -1105,7 +1105,7 @@ public class CropControlEventHandler implements Listener {
 
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityExplode(EntityExplodeEvent e) {
-		doExplodeHandler(e.blockList(), BreakType.EXPLOSION, null);
+		doMultiblockHandler(e.blockList(), BreakType.EXPLOSION, null);
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
