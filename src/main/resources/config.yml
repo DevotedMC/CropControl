@@ -16,6 +16,10 @@ database:
  dirtysave: 
   period: 12000
   delay: 6000
+# Set alerts to true to give chat notices when a special drop is made. %crop% is replaced with the crop dropped, %items% are what were dropped
+alert:
+ enable: true
+ message: Congrats, that %crop% just dropped %items%.
 #tools: TODO
 # define the drops that you'll use in your crops: saplings: and trees: sections.
 drops:

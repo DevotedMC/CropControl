@@ -76,6 +76,8 @@ import net.md_5.bungee.api.chat.HoverEvent;
  */
 public class CropControlEventHandler implements Listener {
 	private FileConfiguration config;
+	
+	private String baseDropMessage;
 	/**
 	 * List of materials that are crops, and if we track specific states
 	 * belonging to that material.
@@ -98,6 +100,8 @@ public class CropControlEventHandler implements Listener {
 	
 	public CropControlEventHandler(FileConfiguration config) {
 		this.config = config;
+		
+		baseDropMessage = (this.config.getBoolean("alert.enable", false) ? this.config.getString("alert.message") : null);
 
 		harvestableCrops = new HashMap<Material, Boolean>();
 		trackedMaterials = new HashSet<Material>();
@@ -1632,6 +1636,13 @@ public class CropControlEventHandler implements Listener {
 				if (player != null) {
 					CropControl.getPlugin().info("Dropping {0} items at {1} due to break {2} caused by player {3}: {4}", 
 							event.getItems().size(), bLoc, breakType, player, summarizeDrops(event.getItems()));
+					if (this.baseDropMessage != null) {
+						String finalMsg = baseDropMessage.replaceAll("%crop%", friendlyCropName(dropable));
+						finalMsg = finalMsg.replaceAll("%items%", friendlySummarizeDrops(event.getItems()));
+						try {
+							Bukkit.getPlayer(player).sendMessage(finalMsg);
+						} catch (Exception e) {} // NO-OP, sending is just best effort
+					}
 				} else {
 					CropControl.getPlugin().info("Dropping {0} items at {1} due to break {2}: {3}",
 							event.getItems().size(), bLoc, breakType, summarizeDrops(event.getItems()));
@@ -1663,6 +1674,44 @@ public class CropControlEventHandler implements Listener {
 		}
 		return toString.toString();
 	}
+	
+	public String friendlyCropName(Locatable dropable) {
+		if (dropable instanceof Crop) {
+			Crop crop = (Crop) dropable;
+			return crop.getCropType();
+		}
+		if (dropable instanceof Sapling) {
+			Sapling sapling = (Sapling) dropable;
+			return sapling.getSaplingType();
+		}
+		if (dropable instanceof TreeComponent) {
+			TreeComponent component = (TreeComponent) dropable;
+			return component.getTreeType();
+		}
+		
+		return "Unknown";
+	}
+	
+	public String friendlySummarizeDrops(List<ItemStack> items) {
+		StringBuffer toString = new StringBuffer();
+		for (ItemStack itemStack: items) {
+			toString.append(" ");
+			Material material = itemStack.getType();
+			int amount = itemStack.getAmount();
+			short durability = itemStack.getDurability();
+					
+			if (amount != 1) {
+				toString.append(amount).append(" x ");
+			}
+			
+			toString.append(itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName() ? 
+						itemStack.getItemMeta().getDisplayName() : material.toString());
+			if (durability > 0) {
+				toString.append(":").append(durability);
+			}
+		}
+		return toString.toString();
+	}	
 	
 	public void realDrop(Location location, List<ItemStack> items) {
 		for (ItemStack item : items) {
