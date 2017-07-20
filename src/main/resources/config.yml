@@ -60,6 +60,15 @@ crops:
        adjust: 1
        chance: 0.5
        extend: -1
+     worlds:
+      world:
+       adjust: -1
+       chance: 1.5
+       extend: 2
+      world_nether:
+       adjust: 1
+       chance: 0.5
+       extend: -1
      # An enhancement of PLAYER break type, allows unique override based on if same player or diff player breaks it vs. planted it 
      player:
       same:
