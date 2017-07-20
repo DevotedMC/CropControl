@@ -292,7 +292,7 @@ public class RootConfig {
 				}
 			} // else no unique settings per biome.
 			
-			ConfigurationSection worldConfigs = config.getConfigurationSection("biomes");
+			ConfigurationSection worldConfigs = config.getConfigurationSection("worlds");
 			// unwraps worlds and divines modifier configs for each one listed.
 			if (worldConfigs != null) {
 				for (String worldName : worldConfigs.getKeys(false)) {
