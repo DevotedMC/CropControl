@@ -367,7 +367,7 @@ public class CropControlEventHandler implements Listener {
 						.append("\nTimeStamp: " + crop.getTimeStamp()).color(ChatColor.RED)
 						.append("\nHarvestable: " + crop.getHarvestable()).color(ChatColor.RED)
 						.append("\nNatural Drops: " + 
-								RootConfig.from(crop).predictDrops(BreakType.NATURAL, crop.getPlacer(), null, crop.getHarvestable(), block.getBiome(), null));
+								RootConfig.from(crop).predictDrops(BreakType.NATURAL, crop.getPlacer(), null, crop.getHarvestable(), block.getBiome(), null, block.getWorld()));
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
 
@@ -396,7 +396,7 @@ public class CropControlEventHandler implements Listener {
 						.append("\nTimeStamp: " + sapling.getTimeStamp()).color(ChatColor.RED)
 						.append("\nHarvestable: " + sapling.getHarvestable()).color(ChatColor.RED)
 						.append("\nNatural Drops: " + 
-								RootConfig.from(sapling).predictDrops(BreakType.NATURAL, sapling.getPlacer(), null, sapling.getHarvestable(), block.getBiome(), null));
+								RootConfig.from(sapling).predictDrops(BreakType.NATURAL, sapling.getPlacer(), null, sapling.getHarvestable(), block.getBiome(), null, block.getWorld()));
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
 
@@ -453,7 +453,7 @@ public class CropControlEventHandler implements Listener {
 								.append("\nPlacer: " + treeComponent.getPlacer())
 								.append("\nHarvestable: " + treeComponent.isHarvestable())
 								.append("\nNatural Drops: " + 
-										RootConfig.from(treeComponent).predictDrops(BreakType.NATURAL, treeComponent.getPlacer(), null, treeComponent.isHarvestable(), block.getBiome(), null));
+										RootConfig.from(treeComponent).predictDrops(BreakType.NATURAL, treeComponent.getPlacer(), null, treeComponent.isHarvestable(), block.getBiome(), null, block.getWorld()));
 
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
@@ -1598,6 +1598,7 @@ public class CropControlEventHandler implements Listener {
 	private void drop(Block block, Locatable dropable, UUID player, BreakType breakType) {
 		Location bLoc = block.getLocation();
 		Biome biome = block.getBiome();
+		World world = block.getWorld();
 		UUID placePlayer = null; 
 		boolean byPlayer = player != null;
 		boolean harvestable = false;
@@ -1628,7 +1629,7 @@ public class CropControlEventHandler implements Listener {
 			}
 		}
 		
-		List<ItemStack> items = config.realizeDrops(breakType, placePlayer, player, harvestable, biome, toolUsed);
+		List<ItemStack> items = config.realizeDrops(breakType, placePlayer, player, harvestable, biome, toolUsed, world);
 		if (items != null) {
 			CropControlDropEvent event = new CropControlDropEvent(bLoc, breakType, dropable, player, items);
 			Bukkit.getPluginManager().callEvent(event);
