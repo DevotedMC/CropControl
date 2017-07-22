@@ -4,7 +4,7 @@
 
 	<groupId>com.programmerdan.minecraft</groupId>
 	<artifactId>cropcontrol</artifactId>
-	<version>1.0.2</version>
+	<version>1.1.0</version>
 	<packaging>jar</packaging>
 	<name>CropControl</name>
 	<url>https://github.com/DevotedMC/CropControl</url>
@@ -64,13 +64,13 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.10.2-R0.1-SNAPSHOT</version>
+			<version>1.12-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>vg.civcraft.mc.civmodcore</groupId>
 			<artifactId>CivModCore</artifactId>
-			<version>1.5.09</version>
+			<version>1.6.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -82,13 +82,13 @@
 		<dependency>
 			<groupId>vg.civcraft.mc.citadel</groupId>
 			<artifactId>Citadel</artifactId>
-			<version>3.7.02</version>
+			<version>3.9.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.aleksey</groupId>
 			<artifactId>castlegates</artifactId>
-			<version>1.0.12-SNAPSHOT</version>
+			<version>1.0.20-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

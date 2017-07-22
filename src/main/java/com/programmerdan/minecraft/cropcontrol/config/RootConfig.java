@@ -113,11 +113,12 @@ public class RootConfig {
 			}
 			
 			//per world support
-			if (dropMod.worlds.containsKey(world)) { // world
+			if (dropMod.worlds.containsKey(world.getName())) { // world
 				ModifierConfig modifier = dropMod.worlds.get(world.getName());
 				localChance *= modifier.chanceMod;
 				localMin += modifier.stackAdjust;
 				localMax += modifier.stackExpand;
+				
 			}
 			
 			if (dropMod.breaks.containsKey(breakType)) { // break
@@ -197,11 +198,12 @@ public class RootConfig {
 			}
 			
 			//per world support
-			if (dropMod.worlds.containsKey(world)) { // world
+			if (dropMod.worlds.containsKey(world.getName())) { // world
 				ModifierConfig modifier = dropMod.worlds.get(world.getName());
 				localChance *= modifier.chanceMod;
 				localMin += modifier.stackAdjust;
 				localMax += modifier.stackExpand;
+
 			}
 			
 			if (dropMod.breaks.containsKey(breakType)) { // break
