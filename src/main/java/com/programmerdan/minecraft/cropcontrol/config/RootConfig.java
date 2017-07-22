@@ -304,13 +304,6 @@ public class RootConfig {
 						if(match != null){
 							worlds.put(match.getName(), new ModifierConfig(worldConfigs.getConfigurationSection(worldName)));
 						}
-						/*	Biome match = Biome.valueOf(biome);
-						if (match != null) {
-							//TODO change from biomes list to worlds list.
-							biomes.put(match, new ModifierConfig(biomeConfigs.getConfigurationSection(biome)));
-						} else {
-							CropControl.getPlugin().warning("Unrecognized biome {0} in config at {1}", biome, config.getCurrentPath());
-						}*/
 					} catch (Exception e) {
 						CropControl.getPlugin().warning("Invalid world {0} in config at {1}", worldName, config.getCurrentPath());
 					}
