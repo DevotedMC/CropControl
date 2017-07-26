@@ -88,7 +88,7 @@
 		<dependency>
 			<groupId>com.aleksey</groupId>
 			<artifactId>castlegates</artifactId>
-			<version>1.0.17-SNAPSHOT</version>
+			<version>1.0.20-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

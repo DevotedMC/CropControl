@@ -6,11 +6,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.config.RootConfig.ModifierConfig;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
 import com.programmerdan.minecraft.cropcontrol.data.Sapling;
 import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
@@ -77,7 +80,7 @@ public class RootConfig {
 		return config;
 	}
 	
-	public String predictDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool) {
+	public String predictDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool, World world) {
 		if (baseDrops == null || baseDrops.size() == 0) {
 			return "No drops configured for " + index;
 		}
@@ -107,6 +110,15 @@ public class RootConfig {
 				localChance *= modifier.chanceMod;
 				localMin += modifier.stackAdjust;
 				localMax += modifier.stackExpand;
+			}
+			
+			//per world support
+			if (dropMod.worlds.containsKey(world.getName())) { // world
+				ModifierConfig modifier = dropMod.worlds.get(world.getName());
+				localChance *= modifier.chanceMod;
+				localMin += modifier.stackAdjust;
+				localMax += modifier.stackExpand;
+				
 			}
 			
 			if (dropMod.breaks.containsKey(breakType)) { // break
@@ -153,7 +165,7 @@ public class RootConfig {
 		return message.toString();
 	}
 	
-	public List<ItemStack> realizeDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool) {
+	public List<ItemStack> realizeDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool, World world) {
 		LinkedList<ItemStack> outcome = new LinkedList<ItemStack>();
 		if (baseDrops == null || baseDrops.size() == 0) {
 			return outcome;
@@ -183,6 +195,15 @@ public class RootConfig {
 				localChance *= modifier.chanceMod;
 				localMin += modifier.stackAdjust;
 				localMax += modifier.stackExpand;
+			}
+			
+			//per world support
+			if (dropMod.worlds.containsKey(world.getName())) { // world
+				ModifierConfig modifier = dropMod.worlds.get(world.getName());
+				localChance *= modifier.chanceMod;
+				localMin += modifier.stackAdjust;
+				localMax += modifier.stackExpand;
+
 			}
 			
 			if (dropMod.breaks.containsKey(breakType)) { // break
@@ -235,6 +256,10 @@ public class RootConfig {
 		
 		Map<Biome, ModifierConfig> biomes = new ConcurrentHashMap<Biome, ModifierConfig>();
 		
+		//per-world support
+		Map<String, ModifierConfig> worlds = new ConcurrentHashMap<String, ModifierConfig>();
+				
+				
 		ModifierConfig base = null;
 		
 		boolean requireHarvestable = true;
@@ -268,6 +293,23 @@ public class RootConfig {
 					}
 				}
 			} // else no unique settings per biome.
+			
+			ConfigurationSection worldConfigs = config.getConfigurationSection("worlds");
+			// unwraps worlds and divines modifier configs for each one listed.
+			if (worldConfigs != null) {
+				for (String worldName : worldConfigs.getKeys(false)) {
+					try {
+						//See if the world is included in the server
+						World match = Bukkit.getServer().getWorld(worldName);
+						if(match != null){
+							worlds.put(match.getName(), new ModifierConfig(worldConfigs.getConfigurationSection(worldName)));
+						}
+					} catch (Exception e) {
+						CropControl.getPlugin().warning("Invalid world {0} in config at {1}", worldName, config.getCurrentPath());
+					}
+				}
+			} // else no unique settings per world.
+			
 			
 			ConfigurationSection breakConfigs = config.getConfigurationSection("breaktypes");
 			// unwraps break types and divines modifier configs for each one listed.
