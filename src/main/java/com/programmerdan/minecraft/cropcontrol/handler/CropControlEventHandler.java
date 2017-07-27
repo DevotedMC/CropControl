@@ -162,8 +162,12 @@ public class CropControlEventHandler implements Listener {
 	private void prefillToolList() {
 		ToolConfig.clear();
 		ConfigurationSection toolDefinitions = config.getConfigurationSection("tools");
-		for (String toolDefine : toolDefinitions.getKeys(false)) {
-			ToolConfig.initTool(toolDefinitions.getConfigurationSection(toolDefine));
+		if (toolDefinitions != null) {
+			for (String toolDefine : toolDefinitions.getKeys(false)) {
+				ToolConfig.initTool(toolDefinitions.getConfigurationSection(toolDefine));
+			}
+		} else {
+			CropControl.getPlugin().warning("No tools defined; if any crop configuration uses a tool config, it will result in a new warning.");
 		}
 	}
 

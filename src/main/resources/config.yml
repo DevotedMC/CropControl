@@ -20,7 +20,33 @@ database:
 alert:
  enable: true
  message: Congrats, that %crop% just dropped %items%.
-#tools: TODO
+# If you've used HiddenOre, these are modelled the same way. If you haven't, you can achieve an impressive degree of expressiveness
+#  in a raw tool config.
+tools:
+ # Give the item a "friendly name" that you'll use in the "tools" section of each drop config.
+ wood_hoe:
+  # Open an issue if the config-devotedmc.yml data doesn't give you enough to go on to 
+  #  design the template of your desire. 
+  template:
+   ==: org.bukkit.inventory.ItemStack
+   type: WOOD_HOE
+   amount: 1
+  # This will match any wooden hoe, regardless of anything else.
+  ignore:
+   # Ignore the amount held.
+   amount: true
+   # Ignore the durability of the item held.
+   durability: true
+   # Ignore all enchantments.
+   enchants: true
+   # Ignore any enchantments not specified in the template
+   otherEnchants: true
+   # Ignore the specific lvl of the enchantments considered
+   enchantsLvl: true
+   # Ignore any differences in lore
+   lore: true
+   # Ignore any differences in display name.
+   name: true
 # define the drops that you'll use in your crops: saplings: and trees: sections.
 drops:
  # unique name required here
@@ -69,6 +95,19 @@ crops:
        adjust: 1
        chance: 0.5
        expand: -1
+     # this is an optional setting, but lets you enforce "resolution order" in case you'd prefer a more specific tool matcher
+     # to have a go before a more general tool matcher. As below, the name must match a tool in the root-level "tools" section.
+     # If nothing is specified here, there is no guarantee provided on matcher application order.
+     # If only some things are specified here (more in tools then in toolOrder) the ones listed here are _always_ tested first,
+     # then the unlisted ones in tools.
+     toolOrder:
+      - wood_hoe
+     tools:
+      # this is the same name as defined above in the root-level "tools" section.
+      wood_hoe:
+       change: 1.5
+       adjust: 0
+       expand: 5
      # An enhancement of PLAYER break type, allows unique override based on if same player or diff player breaks it vs. planted it 
      player:
       same:
