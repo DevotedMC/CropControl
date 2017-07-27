@@ -19,6 +19,7 @@ import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -54,6 +55,7 @@ import org.bukkit.util.Vector;
 import com.google.common.collect.Sets;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.config.RootConfig;
+import com.programmerdan.minecraft.cropcontrol.config.ToolConfig;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
 import com.programmerdan.minecraft.cropcontrol.data.Locatable;
 import com.programmerdan.minecraft.cropcontrol.data.Sapling;
@@ -109,6 +111,8 @@ public class CropControlEventHandler implements Listener {
 		pendingChecks = Sets.newConcurrentHashSet();
 
 		fillHarvestableCropsList();
+		
+		prefillToolList();
 
 		CropControlDatabaseHandler.getInstance().preloadExistingChunks();
 	}
@@ -150,6 +154,17 @@ public class CropControlEventHandler implements Listener {
 		trackedMaterials.add(Material.LOG_2);
 		trackedMaterials.add(Material.LEAVES);
 		trackedMaterials.add(Material.LEAVES_2);
+	}
+
+	/**
+	 * Bootstraps the standalone tools configurations, if any are defined.
+	 */
+	private void prefillToolList() {
+		ToolConfig.clear();
+		ConfigurationSection toolDefinitions = config.getConfigurationSection("tools");
+		for (String toolDefine : toolDefinitions.getKeys(false)) {
+			ToolConfig.initTool(toolDefinitions.getConfigurationSection(toolDefine));
+		}
 	}
 
 	/*
@@ -368,7 +383,7 @@ public class CropControlEventHandler implements Listener {
 						.append("\nTimeStamp: " + crop.getTimeStamp()).color(ChatColor.RED)
 						.append("\nHarvestable: " + crop.getHarvestable()).color(ChatColor.RED)
 						.append("\nNatural Drops: " + 
-								RootConfig.from(crop).predictDrops(BreakType.NATURAL, crop.getPlacer(), null, crop.getHarvestable(), block.getBiome(), null, block.getWorld()));
+								RootConfig.from(crop).predictDrops(BreakType.NATURAL, crop.getPlacer(), null, crop.getHarvestable(), block.getBiome(), p.getInventory().getItemInMainHand(), block.getWorld()));
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
 
@@ -397,7 +412,7 @@ public class CropControlEventHandler implements Listener {
 						.append("\nTimeStamp: " + sapling.getTimeStamp()).color(ChatColor.RED)
 						.append("\nHarvestable: " + sapling.getHarvestable()).color(ChatColor.RED)
 						.append("\nNatural Drops: " + 
-								RootConfig.from(sapling).predictDrops(BreakType.NATURAL, sapling.getPlacer(), null, sapling.getHarvestable(), block.getBiome(), null, block.getWorld()));
+								RootConfig.from(sapling).predictDrops(BreakType.NATURAL, sapling.getPlacer(), null, sapling.getHarvestable(), block.getBiome(), p.getInventory().getItemInMainHand(), block.getWorld()));
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
 
@@ -454,7 +469,7 @@ public class CropControlEventHandler implements Listener {
 								.append("\nPlacer: " + treeComponent.getPlacer())
 								.append("\nHarvestable: " + treeComponent.isHarvestable())
 								.append("\nNatural Drops: " + 
-										RootConfig.from(treeComponent).predictDrops(BreakType.NATURAL, treeComponent.getPlacer(), null, treeComponent.isHarvestable(), block.getBiome(), null, block.getWorld()));
+										RootConfig.from(treeComponent).predictDrops(BreakType.NATURAL, treeComponent.getPlacer(), null, treeComponent.isHarvestable(), block.getBiome(), p.getInventory().getItemInMainHand(), block.getWorld()));
 
 
 				BaseComponent[] hoverMessage = hoverBuilder.create();
