@@ -1,19 +1,22 @@
 package com.programmerdan.minecraft.cropcontrol.config;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.config.RootConfig.ModifierConfig;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
 import com.programmerdan.minecraft.cropcontrol.data.Sapling;
 import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
@@ -213,7 +216,29 @@ public class RootConfig {
 				localMax += modifier.stackExpand;
 			}
 			
-			// TODO: adjust chance based on tool.
+			// Adjust chance based on tool.
+			boolean useCatchall = dropMod.toolCatchall != null;;
+			if ((tool != null && dropMod.toolsByType.containsKey(tool.getType())) || dropMod.toolCatchall != null) {
+				List<String> orderedTools = dropMod.toolsByType.get(tool.getType());
+				if (orderedTools != null) {
+					for (String nextTool : orderedTools) {
+						if (ToolConfig.getConfig(nextTool).matches(tool)) {
+							useCatchall = false; // found a match!
+							ModifierConfig modifier = dropMod.tools.get(nextTool);
+							localChance *= modifier.chanceMod;
+							localMin += modifier.stackAdjust;
+							localMax += modifier.stackExpand;
+							break;
+						}
+					}
+				}
+			}
+			if (useCatchall) {
+				ModifierConfig modifier = dropMod.tools.get(dropMod.toolCatchall);
+				localChance *= modifier.chanceMod;
+				localMin += modifier.stackAdjust;
+				localMax += modifier.stackExpand;
+			}
 			
 			if (BreakType.PLAYER.equals(breakType)) { // player (if applies)
 				if (placer != null && placer.equals(breaker)) {
@@ -251,15 +276,16 @@ public class RootConfig {
 	}
 
 	class DropModifiers {
-		// tool todo -- organize internally by base tool type? if that'll work, otherwise w/e
-		// private Map<String, List<ToolConfig>> tool configs
+		// so for tools we keep a list based on declaration order, and a set to connect to configs.
+		String toolCatchall = null;
+		Map<String, ModifierConfig> tools = new ConcurrentHashMap<String, ModifierConfig>();
+		Map<Material, List<String>> toolsByType = new ConcurrentHashMap<Material, List<String>>();
 		
 		Map<Biome, ModifierConfig> biomes = new ConcurrentHashMap<Biome, ModifierConfig>();
 		
 		//per-world support
 		Map<String, ModifierConfig> worlds = new ConcurrentHashMap<String, ModifierConfig>();
-				
-				
+		
 		ModifierConfig base = null;
 		
 		boolean requireHarvestable = true;
@@ -328,7 +354,53 @@ public class RootConfig {
 				}
 			} // else no unique settings per break type.
 			
-			// TODO tool 'strap here
+			// optionally set a tool ordering to define resolution precedence. Any tools not listed in toolOrder
+			// will be added to the end of the ordering list.
+			List<String> toolOrder = config.getStringList("toolOrder");
+			if (toolOrder == null) {
+				toolOrder = new ArrayList<String>();
+			}
+ 
+			ConfigurationSection toolConfigs = config.getConfigurationSection("tools");
+		
+			// wraps tools by name and divines modifier configs for each one list. We handle matching elsewhere.
+			if (toolConfigs != null) {
+				Set<String> toolsLeft = toolConfigs.getKeys(false);
+				toolsLeft.removeAll(toolOrder);
+				
+				toolOrder.addAll(toolsLeft);
+
+				for (String toolKey : toolOrder) {
+					try {
+						ToolConfig tool = ToolConfig.getConfig(toolKey);
+						ConfigurationSection toolConfig = toolConfigs.getConfigurationSection(toolKey);
+						if (tool == null) {
+							CropControl.getPlugin().warning("Unrecognized tool {0} in config at {1}, be sure to add in global tools declaration before use!", 
+									toolKey, config.getCurrentPath());
+						} else if (toolConfig == null) {
+							CropControl.getPlugin().warning("Valid tool {0} specified in tools or toolOrder at {1} but no modifiers specified in tools!",
+									toolKey, config.getCurrentPath());
+						} else {
+							// add to master list for this drop.
+							tools.put(toolKey, new ModifierConfig(toolConfig));
+							ItemStack toolItem = tool.getTemplate();
+							if (toolItem == null) { // "catchall" type
+								toolCatchall = toolKey; // can be only one, use last
+							} else {
+								Material toolMat = toolItem.getType();
+								List<String> typeList = toolsByType.get(toolMat);
+								if (typeList == null) {
+									typeList = new CopyOnWriteArrayList<>();
+								}
+								typeList.add(toolKey);
+								toolsByType.put(toolMat, typeList);
+							}
+						}
+					} catch (Exception  e) {
+						CropControl.getPlugin().warning("Invalid tool type {0} in config at {1}", toolKey, config.getCurrentPath());
+					}
+				}
+			}
 		}
 	}
 	
