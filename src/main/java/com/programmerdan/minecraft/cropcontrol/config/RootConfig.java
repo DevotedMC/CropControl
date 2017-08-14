@@ -174,7 +174,7 @@ public class RootConfig {
 		return message.toString();
 	}
 	
-	public List<ItemStack> realizeDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool, World world) {
+	public List<ItemStack> realizeDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool, World world, List<String> commandBuffer) {
 		LinkedList<ItemStack> outcome = new LinkedList<ItemStack>();
 		if (baseDrops == null || baseDrops.size() == 0) {
 			return outcome;
@@ -272,6 +272,9 @@ public class RootConfig {
 				int multiplier = (int) (Math.round(Math.random() * ((double) (localMax - localMin))) + localMin);
 				//CropControl.getPlugin().debug("Generated a drop for {0} at chance {1} with multiplier {2}", dropIdent, localChance, multiplier);
 				outcome.addAll(dropConfig.getDrops(multiplier));
+				if (dropConfig.getCommand() != null) {
+					commandBuffer.add(dropConfig.getCommand());
+				}
 				break;
 			}
 			counted ++;

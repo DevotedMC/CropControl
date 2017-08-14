@@ -26,6 +26,7 @@ public class CropControlDropEvent extends Event implements Cancellable {
 	private final Locatable dropable;
 	private final UUID player;
 	private List<ItemStack> items;
+	private List<String> commands;
 	
 	/**
 	 * Constructor for a drop event.
@@ -37,12 +38,13 @@ public class CropControlDropEvent extends Event implements Cancellable {
 	 * @param items A replaceable list of items. The list after all handlers will be dropped.
 	 */
 	public CropControlDropEvent(final Location location, final BreakType breakType, 
-			final Locatable dropable, final UUID player, List<ItemStack> items) {
+			final Locatable dropable, final UUID player, List<ItemStack> items, List<String> commands) {
 		this.location = location;
 		this.breakType = breakType;
 		this.dropable = dropable;
 		this.player = player;
 		this.items = items;
+		this.commands = commands;
 	}
 
 	@Override
@@ -88,5 +90,13 @@ public class CropControlDropEvent extends Event implements Cancellable {
 	
 	public void setItems(List<ItemStack> items) {
 		this.items = items;
+	}
+	
+	public List<String> getCommands() {
+		return this.commands;
+	}
+	
+	public void setCommands(List<String> commands) {
+		this.commands = commands;
 	}
 }

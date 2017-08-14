@@ -3,6 +3,7 @@ package com.programmerdan.minecraft.cropcontrol.handler;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1648,27 +1649,50 @@ public class CropControlEventHandler implements Listener {
 				toolUsed = p.getInventory().getItemInMainHand();
 			}
 		}
+		List<String> commandBuffer = new LinkedList<String>();
 		
-		List<ItemStack> items = config.realizeDrops(breakType, placePlayer, player, harvestable, biome, toolUsed, world);
+		List<ItemStack> items = config.realizeDrops(breakType, placePlayer, player, harvestable, biome, toolUsed, world, commandBuffer);
 		if (items != null) {
-			CropControlDropEvent event = new CropControlDropEvent(bLoc, breakType, dropable, player, items);
+			CropControlDropEvent event = new CropControlDropEvent(bLoc, breakType, dropable, player, items, commandBuffer);
 			Bukkit.getPluginManager().callEvent(event);
-			if (!event.isCancelled() && event.getItems() != null && event.getItems().size() > 0) {
-				if (player != null) {
-					CropControl.getPlugin().info("Dropping {0} items at {1} due to break {2} caused by player {3}: {4}", 
-							event.getItems().size(), bLoc, breakType, player, summarizeDrops(event.getItems()));
-					if (this.baseDropMessage != null) {
-						String finalMsg = baseDropMessage.replaceAll("%crop%", friendlyCropName(dropable));
-						finalMsg = finalMsg.replaceAll("%items%", friendlySummarizeDrops(event.getItems()));
-						try {
-							Bukkit.getPlayer(player).sendMessage(finalMsg);
-						} catch (Exception e) {} // NO-OP, sending is just best effort
+			if (!event.isCancelled() && ((event.getItems() != null && event.getItems().size() > 0) || (event.getCommands() != null && !event.getCommands().isEmpty()))) {
+				if (!event.getItems().isEmpty()) {
+					if (player != null) {
+						CropControl.getPlugin().info("Dropping {0} items at {1} due to break {2} caused by player {3}: {4}", 
+								event.getItems().size(), bLoc, breakType, player, summarizeDrops(event.getItems()));
+						if (this.baseDropMessage != null) {
+							String finalMsg = baseDropMessage.replaceAll("%crop%", friendlyCropName(dropable));
+							finalMsg = finalMsg.replaceAll("%items%", friendlySummarizeDrops(event.getItems()));
+							try {
+								Bukkit.getPlayer(player).sendMessage(finalMsg);
+							} catch (Exception e) {} // NO-OP, sending is just best effort
+						}
+					} else {
+						CropControl.getPlugin().info("Dropping {0} items at {1} due to break {2}: {3}",
+								event.getItems().size(), bLoc, breakType, summarizeDrops(event.getItems()));
 					}
-				} else {
-					CropControl.getPlugin().info("Dropping {0} items at {1} due to break {2}: {3}",
-							event.getItems().size(), bLoc, breakType, summarizeDrops(event.getItems()));
+					realDrop(bLoc, event.getItems());
 				}
-				realDrop(bLoc, event.getItems());
+				
+				if (!event.getCommands().isEmpty() && player != null) {
+					Player p = Bukkit.getPlayer(player);
+					for (String command : event.getCommands()) {
+						if (command != null) {
+							try {
+								String fCommand = command.replaceAll("%player%", p.getName()).replaceAll("%uuid%", player.toString());
+								
+								if (Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), fCommand)) {
+									CropControl.getPlugin().info("Fired off {0} for {1}.", fCommand, p.getName());
+								} else {
+									CropControl.getPlugin().info("Failed to fire off {0} for {1}.", fCommand, p.getName());
+								}
+							} catch (Exception e) {
+								CropControl.getPlugin().info("Failure during command processing: {0}", e);
+							}
+						}
+					}
+				}
+
 			}
 		} else {
 			CropControl.getPlugin().debug("Locatable {0} at {1} broken as {2} by {3}", 

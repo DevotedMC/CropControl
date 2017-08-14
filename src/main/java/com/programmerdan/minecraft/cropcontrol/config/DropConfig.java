@@ -23,6 +23,8 @@ public class DropConfig {
 	
 	private List<ItemStack> template = null;
 	
+	private String command = null;
+	
 	private double chance = 0.0d;
 	private int lowMult = 1;
 	private int highMult = 1;
@@ -45,6 +47,8 @@ public class DropConfig {
 				CropControl.getPlugin().warning("Drop attempts to configure a template but template is broken.", e);
 				return nonce;
 			}
+			
+			config.command = config.dropSection.getString("command");
 			
 			config.chance = config.dropSection.getDouble("base.chance", 0.0d);
 			config.lowMult = config.dropSection.getInt("base.min", 1);
@@ -93,5 +97,9 @@ public class DropConfig {
 			drops.add(clone);
 		}
 		return drops;
+	}
+	
+	public String getCommand() {
+		return this.command;
 	}
 }
