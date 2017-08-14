@@ -10,6 +10,10 @@ commands:
       description: CropControl allows the augment of plant and tree drops. This reloads the config.
       usage: /cropcontrol
       permission: cropcontrol.adv
+   ccgen:
+      description: Generates all configured drops in-game for testing
+      usage: /ccgen [items]
+      permission: cropcontrol.adv
 permissions:
     cropcontrol.*:
       description: Gives access to all CropControl commands

@@ -1,6 +1,7 @@
 package com.programmerdan.minecraft.cropcontrol.config;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
+import com.google.common.collect.ImmutableSet;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
 import com.programmerdan.minecraft.cropcontrol.data.Sapling;
@@ -38,6 +40,10 @@ public class RootConfig {
 	private ConcurrentHashMap<String, DropModifiers> baseDrops = null;
 	
 	private String index;
+	
+	public Set<String> getDropList() {
+		return ImmutableSet.copyOf(baseDrops.keySet().iterator());
+	}
 	
 	public static void reload() {
 		rootConfigs.clear();

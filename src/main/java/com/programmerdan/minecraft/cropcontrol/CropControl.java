@@ -3,6 +3,7 @@ package com.programmerdan.minecraft.cropcontrol;
 import com.programmerdan.minecraft.cropcontrol.data.DAO;
 import com.programmerdan.minecraft.cropcontrol.handler.CastleGatesEventHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CitadelEventHandler;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlCommandHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.RealisticBiomesEventHandler;
@@ -38,6 +39,7 @@ public class CropControl extends ACivMod {
 		if (!this.isEnabled()) return;
 
 		registerEventHandler();
+		registerCommandHandler();
 	}
 	
 	@Override
@@ -77,6 +79,12 @@ public class CropControl extends ACivMod {
 			this.severe("Failed to set up event capture / handling", e);
 			this.setEnabled(false);
 		}	
+	}
+	
+	private void registerCommandHandler() {
+		if (!this.isEnabled()) return;
+		this.setCommandHandler(new CropControlCommandHandler());
+		this.getCommandHandler().registerCommands();
 	}
 
 	/**
