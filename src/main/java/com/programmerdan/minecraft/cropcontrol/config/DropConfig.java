@@ -16,7 +16,7 @@ import com.programmerdan.minecraft.cropcontrol.CropControl;
  *
  */
 public class DropConfig {
-	private static ConcurrentHashMap<String, DropConfig> configs = new ConcurrentHashMap<String, DropConfig>();
+	private static ConcurrentHashMap<String, DropConfig> configs = new ConcurrentHashMap<>();
 	private static DropConfig nonce = new DropConfig();
 	
 	private ConfigurationSection dropSection = null;
@@ -25,7 +25,7 @@ public class DropConfig {
 	
 	private String command = null;
 	
-	private double chance = 0.0d;
+	private double chance = 0.0D;
 	private int lowMult = 1;
 	private int highMult = 1;
 	
@@ -50,7 +50,7 @@ public class DropConfig {
 			
 			config.command = config.dropSection.getString("command");
 			
-			config.chance = config.dropSection.getDouble("base.chance", 0.0d);
+			config.chance = config.dropSection.getDouble("base.chance", 0.0D);
 			config.lowMult = config.dropSection.getInt("base.min", 1);
 			config.highMult = config.dropSection.getInt("base.max", 1);
 			
@@ -76,10 +76,10 @@ public class DropConfig {
 	}
 	
 	public List<ItemStack> getDrops(int multiplier) {
-		if (template == null || template.size() == 0) {
-			return new ArrayList<ItemStack>();
+		if (template == null || template.isEmpty()) {
+			return new ArrayList<>();
 		}
-		ArrayList<ItemStack> drops = new ArrayList<ItemStack>(template.size());
+		ArrayList<ItemStack> drops = new ArrayList<>(template.size());
 		for (ItemStack i : template) {
 			int newSize = i.getAmount() * multiplier;
 			if (newSize <= 0) { 

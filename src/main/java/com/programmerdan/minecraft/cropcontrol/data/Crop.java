@@ -235,7 +235,7 @@ public class Crop extends Locatable {
 	}
 
 	public static List<Crop> preload(WorldChunk chunk) {
-		List<Crop> crops = new ArrayList<Crop>();
+		List<Crop> crops = new ArrayList<>();
 		try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 				PreparedStatement statement = connection.prepareStatement(
 						"SELECT * FROM crops_crop WHERE (crop_id, x, y, z) IN (SELECT max(crop_id), x, y, z FROM crops_crop WHERE chunk_id = ? AND removed = FALSE GROUP BY x, y, z);");) {

@@ -97,8 +97,8 @@ public class CropControlDatabaseHandler {
 	}
 
 	private void activateDirtySave(ConfigurationSection config) {
-		long period = 5*60*1000l;
-		long delay = 5*60*1000l;
+		long period = 5 * 60 * 1000L;
+		long delay = 5 * 60 * 1000L;
 		if (config != null) {
 			period = config.getLong("period", period);
 			delay = config.getLong("delay", delay);
