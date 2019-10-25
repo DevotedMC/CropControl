@@ -40,7 +40,6 @@ import com.programmerdan.minecraft.cropcontrol.CropControl;
 public class ToolConfig {
 	private ItemStack template;
 	private boolean ignoreAmount;
-	private boolean ignoreDurability;
 	private boolean ignoreEnchants;
 	private boolean ignoreOtherEnchants;
 	private boolean ignoreEnchantsLvl;
@@ -48,14 +47,13 @@ public class ToolConfig {
 	private boolean ignoreName;
 	private boolean ignoreMeta;
 
-	private static ConcurrentHashMap<String, ToolConfig> tools = new ConcurrentHashMap<String, ToolConfig>();
+	private static ConcurrentHashMap<String, ToolConfig> tools = new ConcurrentHashMap<>();
 	
-	protected ToolConfig(ItemStack template, boolean ignoreAmount, boolean ignoreDurability,
+	protected ToolConfig(ItemStack template, boolean ignoreAmount,
 			boolean ignoreEnchants, boolean ignoreOtherEnchants, boolean ignoreEnchantsLvl, 
 			boolean ignoreLore, boolean ignoreName) {
 		this.template = template;
 		this.ignoreAmount = ignoreAmount;
-		this.ignoreDurability = ignoreDurability;
 		this.ignoreEnchants = ignoreEnchants;
 		this.ignoreOtherEnchants = ignoreOtherEnchants;
 		this.ignoreEnchantsLvl = ignoreEnchantsLvl;
@@ -66,19 +64,30 @@ public class ToolConfig {
 	
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append(template);
 		sb.append(",ignore:");
-		if (this.ignoreAmount) sb.append("amount");
-		if (this.ignoreDurability) sb.append("durability");
+		if (this.ignoreAmount) {
+			sb.append("amount");
+		}
 		if (this.ignoreMeta) {
 			sb.append("meta");
 		} else {
-			if (this.ignoreEnchants) sb.append("enchants");
-			if (this.ignoreOtherEnchants) sb.append("otherench");
-			if (this.ignoreEnchantsLvl) sb.append("enchantslvl");
-			if (this.ignoreLore) sb.append("lore");
-			if (this.ignoreName) sb.append("name");
+			if (this.ignoreEnchants) {
+				sb.append("enchants");
+			}
+			if (this.ignoreOtherEnchants) {
+				sb.append("otherench");
+			}
+			if (this.ignoreEnchantsLvl) {
+				sb.append("enchantslvl");
+			}
+			if (this.ignoreLore) {
+				sb.append("lore");
+			}
+			if (this.ignoreName) {
+				sb.append("name");
+			}
 		}
 		
 		return sb.toString();
@@ -90,10 +99,6 @@ public class ToolConfig {
 	
 	public boolean ignoreAmount() {
 		return ignoreAmount;
-	}
-	
-	public boolean ignoreDurability() {
-		return ignoreDurability;
 	}
 	
 	public boolean ignoreEnchants() {
@@ -125,7 +130,9 @@ public class ToolConfig {
 	}
 	
 	public static void initTool(ConfigurationSection tool) {
-		if (tools == null) clear();
+		if (tools == null) {
+			clear();
+		}
 		if (!tool.contains("template")) {
 			if (!tool.contains("ignore.all")) {
 				return;
@@ -143,7 +150,6 @@ public class ToolConfig {
 		tools.put(tool.getName(),
 				new ToolConfig(temp,
 						tool.getBoolean("ignore.amount", true),
-						tool.getBoolean("ignore.durability", true),
 						tool.getBoolean("ignore.enchants", true),
 						tool.getBoolean("ignore.otherEnchants", true),
 						tool.getBoolean("ignore.enchantsLvl", true),
@@ -163,10 +169,12 @@ public class ToolConfig {
 		if (compare == null) {
 			return true; // this is catchall! matches everything.
 		}
-		if (compare.getType() != tool.getType()) return false;
-		if (!ignoreDurability() && 
-				compare.getDurability() != tool.getDurability()) return false;
-		if (!ignoreAmount() && compare.getAmount() != tool.getAmount()) return false;
+		if (compare.getType() != tool.getType()) {
+			return false;
+		}
+		if (!ignoreAmount() && compare.getAmount() != tool.getAmount()) {
+			return false;
+		}
 
 		// Short circuit of metachecks.
 		if (ignoreMeta()) return true;
@@ -174,15 +182,23 @@ public class ToolConfig {
 		// Metachecks.
 		ItemMeta compmeta = compare.getItemMeta();
 		ItemMeta toolmeta = tool.getItemMeta();
-		if (toolmeta == null && toolmeta == compmeta) return true; // equal but no further compare
+		if (toolmeta == null && toolmeta == compmeta) {
+			return true; // equal but no further compare
+		}
 		
-		if (compmeta == null) return false; // toolmeta != null but compmeta == null
+		if (compmeta == null) {
+			return false; // toolmeta != null but compmeta == null
+		}
 		
 		// both non-null.
 		if (!ignoreName() && !(toolmeta.hasDisplayName() ? 
-				toolmeta.getDisplayName().equals(compmeta.getDisplayName()) : !compmeta.hasDisplayName() ) ) return false;
+				toolmeta.getDisplayName().equals(compmeta.getDisplayName()) : !compmeta.hasDisplayName() ) ) {
+			return false;
+		}
 		if (!ignoreLore() &&
-				!(toolmeta.hasLore() ? toolmeta.getLore().equals(compmeta.getLore()) : !compmeta.hasLore())) return false;
+				!(toolmeta.hasLore() ? toolmeta.getLore().equals(compmeta.getLore()) : !compmeta.hasLore())) {
+			return false;
+		}
 		
 		// Expensive enchantment checks.
 		if (!ignoreEnchants()) {
@@ -191,11 +207,15 @@ public class ToolConfig {
 
 			// check that set of enchants is same (both null or both not null and same) else bail
 			if (!ignoreOtherEnchants() && !((compench == null && toolench == null) || 
-					(compench != null && toolench != null && compench.keySet().equals(toolench.keySet()) ) ) ) return false; 
+					(compench != null && toolench != null && compench.keySet().equals(toolench.keySet()) ) ) ) {
+				return false; 
+			}
 
 			// check that tool has at least the enchantments specified; ignore the rest.
 			if (ignoreOtherEnchants() && !(compench == null || 
-					(toolench != null && toolench.keySet().containsAll(compench.keySet()) ) ) ) return false; 
+					(toolench != null && toolench.keySet().containsAll(compench.keySet()) ) ) ) {
+				return false; 
+			}
 
 			// also check _level_ of enchants
 			if (!ignoreEnchantsLvl() && compench != null) { 
@@ -206,7 +226,9 @@ public class ToolConfig {
 						break;
 					}
 				}
-				if (fail) return false;
+				if (fail) {
+					return false;
+				}
 			}
 		}
 		return true;

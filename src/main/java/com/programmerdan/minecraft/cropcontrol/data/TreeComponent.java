@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.bukkit.TreeType;
+
 import com.programmerdan.minecraft.cropcontrol.CreationError;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
@@ -31,7 +33,7 @@ public class TreeComponent extends Locatable {
 
 	private long treeComponentID;
 	private long treeID;
-	private String treeType;
+	private TreeType treeType;
 	private UUID placer;
 	private boolean harvestable;
 
@@ -42,12 +44,12 @@ public class TreeComponent extends Locatable {
 	private TreeComponent() {
 	}
 
-	public static TreeComponent create(Tree tree, WorldChunk chunk, int x, int y, int z, String treeType, UUID placer,
+	public static TreeComponent create(Tree tree, WorldChunk chunk, int x, int y, int z, TreeType treeType, UUID placer,
 			boolean harvestable) {
 		return create(tree.getTreeID(), chunk, x, y, z, treeType, placer, harvestable);
 	}
 	
-	public static TreeComponent create(long treeId, WorldChunk chunk, int x, int y, int z, String treeType, UUID placer, boolean harvestable) {
+	public static TreeComponent create(long treeId, WorldChunk chunk, int x, int y, int z, TreeType treeType, UUID placer, boolean harvestable) {
 		TreeComponent component = new TreeComponent();
 		component.treeID = treeId;
 		component.chunkID = chunk.getChunkID();
@@ -72,7 +74,7 @@ public class TreeComponent extends Locatable {
 			if (component.treeType == null) {
 				statement.setNull(6, Types.VARCHAR);
 			} else {
-				statement.setString(6, component.treeType);
+				statement.setString(6, component.treeType.toString());
 			}
 			if (component.placer == null) {
 				statement.setNull(7, Types.VARCHAR);
@@ -120,7 +122,7 @@ public class TreeComponent extends Locatable {
 		TreeComponent.dirties.offer(new WeakReference<TreeComponent>(this));
 	}
 
-	public String getTreeType() {
+	public TreeType getTreeType() {
 		return treeType;
 	}
 
@@ -245,7 +247,7 @@ public class TreeComponent extends Locatable {
 	}
 
 	public static List<TreeComponent> preload(WorldChunk chunk) {
-		List<TreeComponent> components = new ArrayList<TreeComponent>();
+		List<TreeComponent> components = new ArrayList<>();
 		try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 				PreparedStatement statement = connection.prepareStatement(
 						"SELECT * FROM crops_tree_component WHERE (tree_component_id, x, y, z) IN (SELECT max(tree_component_id), x, y, z FROM crops_tree_component WHERE chunk_id = ? AND removed = FALSE GROUP BY x, y, z);");) {
@@ -259,7 +261,7 @@ public class TreeComponent extends Locatable {
 					component.x = results.getInt(4);
 					component.y = results.getInt(5);
 					component.z = results.getInt(6);
-					component.treeType = results.getString(7);
+					component.treeType = TreeType.valueOf(results.getString(7));
 					try {
 						component.placer = UUID.fromString(results.getString(8));
 					} catch (IllegalArgumentException iae) {

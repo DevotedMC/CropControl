@@ -8,7 +8,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 
-import vg.civcraft.mc.citadel.events.AcidBlockEvent;
+import vg.civcraft.mc.citadel.events.ReinforcementAcidBlockedEvent;
 
 /**
  * ACID block breaks are an interesting edge case. Citadel directly sets the reinforced block to air.
@@ -21,9 +21,9 @@ import vg.civcraft.mc.citadel.events.AcidBlockEvent;
 public class CitadelEventHandler implements Listener {
 	
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled=true)
-	public void handleAcidBreak(AcidBlockEvent e) {
+	public void handleAcidBreak(ReinforcementAcidBlockedEvent e) {
 		try {
-			Location acided = e.getDestroyedBlockReinforcement().getLocation();
+			Location acided = e.getReinforcement().getLocation();
 			
 			CropControl.getPlugin().getEventHandler().onBlockBreak(new BlockBreakEvent( acided.getBlock(), e.getPlayer() ) );
 		} catch (Exception g) {
