@@ -4,11 +4,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.untamedears.realisticbiomes.events.RealisticBiomesBlockBreakEvent;
 import com.untamedears.realisticbiomes.events.RealisticBiomesBlockGrowEvent;
 import com.untamedears.realisticbiomes.events.RealisticBiomesStructureGrowEvent;
-
-import com.programmerdan.minecraft.cropcontrol.CropControl;
 
 /**
  * Realistic Biomes cancels all the normal bukkit events; I've layered in shadow events called after RB's manipulations

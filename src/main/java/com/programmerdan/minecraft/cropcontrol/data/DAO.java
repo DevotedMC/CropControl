@@ -57,13 +57,11 @@ public class DAO {
 	}
 
 	public List<TreeComponent> getTreeComponents(long treeID) {
-		List<TreeComponent> components = WorldChunk.getTreeComponents(treeID);
-		return components;
+		return WorldChunk.getTreeComponents(treeID);
 	}
 	
 	public List<TreeComponent> getTreeComponents(Tree tree) {
-		List<TreeComponent> components = WorldChunk.getTreeComponents(tree);
-		return components;
+		return WorldChunk.getTreeComponents(tree);
 	}
 	
 	public boolean isTreeComponent(Tree tree, TreeComponent component) {

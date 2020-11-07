@@ -14,6 +14,7 @@ commands:
       description: Generates all configured drops in-game for testing
       usage: /ccgen [items]
       permission: cropcontrol.adv
+      player-only: true
 permissions:
     cropcontrol.*:
       description: Gives access to all CropControl commands
@@ -27,3 +28,4 @@ permissions:
     cropcontrol.debug:
       description: Enables the CropControl debug interface.
       default: op
+api-version: 1.14
