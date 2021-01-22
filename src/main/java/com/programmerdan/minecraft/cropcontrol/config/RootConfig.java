@@ -1,5 +1,11 @@
 package com.programmerdan.minecraft.cropcontrol.config;
 
+import com.google.common.collect.ImmutableSet;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.data.Crop;
+import com.programmerdan.minecraft.cropcontrol.data.Sapling;
+import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,20 +14,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
-
-import com.google.common.collect.ImmutableSet;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.data.Crop;
-import com.programmerdan.minecraft.cropcontrol.data.Sapling;
-import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
 
 /**
  * Root configuration for a config relative to a type of crop / sapling / tree in terms of drop natures.

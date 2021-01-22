@@ -6,7 +6,6 @@ import com.programmerdan.minecraft.cropcontrol.handler.CitadelEventHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.RealisticBiomesEventHandler;
-
 import vg.civcraft.mc.civmodcore.ACivMod;
 
 /**

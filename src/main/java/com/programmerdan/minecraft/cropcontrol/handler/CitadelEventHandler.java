@@ -1,13 +1,11 @@
 package com.programmerdan.minecraft.cropcontrol.handler;
 
+import com.programmerdan.minecraft.cropcontrol.CropControl;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-
 import vg.civcraft.mc.citadel.events.ReinforcementAcidBlockedEvent;
 
 /**

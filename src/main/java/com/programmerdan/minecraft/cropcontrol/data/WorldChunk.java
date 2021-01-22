@@ -1,5 +1,9 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+import com.google.common.collect.Sets;
+import com.programmerdan.minecraft.cropcontrol.CreationError;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,13 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.bukkit.Chunk;
-
-import com.google.common.collect.Sets;
-import com.programmerdan.minecraft.cropcontrol.CreationError;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
 /**
  * Lots of baked in logic and tracking here. Chunks effectively root our tracking and data into manageable portions, so 

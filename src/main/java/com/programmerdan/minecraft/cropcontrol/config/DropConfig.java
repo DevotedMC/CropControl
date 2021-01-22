@@ -1,13 +1,11 @@
 package com.programmerdan.minecraft.cropcontrol.config;
 
+import com.programmerdan.minecraft.cropcontrol.CropControl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
-
-import com.programmerdan.minecraft.cropcontrol.CropControl;
 
 /**
  * This configures a specific drop

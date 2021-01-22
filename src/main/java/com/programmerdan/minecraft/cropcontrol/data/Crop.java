@@ -1,5 +1,8 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+import com.programmerdan.minecraft.cropcontrol.CreationError;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,12 +16,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
 import org.bukkit.Material;
-
-import com.programmerdan.minecraft.cropcontrol.CreationError;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
 /**
  * Crop is the base holder for all crops, even if spreadable, that effectively captures who placed the crop, 

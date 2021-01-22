@@ -1,190 +1,190 @@
 database:
- host:
- port:
- database:
- user:
- password:
- # How many connections to "reserve" for this plugin. I recommend at least 10.
- poolsize: 15
- # How long to wait for any one query to complete. Change at your own peril.
- connectionTimeout: 3000
- # How long to let a connection sit idle before recycling it.
- idleTimeout: 600000
- # How long to keep a connection open at most, even if largely active
- maxLifetime: 7200000
- # Dirty save is essential -- the period is # of ticks inbetween say attempts. Delay is # of ticks before first dirty save.
- dirtysave: 
-  period: 12000
-  delay: 6000
+  host:
+  port:
+  database:
+  user:
+  password:
+  # How many connections to "reserve" for this plugin. I recommend at least 10.
+  poolsize: 15
+  # How long to wait for any one query to complete. Change at your own peril.
+  connectionTimeout: 3000
+  # How long to let a connection sit idle before recycling it.
+  idleTimeout: 600000
+  # How long to keep a connection open at most, even if largely active
+  maxLifetime: 7200000
+  # Dirty save is essential -- the period is # of ticks inbetween say attempts. Delay is # of ticks before first dirty save.
+  dirtysave:
+    period: 12000
+    delay: 6000
 # Set alerts to true to give chat notices when a special drop is made. %crop% is replaced with the crop dropped, %items% are what were dropped
 alert:
- enable: true
- message: Congrats, that %crop% just dropped %items%.
+  enable: true
+  message: Congrats, that %crop% just dropped %items%.
 # If you've used HiddenOre, these are modelled the same way. If you haven't, you can achieve an impressive degree of expressiveness
 #  in a raw tool config.
 tools:
- # Give the item a "friendly name" that you'll use in the "tools" section of each drop config.
- wood_hoe:
-  # Open an issue if the config-devotedmc.yml data doesn't give you enough to go on to 
-  #  design the template of your desire. 
-  template:
-   ==: org.bukkit.inventory.ItemStack
-   type: WOOD_HOE
-   amount: 1
-  # This will match any wooden hoe, regardless of anything else.
-  ignore:
-   # Ignore the amount held.
-   amount: true
-   # Ignore the durability of the item held.
-   durability: true
-   # Ignore all enchantments.
-   enchants: true
-   # Ignore any enchantments not specified in the template
-   otherEnchants: true
-   # Ignore the specific lvl of the enchantments considered
-   enchantsLvl: true
-   # Ignore any differences in lore
-   lore: true
-   # Ignore any differences in display name.
-   name: true
+  # Give the item a "friendly name" that you'll use in the "tools" section of each drop config.
+  wood_hoe:
+    # Open an issue if the config-devotedmc.yml data doesn't give you enough to go on to
+    #  design the template of your desire.
+    template:
+      ==: org.bukkit.inventory.ItemStack
+      type: WOOD_HOE
+      amount: 1
+    # This will match any wooden hoe, regardless of anything else.
+    ignore:
+      # Ignore the amount held.
+      amount: true
+      # Ignore the durability of the item held.
+      durability: true
+      # Ignore all enchantments.
+      enchants: true
+      # Ignore any enchantments not specified in the template
+      otherEnchants: true
+      # Ignore the specific lvl of the enchantments considered
+      enchantsLvl: true
+      # Ignore any differences in lore
+      lore: true
+      # Ignore any differences in display name.
+      name: true
 # define the drops that you'll use in your crops: saplings: and trees: sections.
 drops:
- # unique name required here
- wheatT1:
-  # list of itemstack templates
-  template:
-  # base values; linear distribution of stack size multiplier from 1 to 4, chance is uniform cummulative capped at 100% so be careful on summations
-  base:
-   min: 1
-   max: 4
-   chance: 1.0
+  # unique name required here
+  wheatT1:
+    # list of itemstack templates
+    template:
+    # base values; linear distribution of stack size multiplier from 1 to 4, chance is uniform cummulative capped at 100% so be careful on summations
+    base:
+      min: 1
+      max: 4
+      chance: 1.0
 crops:
- # Crop Type must be one of : CARROT, CROPS, COCOA, BROWN_MUSHROOM, POTATO, PUMPKIN, PUMPKIN_STEM, SUGAR_CANE_BLOCK, 
- #   BEETROOT_BLOCK, CACTUS, MELON_BLOCK, MELON_STEM, RED_MUSHROOM, NETHER_WARTS
- # Some crops like Wheat can have bindings for every stage of growth. Others have no stages and just don't include the stage setting.
- #  Check the README.md for a complete list.
- # Undefined stages will simply have no drop augments.
- CROPS:
-  RIPE:
-   drops:
-    wheatT1:
-     # You'll see the chance / adjust / extend blocks throughout.
-     # Chance is a multiplier on chance-to-drop. All modifiers that apply are multiplied together.
-     # Adjust is an adder on minimum template size multiplier. All modifiers of this type are _added_ to the minimum multiplier.
-     # Extend is an adder on maximum template size multiplier. All modifiers of this type are _added_ to the maximum multiplier.
-     chance: 0.5
-     adjust: 0
-     extend: 0
-     # Control behavior in specific biomes. Please use the official Spigot Biome enumeration names. Invalid names will result in 
-     # warnings at runtime.
-     biomes:
-      FOREST:
-       adjust: -1
-       chance: 1.5
-       extend: 2
-      BEACH:
-       adjust: 1
-       chance: 0.5
-       extend: -1
-     worlds:
-      world:
-       adjust: -1
-       chance: 1.5
-       expand: 2
-      world_nether:
-       adjust: 1
-       chance: 0.5
-       expand: -1
-     # this is an optional setting, but lets you enforce "resolution order" in case you'd prefer a more specific tool matcher
-     # to have a go before a more general tool matcher. As below, the name must match a tool in the root-level "tools" section.
-     # If nothing is specified here, there is no guarantee provided on matcher application order.
-     # If only some things are specified here (more in tools then in toolOrder) the ones listed here are _always_ tested first,
-     # then the unlisted ones in tools.
-     toolOrder:
-      - wood_hoe
-     tools:
-      # this is the same name as defined above in the root-level "tools" section.
-      wood_hoe:
-       change: 1.5
-       adjust: 0
-       expand: 5
-     # An enhancement of PLAYER break type, allows unique override based on if same player or diff player breaks it vs. planted it 
-     player:
-      same:
-       chance: 1.1
-       adjust: 1
-       extend: 0
-      different:
-       chance: 0.5
-       adjust: 2
-     # Allow fine tuning of drops based on break type. Useful to suppress or enhance particular kinds of drop situations.
-     # Valid types: PLAYER, WATER, LAVA, PISTON, EXPLOSION, NATURAL as of v1.0
-     # If unconfigured, the type is unmodified.
-     breaktypes:
-      NATURAL:
-       adjust: 2
-       expand: 4 
-       chance: 0.1
- # Please note here that some CROPS are fixed as "not harvestable" regardless of stage, namely PUMPKIN_STEM and MELON_STEM. 
- #  If you want unique drops for those, see the note in `saplings` about harvestableOnly
+  # Crop Type must be one of : CARROT, CROPS, COCOA, BROWN_MUSHROOM, POTATO, PUMPKIN, PUMPKIN_STEM, SUGAR_CANE_BLOCK,
+  #   BEETROOT_BLOCK, CACTUS, MELON_BLOCK, MELON_STEM, RED_MUSHROOM, NETHER_WARTS
+  # Some crops like Wheat can have bindings for every stage of growth. Others have no stages and just don't include the stage setting.
+  #  Check the README.md for a complete list.
+  # Undefined stages will simply have no drop augments.
+  CROPS:
+    RIPE:
+      drops:
+        wheatT1:
+          # You'll see the chance / adjust / extend blocks throughout.
+          # Chance is a multiplier on chance-to-drop. All modifiers that apply are multiplied together.
+          # Adjust is an adder on minimum template size multiplier. All modifiers of this type are _added_ to the minimum multiplier.
+          # Extend is an adder on maximum template size multiplier. All modifiers of this type are _added_ to the maximum multiplier.
+          chance: 0.5
+          adjust: 0
+          extend: 0
+          # Control behavior in specific biomes. Please use the official Spigot Biome enumeration names. Invalid names will result in
+          # warnings at runtime.
+          biomes:
+            FOREST:
+              adjust: -1
+              chance: 1.5
+              extend: 2
+            BEACH:
+              adjust: 1
+              chance: 0.5
+              extend: -1
+          worlds:
+            world:
+              adjust: -1
+              chance: 1.5
+              expand: 2
+            world_nether:
+              adjust: 1
+              chance: 0.5
+              expand: -1
+          # this is an optional setting, but lets you enforce "resolution order" in case you'd prefer a more specific tool matcher
+          # to have a go before a more general tool matcher. As below, the name must match a tool in the root-level "tools" section.
+          # If nothing is specified here, there is no guarantee provided on matcher application order.
+          # If only some things are specified here (more in tools then in toolOrder) the ones listed here are _always_ tested first,
+          # then the unlisted ones in tools.
+          toolOrder:
+            - wood_hoe
+          tools:
+            # this is the same name as defined above in the root-level "tools" section.
+            wood_hoe:
+              change: 1.5
+              adjust: 0
+              expand: 5
+          # An enhancement of PLAYER break type, allows unique override based on if same player or diff player breaks it vs. planted it
+          player:
+            same:
+              chance: 1.1
+              adjust: 1
+              extend: 0
+            different:
+              chance: 0.5
+              adjust: 2
+          # Allow fine tuning of drops based on break type. Useful to suppress or enhance particular kinds of drop situations.
+          # Valid types: PLAYER, WATER, LAVA, PISTON, EXPLOSION, NATURAL as of v1.0
+          # If unconfigured, the type is unmodified.
+          breaktypes:
+            NATURAL:
+              adjust: 2
+              expand: 4
+              chance: 0.1
+  # Please note here that some CROPS are fixed as "not harvestable" regardless of stage, namely PUMPKIN_STEM and MELON_STEM.
+  #  If you want unique drops for those, see the note in `saplings` about harvestableOnly
 saplings:
- # Sapling Type must be one of : OAK_SAPLING, SPRUCE_SAPLING, BIRCH_SAPLING, JUNGLE_SAPLING, ACACIA_SAPLING, DARK_OAK_SAPLING
- OAK_SAPLING:
-  drops:
-   # chance / adjust / expand are always optional. If not set, they default to 1.0 / 0 / 0 respectively.
-   saplingT1:
-    chance: 1.0
-    biomes:
-     FOREST:
-      adjust: 2
-      extend: 4
-      chance: 2.0
-     OCEAN:
-      adjust: -1
-      extend: -4
-      chance: 0.1
-    breaktypes:
-     # You can use a breaktype PLAYER bonus if you don't care who breaks it so long as its a player.
-     PLAYER:
-      chance: 1.5
-    # Internally if this is player placed or spread is tracked; for saplings you must turn this protection off for drops to be meaningful.
-    # By default or if not set, it is on, so only use it where necessary.
-    harvestableOnly: false
- JUNGLE_SAPLING:
-  drops:
-   burntSaplingT1:
-    chance: 0.5
-    biomes:
-     JUNGLE:
-      adjust: 1
-      extend: 1
-      chance: 1.5
-    breaktypes:
-     LAVA:
-      chance: 1.0
-     PLAYER:
-      chance: 0.0
-     WATER:
-      chance: 0.0
-     NATURAL:
-      chance: 0.0
-     PISTON:
-      chance: 0.0
-     EXPLOSION:
-      chance: 0.5
-     FIRE:
-      chance: 1.0
-     PHYSICS:
-      chance: 0.0
-    harvestableOnly: false
+  # Sapling Type must be one of : OAK_SAPLING, SPRUCE_SAPLING, BIRCH_SAPLING, JUNGLE_SAPLING, ACACIA_SAPLING, DARK_OAK_SAPLING
+  OAK_SAPLING:
+    drops:
+      # chance / adjust / expand are always optional. If not set, they default to 1.0 / 0 / 0 respectively.
+      saplingT1:
+        chance: 1.0
+        biomes:
+          FOREST:
+            adjust: 2
+            extend: 4
+            chance: 2.0
+          OCEAN:
+            adjust: -1
+            extend: -4
+            chance: 0.1
+        breaktypes:
+          # You can use a breaktype PLAYER bonus if you don't care who breaks it so long as its a player.
+          PLAYER:
+            chance: 1.5
+        # Internally if this is player placed or spread is tracked; for saplings you must turn this protection off for drops to be meaningful.
+        # By default or if not set, it is on, so only use it where necessary.
+        harvestableOnly: false
+  JUNGLE_SAPLING:
+    drops:
+      burntSaplingT1:
+        chance: 0.5
+        biomes:
+          JUNGLE:
+            adjust: 1
+            extend: 1
+            chance: 1.5
+        breaktypes:
+          LAVA:
+            chance: 1.0
+          PLAYER:
+            chance: 0.0
+          WATER:
+            chance: 0.0
+          NATURAL:
+            chance: 0.0
+          PISTON:
+            chance: 0.0
+          EXPLOSION:
+            chance: 0.5
+          FIRE:
+            chance: 1.0
+          PHYSICS:
+            chance: 0.0
+        harvestableOnly: false
 trees:
- # See README.md for list of valid Tree typess
- JUNGLE:
-  drops:
-   jungleT1:
-    chance: 0.25
-    adjust: -1
-    biomes:
-     JUNGLE:
-      adjust: 2
-      extend: 4
+  # See README.md for list of valid Tree typess
+  JUNGLE:
+    drops:
+      jungleT1:
+        chance: 0.25
+        adjust: -1
+        biomes:
+          JUNGLE:
+            adjust: 2
+            extend: 4

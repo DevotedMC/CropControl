@@ -1,11 +1,9 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import java.util.List;
-
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
-
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
 /**
  * Accessor wrapper, some of these methods are legacy from a prior approach to data access based on lists.

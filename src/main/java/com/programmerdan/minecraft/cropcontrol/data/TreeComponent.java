@@ -1,5 +1,8 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+import com.programmerdan.minecraft.cropcontrol.CreationError;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,12 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
 import org.bukkit.TreeType;
-
-import com.programmerdan.minecraft.cropcontrol.CreationError;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
 /**
  * Every tree is composed of a number of Components fixed in actual space. This captures those elements for tracking purposes,

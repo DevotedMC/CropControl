@@ -1,14 +1,12 @@
 package com.programmerdan.minecraft.cropcontrol.config;
 
+import com.programmerdan.minecraft.cropcontrol.CropControl;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import com.programmerdan.minecraft.cropcontrol.CropControl;
 
 /**
  *
