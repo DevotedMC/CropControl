@@ -64,8 +64,8 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
-import vg.civcraft.mc.civmodcore.api.BlockAPI;
-import vg.civcraft.mc.civmodcore.api.TreeTypeAPI;
+import vg.civcraft.mc.civmodcore.inventory.items.TreeTypeUtils;
+import vg.civcraft.mc.civmodcore.world.WorldUtils;
 
 /**
  * Monitor for all growth, placement, spread, and break events and such.
@@ -481,7 +481,7 @@ public class CropControlEventHandler implements Listener {
 			TreeComponent.create(chorusPlant, chunk, x, y, z, TreeType.CHORUS_PLANT,
 					e.getPlayer().getUniqueId(), false);
 		} else if (blockMaterial.isSolid()){ // check for cactus.
-			for (BlockFace face : BlockAPI.PLANAR_SIDES) {
+			for (BlockFace face : WorldUtils.PLANAR_SIDES) {
 				Block adj = block.getRelative(face);
 				if (Material.CACTUS == adj.getType()) {
 					Location loc = adj.getLocation();
@@ -547,7 +547,7 @@ public class CropControlEventHandler implements Listener {
 					crop.setCropState(getCropState(e.getNewState()));
 				} else {
 					if (block.getType() == Material.MELON || block.getType() == Material.PUMPKIN) {
-						for (BlockFace blockFace : BlockAPI.PLANAR_SIDES) {
+						for (BlockFace blockFace : WorldUtils.PLANAR_SIDES) {
 							Block otherBlock = block.getRelative(blockFace);
 							WorldChunk otherChunk = CropControl.getDAO().getChunk(otherBlock.getChunk());
 							int otherX = otherBlock.getX();
@@ -783,7 +783,7 @@ public class CropControlEventHandler implements Listener {
 	 * @param player
 	 */
 	private void trySideBreak(Block block, BreakType type, UUID player) {
-		for (BlockFace face : BlockAPI.PLANAR_SIDES) {
+		for (BlockFace face : WorldUtils.PLANAR_SIDES) {
 			Block faceBlock = block.getRelative(face);
 			Location loc = faceBlock.getLocation();
 			if (Material.COCOA == faceBlock.getType() && !pendingChecks.contains(loc)) {
@@ -862,7 +862,7 @@ public class CropControlEventHandler implements Listener {
 				}
 				
 				// Cactus is a little simpler. It breaks on adjacent placements; that's what would trigger this event. 
-				for (BlockFace face : BlockAPI.PLANAR_SIDES) {
+				for (BlockFace face : WorldUtils.PLANAR_SIDES) {
 					// We look around face-adjacent places and trigger a break-check for any cactus found.
 					Block adj = block.getRelative(face);
 					Material adjM = adj.getType();
@@ -1003,7 +1003,7 @@ public class CropControlEventHandler implements Listener {
 			}
 			
 			if (maybeSideTracked(block)) {
-				for (BlockFace face : BlockAPI.PLANAR_SIDES) {
+				for (BlockFace face : WorldUtils.PLANAR_SIDES) {
 					Block faceBlock = block.getRelative(face);
 					if (Material.COCOA == faceBlock.getType()) {
 						toBreakList.add(faceBlock.getLocation());
@@ -1413,7 +1413,7 @@ public class CropControlEventHandler implements Listener {
 								if (treeComponent != null) {
 									Tree tree = CropControl.getDAO().getTree(treeComponent);
 									TreeType type = treeComponent.getTreeType();
-									if (type == TreeTypeAPI.getMatchingTreeType(startBlock.getType())) {
+									if (type == TreeTypeUtils.getMatchingTreeType(startBlock.getType())) {
 										//CropControl.getPlugin().debug("Ignoring cancelled Tree Component {3} track vs. actual {4} type {0}, {1}, {2}", x, y, z, type, startBlock.getType());
 										return;
 									}
