@@ -1,5 +1,8 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+import com.programmerdan.minecraft.cropcontrol.CreationError;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,10 +16,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import com.programmerdan.minecraft.cropcontrol.CreationError;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
+import org.bukkit.Material;
 
 
 /**
@@ -32,7 +32,7 @@ public class Sapling extends Locatable {
 	private static ConcurrentLinkedQueue<WeakReference<Sapling>> dirties = new ConcurrentLinkedQueue<WeakReference<Sapling>>();
 
 	private long saplingID;
-	private String saplingType;
+	private Material saplingType;
 	private UUID placer;
 	private Timestamp timeStamp;
 	private boolean harvestable;
@@ -43,11 +43,11 @@ public class Sapling extends Locatable {
 	private Sapling() {
 	}
 
-	public static Sapling create(WorldChunk chunk, int x, int y, int z, String saplingType, UUID placer,
+	public static Sapling create(WorldChunk chunk, int x, int y, int z, Material saplingType, UUID placer,
 			long timeStamp, boolean harvestable) {
 		return create(chunk, x, y, z, saplingType, placer, new Timestamp(timeStamp), harvestable);
 	}
-	public static Sapling create(WorldChunk chunk, int x, int y, int z, String saplingType, UUID placer,
+	public static Sapling create(WorldChunk chunk, int x, int y, int z, Material saplingType, UUID placer,
 			Timestamp timeStamp, boolean harvestable) {
 		Sapling sapling = new Sapling();
 		sapling.chunkID = chunk.getChunkID();
@@ -72,7 +72,7 @@ public class Sapling extends Locatable {
 			if (sapling.saplingType == null) {
 				statement.setNull(5, Types.VARCHAR);
 			} else {
-				statement.setString(5, sapling.saplingType);
+				statement.setString(5, sapling.saplingType.toString());
 			}
 			if (sapling.placer == null) {
 				statement.setNull(6, Types.VARCHAR);
@@ -105,7 +105,7 @@ public class Sapling extends Locatable {
 		return saplingID;
 	}
 
-	public String getSaplingType() {
+	public Material getSaplingType() {
 		return saplingType;
 	}
 
@@ -230,7 +230,7 @@ public class Sapling extends Locatable {
 					sapling.x = results.getInt(3);
 					sapling.y = results.getInt(4);
 					sapling.z = results.getInt(5);
-					sapling.saplingType = results.getString(6);
+					sapling.saplingType = Material.valueOf(results.getString(6));
 					try {
 						sapling.placer = UUID.fromString(results.getString(7));
 					} catch (IllegalArgumentException iae) {

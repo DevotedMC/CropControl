@@ -3,11 +3,9 @@ package com.programmerdan.minecraft.cropcontrol;
 import com.programmerdan.minecraft.cropcontrol.data.DAO;
 import com.programmerdan.minecraft.cropcontrol.handler.CastleGatesEventHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CitadelEventHandler;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlCommandHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler;
 import com.programmerdan.minecraft.cropcontrol.handler.RealisticBiomesEventHandler;
-
 import vg.civcraft.mc.civmodcore.ACivMod;
 
 /**
@@ -36,10 +34,11 @@ public class CropControl extends ACivMod {
 		
 		CropControl.instance = this;
 		connectDatabase();
-		if (!this.isEnabled()) return;
+		if (!this.isEnabled()) {
+			return;
+		}
 
 		registerEventHandler();
-		registerCommandHandler();
 	}
 	
 	@Override
@@ -59,7 +58,9 @@ public class CropControl extends ACivMod {
 	}
 
 	private void registerEventHandler() {
-		if (!this.isEnabled()) return;
+		if (!this.isEnabled()) {
+			return;
+		}
 		try {
 			this.eventHandler = new CropControlEventHandler(getConfig());
 			this.getServer().getPluginManager().registerEvents(eventHandler, this);
@@ -80,12 +81,6 @@ public class CropControl extends ACivMod {
 			this.setEnabled(false);
 		}	
 	}
-	
-	private void registerCommandHandler() {
-		if (!this.isEnabled()) return;
-		this.setCommandHandler(new CropControlCommandHandler());
-		this.getCommandHandler().registerCommands();
-	}
 
 	/**
 	 * 
@@ -101,15 +96,6 @@ public class CropControl extends ACivMod {
 	 */
 	public static DAO getDAO() {
 		return CropControlDatabaseHandler.getDAO();
-	}
-	
-	/**
-	 * 
-	 * @return the name of this plugin.
-	 */
-	@Override
-	protected String getPluginName() {
-		return "CropControl";
 	}
 
 	public CropControlEventHandler getEventHandler() {

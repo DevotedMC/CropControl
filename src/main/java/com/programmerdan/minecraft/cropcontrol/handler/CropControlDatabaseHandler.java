@@ -1,12 +1,6 @@
 package com.programmerdan.minecraft.cropcontrol.handler;
 
 
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.data.Crop;
 import com.programmerdan.minecraft.cropcontrol.data.DAO;
@@ -14,7 +8,11 @@ import com.programmerdan.minecraft.cropcontrol.data.Sapling;
 import com.programmerdan.minecraft.cropcontrol.data.Tree;
 import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
 import com.programmerdan.minecraft.cropcontrol.data.WorldChunk;
-
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import vg.civcraft.mc.civmodcore.dao.ManagedDatasource;
 
 /**
@@ -97,8 +95,8 @@ public class CropControlDatabaseHandler {
 	}
 
 	private void activateDirtySave(ConfigurationSection config) {
-		long period = 5*60*1000l;
-		long delay = 5*60*1000l;
+		long period = 5 * 60 * 1000L;
+		long delay = 5 * 60 * 1000L;
 		if (config != null) {
 			period = config.getLong("period", period);
 			delay = config.getLong("delay", delay);

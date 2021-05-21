@@ -4,6 +4,7 @@ authors: [ProgrammerDan, xFier]
 depend: [CivModCore]
 softdepend: [RealisticBiomes, Citadel, CastleGates]
 main: com.programmerdan.minecraft.cropcontrol.CropControl
+api-version: 1.16
 description: Fills the gaps left by RealisticBiomes and HiddenOre; augment drops for player-grown plants and trees
 commands:
    cropcontrol:
@@ -14,6 +15,7 @@ commands:
       description: Generates all configured drops in-game for testing
       usage: /ccgen [items]
       permission: cropcontrol.adv
+      player-only: true
 permissions:
     cropcontrol.*:
       description: Gives access to all CropControl commands

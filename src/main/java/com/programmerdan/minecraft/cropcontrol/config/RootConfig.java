@@ -1,7 +1,12 @@
 package com.programmerdan.minecraft.cropcontrol.config;
 
+import com.google.common.collect.ImmutableSet;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.data.Crop;
+import com.programmerdan.minecraft.cropcontrol.data.Sapling;
+import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -17,22 +21,15 @@ import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 
-import com.google.common.collect.ImmutableSet;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.data.Crop;
-import com.programmerdan.minecraft.cropcontrol.data.Sapling;
-import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
-
 /**
  * Root configuration for a config relative to a type of crop / sapling / tree in terms of drop natures.
  * 
  * @author Programmerdan
  *
  */
-public class RootConfig {
+public final class RootConfig {
 	
-	private static ConcurrentHashMap<String, RootConfig> rootConfigs = new ConcurrentHashMap<String, RootConfig>();
+	private static ConcurrentHashMap<String, RootConfig> rootConfigs = new ConcurrentHashMap<>();
 	private RootConfig() {};
 	
 	private ConfigurationSection baseSection = null;
@@ -78,7 +75,7 @@ public class RootConfig {
 		if (config.baseSection != null) {
 			ConfigurationSection drops = config.baseSection.getConfigurationSection("drops");
 			if (drops != null) {
-				config.baseDrops = new ConcurrentHashMap<String, DropModifiers>();
+				config.baseDrops = new ConcurrentHashMap<>();
 				for (String key : drops.getKeys(false)) {
 					DropConfig.byIdent(key); // preload it.
 					config.baseDrops.put(key, config.new DropModifiers(drops.getConfigurationSection(key)));
@@ -90,12 +87,12 @@ public class RootConfig {
 	}
 	
 	public String predictDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool, World world) {
-		if (baseDrops == null || baseDrops.size() == 0) {
+		if (baseDrops == null || baseDrops.isEmpty()) {
 			return "No drops configured for " + index;
 		}
-		StringBuffer message = new StringBuffer("Drops configured for " + index + ":\n");
-		double cumChance = 0.0d;
-		double localChance = 0.0d;
+		StringBuilder message = new StringBuilder("Drops configured for " + index + ":\n");
+		double cumChance = 0.0D;
+		double localChance = 0.0D;
 		int localMin = 0;
 		int localMax = 0;
 		int counted = 0;
@@ -139,7 +136,7 @@ public class RootConfig {
 			
 			// TODO: adjust chance based on tool.
 			
-			if (BreakType.PLAYER.equals(breakType)) { // player (if applies)
+			if (BreakType.PLAYER == breakType) { // player (if applies)
 				if (placer != null && placer.equals(breaker)) {
 					localChance *= dropMod.samePlayer.chanceMod;
 					localMin += dropMod.samePlayer.stackAdjust;
@@ -151,7 +148,9 @@ public class RootConfig {
 				}
 			}
 			
-			if (localMax < localMin) localMax = localMin;
+			if (localMax < localMin) {
+				localMax = localMin;
+			}
 			
 			// If no chance of drop or drop size would be * 0, move on.
 			if (localChance <= 0) {
@@ -175,12 +174,12 @@ public class RootConfig {
 	}
 	
 	public List<ItemStack> realizeDrops(BreakType breakType, UUID placer, UUID breaker, boolean harvestable, Biome biome, ItemStack tool, World world, List<String> commandBuffer) {
-		LinkedList<ItemStack> outcome = new LinkedList<ItemStack>();
-		if (baseDrops == null || baseDrops.size() == 0) {
+		LinkedList<ItemStack> outcome = new LinkedList<>();
+		if (baseDrops == null || baseDrops.isEmpty()) {
 			return outcome;
 		}
-		double cumChance = 0.0d;
-		double localChance = 0.0d;
+		double cumChance = 0.0D;
+		double localChance = 0.0D;
 		int localMin = 0;
 		int localMax = 0;
 		int counted = 0;
@@ -246,7 +245,7 @@ public class RootConfig {
 				localMax += modifier.stackExpand;
 			}
 			
-			if (BreakType.PLAYER.equals(breakType)) { // player (if applies)
+			if (BreakType.PLAYER == breakType) { // player (if applies)
 				if (placer != null && placer.equals(breaker)) {
 					localChance *= dropMod.samePlayer.chanceMod;
 					localMin += dropMod.samePlayer.stackAdjust;
@@ -258,10 +257,14 @@ public class RootConfig {
 				}
 			}
 			
-			if (localMax < localMin) localMax = localMin;
+			if (localMax < localMin) {
+				localMax = localMin;
+			}
 			
 			// If no chance of drop or drop size would be * 0, move on.
-			if (localChance <= 0) continue;
+			if (localChance <= 0) {
+				continue;
+			}
 			if (localMin <= localMax && localMax <= 0) {
 				cumChance += localChance;
 				counted  ++;
@@ -269,7 +272,7 @@ public class RootConfig {
 			}
 			
 			if (dice >= cumChance && dice < cumChance + localChance) {
-				int multiplier = (int) (Math.round(Math.random() * ((double) (localMax - localMin))) + localMin);
+				int multiplier = (int) (Math.round(Math.random() * (localMax - localMin)) + localMin);
 				//CropControl.getPlugin().debug("Generated a drop for {0} at chance {1} with multiplier {2}", dropIdent, localChance, multiplier);
 				outcome.addAll(dropConfig.getDrops(multiplier));
 				if (dropConfig.getCommand() != null) {
@@ -287,19 +290,19 @@ public class RootConfig {
 	class DropModifiers {
 		// so for tools we keep a list based on declaration order, and a set to connect to configs.
 		String toolCatchall = null;
-		Map<String, ModifierConfig> tools = new ConcurrentHashMap<String, ModifierConfig>();
-		Map<Material, List<String>> toolsByType = new ConcurrentHashMap<Material, List<String>>();
+		Map<String, ModifierConfig> tools = new ConcurrentHashMap<>();
+		Map<Material, List<String>> toolsByType = new ConcurrentHashMap<>();
 		
-		Map<Biome, ModifierConfig> biomes = new ConcurrentHashMap<Biome, ModifierConfig>();
+		Map<Biome, ModifierConfig> biomes = new ConcurrentHashMap<>();
 		
 		//per-world support
-		Map<String, ModifierConfig> worlds = new ConcurrentHashMap<String, ModifierConfig>();
+		Map<String, ModifierConfig> worlds = new ConcurrentHashMap<>();
 		
 		ModifierConfig base = null;
 		
 		boolean requireHarvestable = true;
 		
-		Map<BreakType, ModifierConfig> breaks = new ConcurrentHashMap<BreakType, ModifierConfig>();
+		Map<BreakType, ModifierConfig> breaks = new ConcurrentHashMap<>();
 		
 		ModifierConfig differentPlayer = null;
 		ModifierConfig samePlayer = null;
@@ -414,12 +417,14 @@ public class RootConfig {
 	}
 	
 	class ModifierConfig {
-		double chanceMod = 1.0d;
+		double chanceMod = 1.0D;
 		int stackExpand = 0;
 		int stackAdjust = 0;
 		
 		public ModifierConfig(ConfigurationSection config) {
-			if (config == null) return; // leave as no-op default.
+			if (config == null) {
+				return; // leave as no-op default.
+			}
 			chanceMod = config.getDouble("chance", chanceMod);
 			stackExpand = config.getInt("expand", stackExpand);
 			stackAdjust = config.getInt("adjust", stackAdjust);

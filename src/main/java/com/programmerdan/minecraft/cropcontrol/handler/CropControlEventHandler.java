@@ -1,7 +1,18 @@
 package com.programmerdan.minecraft.cropcontrol.handler;
 
+import com.google.common.collect.Sets;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.config.RootConfig;
+import com.programmerdan.minecraft.cropcontrol.config.ToolConfig;
+import com.programmerdan.minecraft.cropcontrol.data.Crop;
+import com.programmerdan.minecraft.cropcontrol.data.Locatable;
+import com.programmerdan.minecraft.cropcontrol.data.Sapling;
+import com.programmerdan.minecraft.cropcontrol.data.Tree;
+import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
+import com.programmerdan.minecraft.cropcontrol.data.WorldChunk;
+import com.programmerdan.minecraft.cropcontrol.events.CropControlDropEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,17 +20,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.TreeType;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.data.Ageable;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -47,28 +63,9 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.CocoaPlant;
-import org.bukkit.material.Crops;
-import org.bukkit.material.NetherWarts;
 import org.bukkit.util.Vector;
-
-import com.google.common.collect.Sets;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.config.RootConfig;
-import com.programmerdan.minecraft.cropcontrol.config.ToolConfig;
-import com.programmerdan.minecraft.cropcontrol.data.Crop;
-import com.programmerdan.minecraft.cropcontrol.data.Locatable;
-import com.programmerdan.minecraft.cropcontrol.data.Sapling;
-import com.programmerdan.minecraft.cropcontrol.data.Tree;
-import com.programmerdan.minecraft.cropcontrol.data.TreeComponent;
-import com.programmerdan.minecraft.cropcontrol.data.WorldChunk;
-import com.programmerdan.minecraft.cropcontrol.events.CropControlDropEvent;
-
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
+import vg.civcraft.mc.civmodcore.inventory.items.TreeTypeUtils;
+import vg.civcraft.mc.civmodcore.world.WorldUtils;
 
 /**
  * Monitor for all growth, placement, spread, and break events and such.
@@ -92,9 +89,6 @@ public class CropControlEventHandler implements Listener {
 	
 	private Set<Location> pendingChecks;
 	
-	public static final BlockFace[] directions = new BlockFace[] { 
-			BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
-	
 	public static final BlockFace[] traverse = new BlockFace[] {
 			BlockFace.DOWN, BlockFace.SELF, BlockFace.UP
 	};
@@ -107,8 +101,8 @@ public class CropControlEventHandler implements Listener {
 		
 		baseDropMessage = (this.config.getBoolean("alert.enable", false) ? this.config.getString("alert.message") : null);
 
-		harvestableCrops = new HashMap<Material, Boolean>();
-		trackedMaterials = new HashSet<Material>();
+		harvestableCrops = new EnumMap<>(Material.class);
+		trackedMaterials = new HashSet<>();
 		pendingChecks = Sets.newConcurrentHashSet();
 
 		fillHarvestableCropsList();
@@ -119,42 +113,40 @@ public class CropControlEventHandler implements Listener {
 	}
 
 	public void fillHarvestableCropsList() {
-		harvestableCrops.put(Material.CROPS, true);
+		harvestableCrops.put(Material.WHEAT_SEEDS, true);
 		harvestableCrops.put(Material.CARROT, true);
 		harvestableCrops.put(Material.POTATO, true);
-		harvestableCrops.put(Material.NETHER_WARTS, true);
-		harvestableCrops.put(Material.BEETROOT_BLOCK, true);
+		harvestableCrops.put(Material.NETHER_WART, true);
+		harvestableCrops.put(Material.BEETROOT_SEEDS, true);
 		harvestableCrops.put(Material.COCOA, true);
 		harvestableCrops.put(Material.PUMPKIN_STEM, false);
 		harvestableCrops.put(Material.MELON_STEM, false);
 		harvestableCrops.put(Material.CACTUS, false);
 		harvestableCrops.put(Material.BROWN_MUSHROOM, false);
 		harvestableCrops.put(Material.RED_MUSHROOM, false);
-		harvestableCrops.put(Material.SUGAR_CANE_BLOCK, false);
+		harvestableCrops.put(Material.SUGAR_CANE, false);
 		
-		trackedMaterials.add(Material.CROPS);
+		trackedMaterials.add(Material.WHEAT_SEEDS);
 		trackedMaterials.add(Material.CARROT);
 		trackedMaterials.add(Material.POTATO);
-		trackedMaterials.add(Material.NETHER_WARTS);
-		trackedMaterials.add(Material.BEETROOT_BLOCK);
+		trackedMaterials.add(Material.NETHER_WART);
+		trackedMaterials.add(Material.BEETROOTS);
 		trackedMaterials.add(Material.COCOA);
 		trackedMaterials.add(Material.PUMPKIN_STEM);
 		trackedMaterials.add(Material.PUMPKIN);
 		trackedMaterials.add(Material.MELON_STEM);
-		trackedMaterials.add(Material.MELON_BLOCK);
+		trackedMaterials.add(Material.MELON);
 		trackedMaterials.add(Material.CACTUS);
-		trackedMaterials.add(Material.SUGAR_CANE_BLOCK);
+		trackedMaterials.add(Material.SUGAR_CANE);
 		trackedMaterials.add(Material.BROWN_MUSHROOM);
 		trackedMaterials.add(Material.RED_MUSHROOM);
-		trackedMaterials.add(Material.SAPLING);
+		trackedMaterials.addAll(Tag.SAPLINGS.getValues());
 		trackedMaterials.add(Material.CHORUS_PLANT);
 		trackedMaterials.add(Material.CHORUS_FLOWER);
-		trackedMaterials.add(Material.HUGE_MUSHROOM_1);
-		trackedMaterials.add(Material.HUGE_MUSHROOM_2);
-		trackedMaterials.add(Material.LOG);
-		trackedMaterials.add(Material.LOG_2);
-		trackedMaterials.add(Material.LEAVES);
-		trackedMaterials.add(Material.LEAVES_2);
+		trackedMaterials.add(Material.BROWN_MUSHROOM_BLOCK);
+		trackedMaterials.add(Material.RED_MUSHROOM_BLOCK);
+		trackedMaterials.addAll(Tag.LOGS.getValues());
+		trackedMaterials.addAll(Tag.LEAVES.getValues());
 	}
 
 	/**
@@ -192,7 +184,7 @@ public class CropControlEventHandler implements Listener {
 			return null;
 		case RED_MUSHROOM:
 			return null;
-		case SUGAR_CANE_BLOCK:
+		case SUGAR_CANE:
 			return null;
 		default:
 			return "SEEDED";
@@ -202,127 +194,38 @@ public class CropControlEventHandler implements Listener {
 	public String getCropState(BlockState blockState) {
 		switch (blockState.getType()) { // .getBlock().getType()) {
 		case COCOA:
-			return ((CocoaPlant) blockState.getData()).getSize().toString();
-		case NETHER_WARTS:
-			return ((NetherWarts) blockState.getData()).getState().toString();
+		case NETHER_WART:
 		case MELON_STEM:
-			return (int) blockState.getBlock().getData() + "";
 		case PUMPKIN_STEM:
-			return (int) blockState.getBlock().getData() + "";
+			Ageable ageable = (Ageable) blockState.getBlockData();
+			return String.valueOf(ageable.getAge());
 		case CACTUS:
 			return null;
 		case BROWN_MUSHROOM:
 			return null;
 		case RED_MUSHROOM:
 			return null;
-		case SUGAR_CANE_BLOCK:
+		case SUGAR_CANE:
 			return null;
 		default:
 			//CropControl.getPlugin().debug("Unable to find CropState match for {0}", blockState);
-			return ((Crops) blockState.getData()).getState().toString();
+			return blockState.getBlockData().getAsString();
 		}
 	}
 
-	public String getSaplingType(Byte data) {
-		switch (data) {
-		case 0:
-			return "OAK_SAPLING";
-		case 1:
-			return "SPRUCE_SAPLING";
-		case 2:
-			return "BIRCH_SAPLING";
-		case 3:
-			return "JUNGLE_SAPLING";
-		case 4:
-			return "ACACIA_SAPLING";
-		case 5:
-			return "DARK_OAK_SAPLING";
-		default:
-			CropControl.getPlugin().debug("Unknown sapling type {0}", data);
-			return null;
-		}
-	}
-
-	public Material getTrackedTypeMaterial(String trackedType) {
-		for (Material material : harvestableCrops.keySet()) {
-			if (material.toString().equals(trackedType))
-				return material;
-		}
-
-		if (Material.MELON_BLOCK.toString().equals(trackedType))
-			return Material.MELON_BLOCK;
-		else if (Material.PUMPKIN.toString().equals(trackedType))
-			return Material.PUMPKIN;
-
-		for (Byte i = 0; i < 6; i++) {
-			if (getSaplingType(i).equals(trackedType)) // TODO: odd structure here
-				return Material.SAPLING;
-		}
-
-		for (TreeType treeType : TreeType.values()) {
-			if (treeType.toString().equals(trackedType)) {
-				if (treeType == TreeType.ACACIA || treeType == TreeType.DARK_OAK)
-					return Material.LOG_2;
-				else if (treeType == TreeType.BROWN_MUSHROOM)
-					return Material.HUGE_MUSHROOM_1;
-				else if (treeType == TreeType.RED_MUSHROOM)
-					return Material.HUGE_MUSHROOM_2;
-				else
-					return Material.LOG;
-			}
-		}
-
-		if (Material.CHORUS_PLANT.toString().equals(trackedType))
-			return Material.CHORUS_PLANT;
-
-		CropControl.getPlugin().debug("Unable to match tracked type material {0}", trackedType);
-		return null;
-	}
-
-	public Material getTrackedCropMaterial(String _trackedType) {
-		Material trackedType = Material.getMaterial(_trackedType);
-		if (Material.MELON_BLOCK.equals(trackedType))
-			return Material.MELON_BLOCK;
-		else if (Material.PUMPKIN.equals(trackedType))
+	public Material getTrackedCropMaterial(String trackedStringType) {
+		Material trackedType = Material.getMaterial(trackedStringType);
+		if (Material.MELON == trackedType)
+			return Material.MELON;
+		else if (Material.PUMPKIN == trackedType)
 			return Material.PUMPKIN;
 		else {
 			for (Material material : harvestableCrops.keySet()) {
-				if (material.equals(trackedType))
+				if (material == trackedType)
 					return material;
 			}
 		}
 		CropControl.getPlugin().debug("Unable to match tracked crop type material {0}", trackedType);
-		return null;
-	}
-
-	public Material getTrackedSaplingMaterial(String trackedType) {
-		for (Byte i = 0; i < 6; i++) {
-			if (getSaplingType(i).equals(trackedType))
-				return Material.SAPLING;
-		}
-		CropControl.getPlugin().debug("Unable to match tracked sapling type material {0}", trackedType);
-		return null;
-	}
-
-	public Material getTrackedTreeMaterial(String trackedType) {
-		if (Material.CHORUS_PLANT.toString().equals(trackedType))
-			return Material.CHORUS_PLANT;
-		else {
-			for (TreeType treeType : TreeType.values()) {
-				if (treeType.toString().equals(trackedType)) {
-					if (treeType == TreeType.ACACIA || treeType == TreeType.DARK_OAK)
-						return Material.LOG_2;
-					else if (treeType == TreeType.BROWN_MUSHROOM)
-						return Material.HUGE_MUSHROOM_1;
-					else if (treeType == TreeType.RED_MUSHROOM)
-						return Material.HUGE_MUSHROOM_2;
-					else
-						return Material.LOG;
-				}
-			}
-		}
-		CropControl.getPlugin().debug("Unable to match tracked tree type material {0}", trackedType);
-
 		return null;
 	}
 	
@@ -337,7 +240,9 @@ public class CropControlEventHandler implements Listener {
 
 		Player p = e.getPlayer();
 		
-		if (!p.hasPermission("cropcontrol.debug") ) return;
+		if (!p.hasPermission("cropcontrol.debug") ) {
+			return;
+		}
 
 		Block block = e.getClickedBlock();
 		int x = block.getX();
@@ -363,7 +268,9 @@ public class CropControlEventHandler implements Listener {
 			Sapling sapling = chunk.getSapling(x, y, z);
 			TreeComponent component = chunk.getTreeComponent(x, y, z);
 			
-			if (crop == null && sapling == null && component == null) return;
+			if (crop == null && sapling == null && component == null) {
+				return;
+			}
 			
 			p.sendMessage(ChatColor.GREEN + "Fier's fancy debug system:");
 
@@ -530,7 +437,7 @@ public class CropControlEventHandler implements Listener {
 		int z = block.getZ();
 		WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
 
-		if (CropControl.getDAO().isTracked(block) == true) {
+		if (CropControl.getDAO().isTracked(block)) {
 			// We've got a replacement
 			CropControl.getPlugin().debug("Ghost object? Placement is overtop a tracked object at {0}, {1}, {2}", x, y, z);
 			handleRemoval(block, chunk);
@@ -545,9 +452,9 @@ public class CropControlEventHandler implements Listener {
 			}*/
 			
 			// We've placed a crop!
-			Crop.create(chunk, x, y, z, blockMaterial.toString(), getBaseCropState(blockMaterial),
+			Crop.create(chunk, x, y, z, blockMaterial, blockMaterial.toString(),
 					e.getPlayer().getUniqueId(), System.currentTimeMillis(), harvestableCrops.get(blockMaterial));
-		} else if (blockMaterial == Material.SAPLING) {
+		} else if (Tag.SAPLINGS.isTagged(blockMaterial)) {
 			// we placed a block overtop an existing sapling. TODO: Do I need to remove sapling here, or will there be a break event?
 			/*Sapling sapling = chunk.getSapling(x, y, z);
 			if (sapling != null) {
@@ -556,7 +463,7 @@ public class CropControlEventHandler implements Listener {
 				//return;
 			}*/
 			// We've placed a sapling!
-			Sapling.create(chunk, x, y, z, getSaplingType(block.getData()),
+			Sapling.create(chunk, x, y, z, block.getType(),
 					e.getPlayer().getUniqueId(), System.currentTimeMillis(), false);
 		} else if (blockMaterial == Material.CHORUS_FLOWER) {
 			/*if (CropControl.getDAO().isTracked(block) == true) {
@@ -567,16 +474,16 @@ public class CropControlEventHandler implements Listener {
 			// TODO: Check if connected to an existing chorus tree.
 
 			// First register the "tree"
-			Tree chorusPlant = Tree.create(chunk, x, y, z, Material.CHORUS_PLANT.toString(),
+			Tree chorusPlant = Tree.create(chunk, x, y, z, TreeType.CHORUS_PLANT,
 					e.getPlayer().getUniqueId(), System.currentTimeMillis());
 
 			// Then the component in the tree.
-			TreeComponent.create(chorusPlant, chunk, x, y, z, Material.CHORUS_PLANT.toString(),
+			TreeComponent.create(chorusPlant, chunk, x, y, z, TreeType.CHORUS_PLANT,
 					e.getPlayer().getUniqueId(), false);
 		} else if (blockMaterial.isSolid()){ // check for cactus.
-			for (BlockFace face : CropControlEventHandler.directions) {
+			for (BlockFace face : WorldUtils.PLANAR_SIDES) {
 				Block adj = block.getRelative(face);
-				if (Material.CACTUS.equals(adj.getType())) {
+				if (Material.CACTUS == adj.getType()) {
 					Location loc = adj.getLocation();
 					if (!pendingChecks.contains(loc)) {
 						pendingChecks.add(loc);
@@ -630,9 +537,7 @@ public class CropControlEventHandler implements Listener {
 	public void onCropGrow(BlockGrowEvent e) {
 		Block block = e.getNewState().getBlock();
 
-		Bukkit.getServer().getScheduler().runTaskAsynchronously(CropControl.getPlugin(), new Runnable() {
-			@Override
-			public void run() {
+		Bukkit.getServer().getScheduler().runTaskAsynchronously(CropControl.getPlugin(),() -> {
 				WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
 				int x = block.getX();
 				int y = block.getY();
@@ -641,8 +546,8 @@ public class CropControlEventHandler implements Listener {
 				if (crop != null) {
 					crop.setCropState(getCropState(e.getNewState()));
 				} else {
-					if (block.getType() == Material.MELON_BLOCK || block.getType() == Material.PUMPKIN) {
-						for (BlockFace blockFace : CropControlEventHandler.directions) {
+					if (block.getType() == Material.MELON || block.getType() == Material.PUMPKIN) {
+						for (BlockFace blockFace : WorldUtils.PLANAR_SIDES) {
 							Block otherBlock = block.getRelative(blockFace);
 							WorldChunk otherChunk = CropControl.getDAO().getChunk(otherBlock.getChunk());
 							int otherX = otherBlock.getX();
@@ -652,12 +557,12 @@ public class CropControlEventHandler implements Listener {
 							if (otherCrop != null) {
 								UUID placerUUID = otherCrop.getPlacer();
 								
-								Crop.create(chunk, x,y,z,  block.getType().toString(), null,
+								Crop.create(chunk, x,y,z,  block.getType(), null,
 										placerUUID, System.currentTimeMillis(), true);
 								break;
 							}
 						}
-					} else if (block.getType() == Material.CACTUS || block.getType() == Material.SUGAR_CANE_BLOCK) {
+					} else if (block.getType() == Material.CACTUS || block.getType() == Material.SUGAR_CANE) {
 						Block otherBlock = block.getRelative(BlockFace.DOWN);
 						int otherX = otherBlock.getX();
 						int otherY = otherBlock.getY();
@@ -666,21 +571,20 @@ public class CropControlEventHandler implements Listener {
 						if (otherCrop != null) {
 							UUID placerUUID = otherCrop.getPlacer();
 							
-							Crop.create(chunk, x,y,z,  block.getType().toString(), null,
+							Crop.create(chunk, x,y,z,  block.getType(), null,
 									placerUUID, System.currentTimeMillis(), true);
 						} else { // go one lower, might have been async out of order ..
 							Block finalCheck = otherBlock.getRelative(BlockFace.DOWN);
-							if (block.getType().equals(finalCheck.getType())) { // same ballpark
+							if (block.getType() == finalCheck.getType()) { // same ballpark
 								Crop finalCrop = chunk.getCrop(finalCheck.getX(), finalCheck.getY(), finalCheck.getZ());
 								if (finalCrop != null) {
 									UUID placerUUID = finalCrop.getPlacer();
 									
-									Crop.create(chunk, x,y,z,  block.getType().toString(), null,
+									Crop.create(chunk, x,y,z,  block.getType(), null,
 											placerUUID, System.currentTimeMillis(), true);									
 								}
 							}
 						}
-					}
 				}
 			}
 		});
@@ -709,7 +613,7 @@ public class CropControlEventHandler implements Listener {
 		Crop sourceCrop = sourceChunk.getCrop(sourceX, sourceY, sourceZ);
 		if (sourceCrop != null) {
 			UUID placerUUID = sourceCrop.getPlacer();
-			Crop.create(chunk, x, y, z, source.getType().toString(), null, placerUUID,
+			Crop.create(chunk, x, y, z, source.getType(), null, placerUUID,
 					System.currentTimeMillis(), true);
 			return;
 		} 
@@ -719,7 +623,7 @@ public class CropControlEventHandler implements Listener {
 			treeComponent.setHarvestable(true);
 
 			// TODO: should we differentiate between flower and plant here?
-			TreeComponent.create(treeComponent.getTreeID(), chunk, x, y, z, Material.CHORUS_PLANT.toString(),
+			TreeComponent.create(treeComponent.getTreeID(), chunk, x, y, z, TreeType.CHORUS_PLANT,
 					treeComponent.getPlacer(), true);
 		}
 
@@ -740,25 +644,24 @@ public class CropControlEventHandler implements Listener {
 			return;
 		}
 		
-		List<BlockState> blocks = new ArrayList<BlockState>();
+		List<BlockState> blocks = new ArrayList<>();
 	
 		if (sapling != null) {
 			sapling.setRemoved();
 			// Because dirt & saplings are part of the structure
 			for (BlockState state : e.getBlocks()) {
-				if (state.getType() == Material.LOG || state.getType() == Material.LOG_2
-						|| state.getType() == Material.LEAVES || state.getType() == Material.LEAVES_2) {
+				if (Tag.LOGS.isTagged(state.getType()) || Tag.LEAVES.isTagged(state.getType())) {
 					blocks.add(state);
 				}
 			}
 
-			if (blocks.size() == 0) {
+			if (blocks.isEmpty()) {
 				CropControl.getPlugin().debug("Ignoring tree grow that has no logs or leaves at {0}, {1}, {2}", x, y, z);
 				// TODO: do we remove the sapling?
 				return;
 			}
 
-			Tree tree = Tree.create(sourceChunk, x, y, z, e.getSpecies().toString(), sapling.getPlacer(), System.currentTimeMillis());
+			Tree tree = Tree.create(sourceChunk, x, y, z, e.getSpecies(), sapling.getPlacer(), System.currentTimeMillis());
 
 			// Done in the case of Multiple saplings (Big Jungle trees etc)
 			for (BlockState state : e.getBlocks()) {
@@ -773,7 +676,7 @@ public class CropControlEventHandler implements Listener {
 					testSapling.setRemoved();
 				}
 			}
-			Set<Long> treesStolen = new HashSet<Long>();
+			Set<Long> treesStolen = new HashSet<>();
 			for (BlockState state : blocks) {
 				WorldChunk partChunk = CropControl.getDAO().getChunk(state.getChunk());
 				// TODO: differentiate between leaves and trunks
@@ -783,10 +686,10 @@ public class CropControlEventHandler implements Listener {
 					treesStolen.add(exists.getTreeID());
 					exists.setRemoved();
 				}
-				TreeComponent.create(tree, partChunk, state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
+				TreeComponent.create(tree, partChunk, state.getX(), state.getY(), state.getZ(), e.getSpecies(),
 						tree.getPlacer(), true);
 			}
-			if (treesStolen.size() > 0) {
+			if (!treesStolen.isEmpty()) {
 				// Check we didn't just override the last leaves of an old tree or something
 				for (Long treeID : treesStolen) {
 					List<TreeComponent> remainder = CropControl.getDAO().getTreeComponents(treeID);
@@ -802,22 +705,22 @@ public class CropControlEventHandler implements Listener {
 		if (crop != null) {
 			// Because dirt & saplings are part of the structure
 			for (BlockState state : e.getBlocks()) {
-				if (state.getType() == Material.HUGE_MUSHROOM_1 || state.getType() == Material.HUGE_MUSHROOM_2)
+				if (state.getType() == Material.BROWN_MUSHROOM || state.getType() == Material.RED_MUSHROOM_BLOCK)
 					blocks.add(state);
 			}
 
-			if (blocks.size() == 0) {
+			if (blocks.isEmpty()) {
 				CropControl.getPlugin().debug("Ignoring mushroom? grow that has no mushroom parts at {0}, {1}, {2}", x, y, z);
 				return;
 			}
 
-			Tree tree = Tree.create(sourceChunk, x, y, z, e.getSpecies().toString(), crop.getPlacer(), System.currentTimeMillis());
+			Tree tree = Tree.create(sourceChunk, x, y, z, e.getSpecies(), crop.getPlacer(), System.currentTimeMillis());
 
 			crop.setRemoved();
 
 			for (BlockState state : blocks) {
 				WorldChunk partChunk = CropControl.getDAO().getChunk(state.getChunk());
-				TreeComponent.create(tree, partChunk, state.getX(), state.getY(), state.getZ(), e.getSpecies().toString(),
+				TreeComponent.create(tree, partChunk, state.getX(), state.getY(), state.getZ(), e.getSpecies(),
 						tree.getPlacer(), true);
 			}
 		}
@@ -848,15 +751,15 @@ public class CropControlEventHandler implements Listener {
 	 * @return True if any of the conditions are met.
 	 */
 	private boolean maybeBelowTracked(Block block) {
-		if (Material.SOIL.equals(block.getType()) ||  // wheat, carrots, potatoes, beetroot, melon stalk, pumpkin stalk
-				Material.NETHERRACK.equals(block.getType()) || // netherwart
-				Material.SAND.equals(block.getType()) || // cactus, sugarcane
-				Material.ENDER_STONE.equals(block.getType())) {  // chorus fruit 
+		if (Material.FARMLAND == block.getType() ||  // wheat, carrots, potatoes, beetroot, melon stalk, pumpkin stalk
+				Material.NETHERRACK == block.getType() || // netherwart
+				Material.SAND == block.getType() || // cactus, sugarcane
+				Material.END_STONE == block.getType()) {  // chorus fruit 
 			return true;
 		}
 		Block up = block.getRelative(BlockFace.UP);
-		if (Material.BROWN_MUSHROOM.equals(up.getType()) || Material.RED_MUSHROOM.equals(up.getType()) || // mushrooms
-				Material.SAPLING.equals(up.getType())) { // saplings
+		if (Material.BROWN_MUSHROOM == up.getType() || Material.RED_MUSHROOM == up.getType() || // mushrooms
+				Tag.SAPLINGS.isTagged(up.getType())) { // saplings
 			return true;
 		}
 		return false;
@@ -868,13 +771,8 @@ public class CropControlEventHandler implements Listener {
 	 * @param block The block to test type on
 	 * @return True if maybe could possible contain cocoa
 	 */
-	@SuppressWarnings("deprecation")
 	private boolean maybeSideTracked(Block block) {
-		if (Material.LOG.equals(block.getType()) && block.getData() == 3) {
-			return true;
-		} else {
-			return false;
-		}
+		return block.getType() == Material.JUNGLE_LOG;
 	}
 
 	/**
@@ -885,10 +783,10 @@ public class CropControlEventHandler implements Listener {
 	 * @param player
 	 */
 	private void trySideBreak(Block block, BreakType type, UUID player) {
-		for (BlockFace face : directions) {
+		for (BlockFace face : WorldUtils.PLANAR_SIDES) {
 			Block faceBlock = block.getRelative(face);
 			Location loc = faceBlock.getLocation();
-			if (Material.COCOA.equals(faceBlock.getType()) && !pendingChecks.contains(loc)) {
+			if (Material.COCOA == faceBlock.getType() && !pendingChecks.contains(loc)) {
 				pendingChecks.add(loc);
 				handleBreak(faceBlock, type, player, null);
 			}
@@ -912,7 +810,6 @@ public class CropControlEventHandler implements Listener {
 	 *  
 	 * @param e The physics event.
 	 */
-	@SuppressWarnings("deprecation")
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled=true) 
 	public void onPhysics(BlockPhysicsEvent e) {
 		Block block = e.getBlock();
@@ -921,16 +818,16 @@ public class CropControlEventHandler implements Listener {
 		boolean checkBreak = false;
 		if (maybeTracked(chMat) && !pendingChecks.contains(loc)) { // do we even slightly care?
 			// Check light levels.
-			if (Material.CROPS.equals(chMat) || Material.POTATO.equals(chMat) || Material.CARROT.equals(chMat) || Material.BEETROOT.equals(chMat)) {
+			if (Material.WHEAT == chMat || Material.POTATOES == chMat || Material.CARROTS == chMat || Material.BEETROOTS == chMat) {
 				if (block.getLightLevel() < 8) {
 					checkBreak = true;
 				}
-			} else if (Material.RED_MUSHROOM.equals(chMat) || Material.BROWN_MUSHROOM.equals(chMat)) {
+			} else if (Material.RED_MUSHROOM == chMat || Material.BROWN_MUSHROOM == chMat) {
 				Block below = block.getRelative(BlockFace.DOWN);
 				Material belowM = below.getType();
-				if (!Material.MYCEL.equals(belowM) && !Material.DIRT.equals(belowM)) {
+				if (Material.MYCELIUM != belowM && Material.DIRT != belowM) {
 					checkBreak = true;
-				} else if (Material.DIRT.equals(belowM) && below.getData() != 2) {
+				} else if (Material.PODZOL == belowM) {
 					checkBreak = true;
 				}
 			}
@@ -941,46 +838,47 @@ public class CropControlEventHandler implements Listener {
 		} else { // we haven't found a break condition yet. However, what follows aren't light level checks but rather
 			// block checks, so these are controlled by a variety of rules. Some involve physics firing _adjacent_ to the block.
 			// Basically it's a crapshoot.
-			if (Material.SUGAR_CANE_BLOCK.equals(e.getChangedType())) {
+			if (Material.SUGAR_CANE == e.getChangedType()) {
 				// Sugarcane winds up being weird. I'm still not sure what event fires and removes the bottom block but for
 				// unattended (non-player) breaks physics events remove middle and top blocks. So, we just register
 				// breaks for lower and upper blocks and if they are gone, we know it then.
 				//
 				// Note this will leave singular base blocks undetected. TODO
-				if (chMat.equals(e.getChangedType())) {
+				if (chMat == e.getChangedType()) {
 					for (BlockFace a : CropControlEventHandler.traverse) {
 						Location adjL = block.getRelative(a).getLocation();
 						if (!pendingChecks.contains(adjL)) {
 							pendingChecks.add(adjL);
 							// So, the physics check can take a tick to resolve. We mark our interest but defer resolution.
-							Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), new Runnable() {
-								public void run() {
+							Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), () -> {
 									handleBreak(adjL.getBlock(), BreakType.PHYSICS, null, null);
-								}
-							}, 1L);
+								}, 1L);
 						}
 					}
 				}
-			} else if (Material.CACTUS.equals(e.getChangedType())) {
-				if (chMat.equals(e.getChangedType())) return; // handled elsewhere
+			} else if (Material.CACTUS == e.getChangedType()) {
+				if (chMat == e.getChangedType()) {
+					return; // handled elsewhere
+				}
 				
 				// Cactus is a little simpler. It breaks on adjacent placements; that's what would trigger this event. 
-				for (BlockFace face : CropControlEventHandler.directions) {
+				for (BlockFace face : WorldUtils.PLANAR_SIDES) {
 					// We look around face-adjacent places and trigger a break-check for any cactus found.
 					Block adj = block.getRelative(face);
 					Material adjM = adj.getType();
 					Location adjL = adj.getLocation();
-					if (Material.CACTUS.equals(adjM) && !pendingChecks.contains(adjL)) {
+					if (Material.CACTUS == adjM && !pendingChecks.contains(adjL)) {
 						pendingChecks.add(adjL);
 						// So, the physics check can take a tick to resolve. We mark our interest but defer resolution.
 						Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(), new Runnable() {
+							@Override
 							public void run() {
 								handleBreak(adj, BreakType.PHYSICS, null, null);
 							}
 						}, 1L);
 					}
 				}
-			} else if (Material.CHORUS_FLOWER.equals(e.getChangedType()) || Material.CHORUS_PLANT.equals(e.getChangedType())) {
+			} else if (Material.CHORUS_FLOWER == e.getChangedType() || Material.CHORUS_PLANT == e.getChangedType()) {
 				// TODO: this one is complicated; it's more like sugarcane I guess? Still need rules.
 			}
 		}
@@ -1057,7 +955,7 @@ public class CropControlEventHandler implements Listener {
 	 * @param player Who triggered it (if applicable)
 	 */
 	public void doMultiblockHandler(List<Block> blockList, BreakType breakType, UUID player) {
-		Set<Location> toBreakList = new HashSet<Location>();
+		Set<Location> toBreakList = new HashSet<>();
 
 		for (Block block : blockList) {
 			WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
@@ -1066,7 +964,7 @@ public class CropControlEventHandler implements Listener {
 			int z = block.getZ();
 			TreeComponent component = chunk.getTreeComponent(x, y, z);
 			if (component != null) {
-				if (getTrackedTreeMaterial(component.getTreeType()) == Material.CHORUS_PLANT) {
+				if (component.getTreeType() == TreeType.CHORUS_PLANT) {
 					for (Location location : returnUpwardsChorusBlocks(block)) {
 						if (!toBreakList.contains(location)) {
 							toBreakList.add(location);
@@ -1085,8 +983,8 @@ public class CropControlEventHandler implements Listener {
 			}
 			Crop crop = chunk.getCrop(x, y, z);
 			if (crop != null) {
-				Material type = getTrackedCropMaterial(crop.getCropType());
-				if (type == Material.SUGAR_CANE_BLOCK || type == Material.CACTUS) {
+				Material type = crop.getCropType();
+				if (type == Material.SUGAR_CANE || type == Material.CACTUS) {
 					for (Location location : returnUpwardsBlocks(block, type)) {
 						if (!toBreakList.contains(location)) {
 							toBreakList.add(location);
@@ -1105,9 +1003,9 @@ public class CropControlEventHandler implements Listener {
 			}
 			
 			if (maybeSideTracked(block)) {
-				for (BlockFace face : directions) {
+				for (BlockFace face : WorldUtils.PLANAR_SIDES) {
 					Block faceBlock = block.getRelative(face);
-					if (Material.COCOA.equals(faceBlock.getType())) {
+					if (Material.COCOA == faceBlock.getType()) {
 						toBreakList.add(faceBlock.getLocation());
 					}
 				}
@@ -1123,7 +1021,7 @@ public class CropControlEventHandler implements Listener {
 				}
 			}
 		}
-		if (toBreakList.size() > 0) {
+		if (!toBreakList.isEmpty()) {
 			handleBreak(null, breakType, player, toBreakList);
 		}
 	}
@@ -1186,14 +1084,14 @@ public class CropControlEventHandler implements Listener {
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockFromTo(BlockFromToEvent e) {
 		Material toBlock = e.getToBlock().getType();
-		if (toBlock == Material.WATER || toBlock == Material.STATIONARY_WATER) {
+		if (toBlock == Material.WATER) {
 			Block block = e.getBlock();
 			Location loc = block.getLocation();
 			if (!pendingChecks.contains(loc)) {
 				pendingChecks.add(loc);
 				handleBreak(block, BreakType.WATER, null, null);
 			}
-		} else if (toBlock == Material.LAVA || toBlock == Material.STATIONARY_LAVA) {
+		} else if (toBlock == Material.LAVA) {
 			Block block = e.getBlock();
 			Location loc = block.getLocation();
 			if (!pendingChecks.contains(loc)) {
@@ -1204,9 +1102,9 @@ public class CropControlEventHandler implements Listener {
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPistionExtend(BlockPistonExtendEvent e) {
+	public void onPistonExtend(BlockPistonExtendEvent e) {
 		// We need to order movements of moved components from furthest to nearest
-		TreeMap<Double, Runnable> movements = new TreeMap<Double, Runnable>();
+		TreeMap<Double, Runnable> movements = new TreeMap<>();
 		for (Block block : e.getBlocks()) {
 			// handle tree breaks
 			WorldChunk chunk = CropControl.getDAO().getChunk(block.getChunk());
@@ -1224,7 +1122,7 @@ public class CropControlEventHandler implements Listener {
 
 			if (component != null) {
 				// chorus fruit tree break
-				if (getTrackedTreeMaterial(component.getTreeType()) == Material.CHORUS_PLANT) {
+				if (component.getTreeType() == TreeType.CHORUS_PLANT) {
 					Location loc = block.getLocation();
 					if (!pendingChecks.contains(loc)) {
 						pendingChecks.add(loc);
@@ -1238,25 +1136,19 @@ public class CropControlEventHandler implements Listener {
 				Tree tree = chunk.getTree(x, y, z);
 				if (tree == null) {
 					movements.put(e.getBlock().getLocation().distance(block.getLocation()), 
-							new Runnable() {
-								@Override
-								public void run() {
+							() -> {
 									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
 									CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
 								}
-							}
 					);
 				} else {
 					movements.put(e.getBlock().getLocation().distance(block.getLocation()), 
-							new Runnable() {
-								@Override
-								public void run() {
+							() -> {
 									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
 									CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
 									tree.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
 									CropControl.getPlugin().debug("Moved tree from {0} {1} {2} to {3}", x, y, z, tree);
 								}
-							}
 					);
 				}
 				// if tree base, move the whole tree
@@ -1287,7 +1179,7 @@ public class CropControlEventHandler implements Listener {
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPistonRetract(BlockPistonRetractEvent e) {
 		// We need to order movements of moved components from furthest to nearest
-		TreeMap<Double, Runnable> movements = new TreeMap<Double, Runnable>();
+		TreeMap<Double, Runnable> movements = new TreeMap<>();
 
 		for (Block block : e.getBlocks()) {
 			// handle tree breaks
@@ -1305,7 +1197,7 @@ public class CropControlEventHandler implements Listener {
 			int newZ = nextBlock.getZ();
 
 			if (component != null) {
-				if (getTrackedTreeMaterial(component.getTreeType()) == Material.CHORUS_PLANT) {
+				if (component.getTreeType() == TreeType.CHORUS_PLANT) {
 					Location loc = block.getLocation();
 					if (!pendingChecks.contains(loc)) {
 						pendingChecks.add(loc);
@@ -1319,25 +1211,19 @@ public class CropControlEventHandler implements Listener {
 				Tree tree = chunk.getTree(x, y, z);
 				if (tree == null) {
 					movements.put(e.getBlock().getLocation().distance(block.getLocation()), 
-							new Runnable() {
-								@Override
-								public void run() {
-									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
-									CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
-								}
+							() -> {
+								component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
+								CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
 							}
 					);
 				} else {
 					movements.put(e.getBlock().getLocation().distance(block.getLocation()), 
-							new Runnable() {
-								@Override
-								public void run() {
+							() -> {
 									component.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
 									CropControl.getPlugin().debug("Moved tree component from {0} {1} {2} to {3}", x, y, z, component);
 									tree.updateLocation(newChunk.getChunkID(), newX, newY, newZ);
 									CropControl.getPlugin().debug("Moved tree from {0} {1} {2} to {3}", x, y, z, tree);
 								}
-							}
 					);
 				}
 				// if tree base, move the whole tree
@@ -1366,20 +1252,20 @@ public class CropControlEventHandler implements Listener {
 	}
 
 	public Set<Location> returnUpwardsBlocks(Block startBlock, Material upwardBlockMaterial) {
-		Set<Location> checkedLocations = new HashSet<Location>();
+		Set<Location> checkedLocations = new HashSet<>();
 
-		Set<Location> uncheckedLocations = new HashSet<Location>();
+		Set<Location> uncheckedLocations = new HashSet<>();
 
 		Crop crop = CropControl.getDAO().getChunk(startBlock.getChunk()).getCrop(startBlock.getX(), startBlock.getY(), startBlock.getZ());
 		if (crop != null) {
-			if (getTrackedCropMaterial(crop.getCropType()) == upwardBlockMaterial) {
+			if (crop.getCropType() == upwardBlockMaterial) {
 				uncheckedLocations.add(startBlock.getLocation());
 			}
 		} else {
 			return checkedLocations; // failfast
 		}
 
-		Set<Location> toAddLocations = new HashSet<Location>();
+		Set<Location> toAddLocations = new HashSet<>();
 		
 		do {
 			for (Location unchecked : uncheckedLocations) {
@@ -1396,9 +1282,8 @@ public class CropControlEventHandler implements Listener {
 						&& !toAddLocations.contains(up)
 						&& !checkedLocations.contains(up)) {
 					
-					if (getTrackedCropMaterial(
-							CropControl.getDAO().getChunk(upBlock.getChunk()).getCrop(upBlock.getX(), upBlock.getY(), upBlock.getZ())
-									.getCropType()) == upwardBlockMaterial)
+					if (CropControl.getDAO().getChunk(upBlock.getChunk()).getCrop(upBlock.getX(), upBlock.getY(), upBlock.getZ())
+									.getCropType() == upwardBlockMaterial)
 						toAddLocations.add(up);
 				}
 			}
@@ -1415,14 +1300,14 @@ public class CropControlEventHandler implements Listener {
 	}
 
 	public Set<Location> returnUpwardsChorusBlocks(Block startBlock) {
-		Set<Location> checkedLocations = new HashSet<Location>();
+		Set<Location> checkedLocations = new HashSet<>();
 
-		Set<Location> uncheckedLocations = new HashSet<Location>();
+		Set<Location> uncheckedLocations = new HashSet<>();
 
 		TreeComponent component = CropControl.getDAO().getChunk(startBlock.getChunk())
 				.getTreeComponent(startBlock.getX(), startBlock.getY(), startBlock.getZ());
 		if (component != null) {
-			if (getTrackedTreeMaterial(component.getTreeType()) == Material.CHORUS_PLANT) {
+			if (component.getTreeType() == TreeType.CHORUS_PLANT) {
 				uncheckedLocations.add(startBlock.getLocation());
 			}
 		} else {
@@ -1431,7 +1316,7 @@ public class CropControlEventHandler implements Listener {
 		
 		Tree tree = CropControl.getDAO().getTree(component);
 
-		Set<Location> toAddLocations = new HashSet<Location>();
+		Set<Location> toAddLocations = new HashSet<>();
 		do {
 			for (Location unchecked : uncheckedLocations) {
 				if (CropControl.getDAO().isTracked(unchecked.getBlock())
@@ -1449,7 +1334,7 @@ public class CropControlEventHandler implements Listener {
 							&& !checkedLocations.contains(rel)) {
 						TreeComponent relComponent = CropControl.getDAO().getChunk(relBlock.getChunk())
 								.getTreeComponent(relBlock.getX(), relBlock.getY(), relBlock.getZ());
-						if (getTrackedTreeMaterial(relComponent.getTreeType()) == Material.CHORUS_PLANT
+						if (relComponent.getTreeType() == TreeType.CHORUS_PLANT
 								&& CropControl.getDAO().isTreeComponent(tree, relComponent)) {
 							toAddLocations.add(rel);
 						}
@@ -1478,9 +1363,7 @@ public class CropControlEventHandler implements Listener {
 		}
 		// TODO does it need to be 1 tick? more? less?
 		Bukkit.getScheduler().runTaskLater(CropControl.getPlugin(),
-				new Runnable() {
-					@Override
-					public void run() {
+				() -> {
 						if (startBlock != null) { // no altBlocks.
 							try {
 								WorldChunk chunk = CropControl.getDAO().getChunk(startBlock.getChunk());
@@ -1490,13 +1373,13 @@ public class CropControlEventHandler implements Listener {
 								
 								Crop crop = chunk.getCrop(x, y, z);
 								if (crop != null) {
-									Material type = getTrackedCropMaterial(crop.getCropType());
+									Material type = crop.getCropType();
 									if (type == startBlock.getType()) { // Still there.
 										//CropControl.getPlugin().debug("Ignoring cancelled Crop {3} track vs. actual {4} type {0}, {1}, {2}", x, y, z, type, startBlock.getType());
 										return;
 									}
 		
-									if (type == Material.SUGAR_CANE_BLOCK || type == Material.CACTUS) {
+									if (type == Material.SUGAR_CANE || type == Material.CACTUS) {
 										for (Location location : returnUpwardsBlocks(startBlock, type)) {
 											WorldChunk upChunk = CropControl.getDAO().getChunk(location.getChunk());
 											Crop upCrop = upChunk.getCrop(location.getBlockX(), location.getBlockY(), location.getBlockZ());
@@ -1516,7 +1399,7 @@ public class CropControlEventHandler implements Listener {
 								
 								Sapling sapling = chunk.getSapling(x, y, z);
 								if (sapling != null) {
-									if (getTrackedSaplingMaterial(sapling.getSaplingType()) == startBlock.getType()) {
+									if (sapling.getSaplingType() == startBlock.getType()) {
 										//CropControl.getPlugin().debug("Ignoring cancelled Sapling {3} track vs. actual {4} type {0}, {1}, {2}", x, y, z, sapling.getSaplingType(), startBlock.getType());
 										return;
 									}
@@ -1529,17 +1412,13 @@ public class CropControlEventHandler implements Listener {
 								TreeComponent treeComponent = chunk.getTreeComponent(x, y, z);
 								if (treeComponent != null) {
 									Tree tree = CropControl.getDAO().getTree(treeComponent);
-									Material type = getTrackedTreeMaterial(treeComponent.getTreeType());
-									if (type == 
-											(startBlock.getType() == Material.LEAVES ? Material.LOG : 
-											startBlock.getType() == Material.LEAVES_2 ? Material.LOG_2 :
-											startBlock.getType() == Material.CHORUS_FLOWER	? Material.CHORUS_PLANT : 
-											startBlock.getType())) {
+									TreeType type = treeComponent.getTreeType();
+									if (type == TreeTypeUtils.getMatchingTreeType(startBlock.getType())) {
 										//CropControl.getPlugin().debug("Ignoring cancelled Tree Component {3} track vs. actual {4} type {0}, {1}, {2}", x, y, z, type, startBlock.getType());
 										return;
 									}
 		
-									if (type == Material.CHORUS_PLANT) {
+									if (type == TreeType.CHORUS_PLANT) {
 										for (Location location : returnUpwardsChorusBlocks(startBlock)) {
 											TreeComponent upComponent = CropControl.getDAO().getChunk(location.getChunk())
 													.getTreeComponent(location.getBlockX(), location.getBlockY(), location.getBlockZ());
@@ -1600,7 +1479,6 @@ public class CropControlEventHandler implements Listener {
 										if (CropControl.getDAO().getTreeComponents(treeComponent.getTreeID()).isEmpty()) {
 											CropControl.getPlugin().debug("Tree at {0} broken as {1} by {2}", 
 													location, breakType, breaker);
-		
 											CropControl.getDAO().getTree(treeComponent).setRemoved();
 										}
 										
@@ -1612,8 +1490,7 @@ public class CropControlEventHandler implements Listener {
 								}
 							}
 						}
-					}
-				}, 1L);
+			}, 1L);
 	}
 
 	private void drop(Block block, Locatable dropable, UUID player, BreakType breakType) {
@@ -1649,13 +1526,13 @@ public class CropControlEventHandler implements Listener {
 				toolUsed = p.getInventory().getItemInMainHand();
 			}
 		}
-		List<String> commandBuffer = new LinkedList<String>();
+		List<String> commandBuffer = new LinkedList<>();
 		
 		List<ItemStack> items = config.realizeDrops(breakType, placePlayer, player, harvestable, biome, toolUsed, world, commandBuffer);
 		if (items != null) {
 			CropControlDropEvent event = new CropControlDropEvent(bLoc, breakType, dropable, player, items, commandBuffer);
 			Bukkit.getPluginManager().callEvent(event);
-			if (!event.isCancelled() && ((event.getItems() != null && event.getItems().size() > 0) || (event.getCommands() != null && !event.getCommands().isEmpty()))) {
+			if (!event.isCancelled() && ((event.getItems() != null && !event.getItems().isEmpty()) || (event.getCommands() != null && !event.getCommands().isEmpty()))) {
 				if (!event.getItems().isEmpty()) {
 					if (player != null) {
 						CropControl.getPlugin().info("Dropping {0} items at {1} due to break {2} caused by player {3}: {4}", 
@@ -1701,12 +1578,11 @@ public class CropControlEventHandler implements Listener {
 	}
 	
 	public String summarizeDrops(List<ItemStack> items) {
-		StringBuffer toString = new StringBuffer();
+		StringBuilder toString = new StringBuilder();
 		for (ItemStack itemStack: items) {
 			toString.append("[");
 			Material material = itemStack.getType();
 			int amount = itemStack.getAmount();
-			short durability = itemStack.getDurability();
 					
 			if (amount != 1) {
 				toString.append(amount).append("x");
@@ -1714,7 +1590,6 @@ public class CropControlEventHandler implements Listener {
 			
 			toString.append(itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName() ? 
 						itemStack.getItemMeta().getDisplayName() : material.toString());
-			toString.append(":").append(durability);
 			toString.append("]");
 		}
 		return toString.toString();
@@ -1723,27 +1598,26 @@ public class CropControlEventHandler implements Listener {
 	public String friendlyCropName(Locatable dropable) {
 		if (dropable instanceof Crop) {
 			Crop crop = (Crop) dropable;
-			return crop.getCropType();
+			return crop.getCropType().toString();
 		}
 		if (dropable instanceof Sapling) {
 			Sapling sapling = (Sapling) dropable;
-			return sapling.getSaplingType();
+			return sapling.getSaplingType().toString();
 		}
 		if (dropable instanceof TreeComponent) {
 			TreeComponent component = (TreeComponent) dropable;
-			return component.getTreeType();
+			return component.getTreeType().toString();
 		}
 		
 		return "Unknown";
 	}
 	
 	public String friendlySummarizeDrops(List<ItemStack> items) {
-		StringBuffer toString = new StringBuffer();
+		StringBuilder toString = new StringBuilder();
 		for (ItemStack itemStack: items) {
 			toString.append(" ");
 			Material material = itemStack.getType();
 			int amount = itemStack.getAmount();
-			short durability = itemStack.getDurability();
 					
 			if (amount != 1) {
 				toString.append(amount).append(" x ");
@@ -1751,9 +1625,6 @@ public class CropControlEventHandler implements Listener {
 			
 			toString.append(itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName() ? 
 						itemStack.getItemMeta().getDisplayName() : material.toString());
-			if (durability > 0) {
-				toString.append(":").append(durability);
-			}
 		}
 		return toString.toString();
 	}	
@@ -1764,7 +1635,7 @@ public class CropControlEventHandler implements Listener {
 		}
 	}
 
-	public static enum BreakType {
+	public enum BreakType {
 		PLAYER, WATER, LAVA, PISTON, EXPLOSION, NATURAL, FIRE, PHYSICS;
 	}
 

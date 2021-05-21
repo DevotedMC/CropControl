@@ -1,5 +1,8 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+import com.programmerdan.minecraft.cropcontrol.CreationError;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,10 +16,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import com.programmerdan.minecraft.cropcontrol.CreationError;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
+import org.bukkit.Material;
 
 /**
  * Crop is the base holder for all crops, even if spreadable, that effectively captures who placed the crop, 
@@ -34,7 +34,7 @@ public class Crop extends Locatable {
 	private static ConcurrentLinkedQueue<WeakReference<Crop>> dirties = new ConcurrentLinkedQueue<WeakReference<Crop>>();
 	
 	private long cropID;
-	private String cropType;
+	private Material cropType;
 	private String cropState;
 	private UUID placer;
 	private Timestamp timeStamp;
@@ -46,10 +46,10 @@ public class Crop extends Locatable {
 
 	private Crop() {}
 	
-	public static Crop create(WorldChunk chunk, int x, int y, int z, String cropType, String cropState, UUID placer, long timeStamp, boolean harvestable) {
+	public static Crop create(WorldChunk chunk, int x, int y, int z, Material cropType, String cropState, UUID placer, long timeStamp, boolean harvestable) {
 		return create(chunk, x, y, z, cropType, cropState, placer, new Timestamp(timeStamp), harvestable);
 	}
-	public static Crop create(WorldChunk chunk, int x, int y, int z, String cropType, String cropState, UUID placer, Timestamp timeStamp, boolean harvestable) {
+	public static Crop create(WorldChunk chunk, int x, int y, int z, Material cropType, String cropState, UUID placer, Timestamp timeStamp, boolean harvestable) {
 		Crop crop = new Crop();
 		crop.chunkID = chunk.getChunkID();
 		crop.x = x;
@@ -74,7 +74,7 @@ public class Crop extends Locatable {
 			if (crop.cropType == null) {
 				statement.setNull(5, Types.VARCHAR);
 			} else {
-				statement.setString(5, crop.cropType);
+				statement.setString(5, crop.cropType.toString());
 			}
 			if (crop.cropState == null) {
 				statement.setNull(6,  Types.VARCHAR);
@@ -111,7 +111,7 @@ public class Crop extends Locatable {
 		return cropID;
 	}
 
-	public String getCropType() {
+	public Material getCropType() {
 		return cropType;
 	}
 
@@ -235,7 +235,7 @@ public class Crop extends Locatable {
 	}
 
 	public static List<Crop> preload(WorldChunk chunk) {
-		List<Crop> crops = new ArrayList<Crop>();
+		List<Crop> crops = new ArrayList<>();
 		try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 				PreparedStatement statement = connection.prepareStatement(
 						"SELECT * FROM crops_crop WHERE (crop_id, x, y, z) IN (SELECT max(crop_id), x, y, z FROM crops_crop WHERE chunk_id = ? AND removed = FALSE GROUP BY x, y, z);");) {
@@ -248,7 +248,7 @@ public class Crop extends Locatable {
 					crop.x = results.getInt(3);
 					crop.y = results.getInt(4);
 					crop.z = results.getInt(5);
-					crop.cropType = results.getString(6);
+					crop.cropType = Material.valueOf(results.getString(6));
 					crop.cropState = results.getString(7);
 					try {
 						crop.placer = UUID.fromString(results.getString(8));

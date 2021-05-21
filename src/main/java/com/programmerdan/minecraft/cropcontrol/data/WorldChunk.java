@@ -1,6 +1,9 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
-import java.lang.ref.WeakReference;
+import com.google.common.collect.Sets;
+import com.programmerdan.minecraft.cropcontrol.CreationError;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,13 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.bukkit.Chunk;
-
-import com.google.common.collect.Sets;
-import com.programmerdan.minecraft.cropcontrol.CreationError;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 
 /**
  * Lots of baked in logic and tracking here. Chunks effectively root our tracking and data into manageable portions, so 
@@ -35,40 +32,37 @@ import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandle
 public class WorldChunk {
 	
 	// consider locating all related to the chunk into the chunk, load as chunk, etc.
-	private Map<Long, Crop> cropCacheID = new ConcurrentHashMap<Long, Crop>();
-	private Map<Locatable, Crop> cropCacheLoc = new ConcurrentHashMap<Locatable, Crop>();
+	private Map<Long, Crop> cropCacheID = new ConcurrentHashMap<>();
+	private Map<Locatable, Crop> cropCacheLoc = new ConcurrentHashMap<>();
 
-	private Map<Long, Sapling> saplingCacheID = new ConcurrentHashMap<Long, Sapling>();
-	private Map<Locatable, Sapling> saplingCacheLoc = new ConcurrentHashMap<Locatable, Sapling>();
+	private Map<Long, Sapling> saplingCacheID = new ConcurrentHashMap<>();
+	private Map<Locatable, Sapling> saplingCacheLoc = new ConcurrentHashMap<>();
 	
-	private static Map<Long, Tree> universalTreeCache = new ConcurrentHashMap<Long, Tree>();
-	private static Map<Long, Set<TreeComponent>> universalTreeComponentCache = new ConcurrentHashMap<Long, Set<TreeComponent>>();
+	private static Map<Long, Tree> universalTreeCache = new ConcurrentHashMap<>();
+	private static Map<Long, Set<TreeComponent>> universalTreeComponentCache = new ConcurrentHashMap<>();
 	
-	private Map<Long, Tree> treeCacheID = new ConcurrentHashMap<Long, Tree>();
-	private Map<Locatable, Tree> treeCacheLoc = new ConcurrentHashMap<Locatable, Tree>();
+	private Map<Long, Tree> treeCacheID = new ConcurrentHashMap<>();
+	private Map<Locatable, Tree> treeCacheLoc = new ConcurrentHashMap<>();
 	
-	private Map<Long, TreeComponent> componentCacheID = new ConcurrentHashMap<Long, TreeComponent>();
-	private Map<Locatable, TreeComponent> componentCacheLoc = new ConcurrentHashMap<Locatable, TreeComponent>();
+	private Map<Long, TreeComponent> componentCacheID = new ConcurrentHashMap<>();
+	private Map<Locatable, TreeComponent> componentCacheLoc = new ConcurrentHashMap<>();
 	
-	private static Map<Long, WorldChunk> chunkCacheID = new ConcurrentHashMap<Long, WorldChunk>();
-	private static Map<UUID, Map<Long, WorldChunk>> chunkCacheLoc = new ConcurrentHashMap<UUID, Map<Long, WorldChunk>>(); // using transposed x,z
+	private static Map<Long, WorldChunk> chunkCacheID = new ConcurrentHashMap<>();
+	private static Map<UUID, Map<Long, WorldChunk>> chunkCacheLoc = new ConcurrentHashMap<>(); // using transposed x,z
 	
-	private static ConcurrentLinkedQueue<WorldChunk> unloadQueue = new ConcurrentLinkedQueue<WorldChunk>();
+	private static ConcurrentLinkedQueue<WorldChunk> unloadQueue = new ConcurrentLinkedQueue<>();
 	
-	private ConcurrentLinkedQueue<Crop> removedCropQueue = new ConcurrentLinkedQueue<Crop>();
-	private ConcurrentLinkedQueue<Sapling> removedSaplingQueue = new ConcurrentLinkedQueue<Sapling>();
-	private ConcurrentLinkedQueue<TreeComponent> removedTreeComponentQueue = new ConcurrentLinkedQueue<TreeComponent>();
-	private ConcurrentLinkedQueue<Tree> removedTreeQueue = new ConcurrentLinkedQueue<Tree>();
+	private ConcurrentLinkedQueue<Crop> removedCropQueue = new ConcurrentLinkedQueue<>();
+	private ConcurrentLinkedQueue<Sapling> removedSaplingQueue = new ConcurrentLinkedQueue<>();
+	private ConcurrentLinkedQueue<TreeComponent> removedTreeComponentQueue = new ConcurrentLinkedQueue<>();
+	private ConcurrentLinkedQueue<Tree> removedTreeQueue = new ConcurrentLinkedQueue<>();
 
 	private long chunkID;
 	private UUID worldID;
 	private int chunkX;
 	private int chunkZ;
 	
-	private transient long retrieveTime;
-	
 	private WorldChunk() {
-		retrieveTime = System.currentTimeMillis();
 	}
 
 	public long getChunkID() {
@@ -88,9 +82,7 @@ public class WorldChunk {
 	}
 	
 	public long getChunkLocID() {
-		long chunk_id = ((long) chunkX << 32L) + (long) chunkZ;
-		
-		return chunk_id;
+		return ((long) chunkX << 32L) + chunkZ;
 	}
 	
 	
@@ -133,19 +125,19 @@ public class WorldChunk {
 	
 	
 	public void register(Crop crop) {
-		Crop preExist = cropCacheLoc.remove((Locatable) crop); // did we have one here already?
+		Crop preExist = cropCacheLoc.remove(crop); // did we have one here already?
 		if (preExist != null) {
-			CropControl.getPlugin().debug("Replacing crop at {0}: {1}", (Locatable) crop, crop);
+			CropControl.getPlugin().debug("Replacing crop at {0}: {1}", crop, crop);
 			cropCacheID.remove(preExist.getCropID());
 		} else {
-			CropControl.getPlugin().debug("Putting crop at {0}: {1}", (Locatable) crop, crop);
+			CropControl.getPlugin().debug("Putting crop at {0}: {1}", crop, crop);
 		}
 		cropCacheLoc.put(new Locatable(crop.getChunkID(), crop.getX(), crop.getY(), crop.getZ()), crop);
 		cropCacheID.put(crop.getCropID(), crop);
 	}
 	
 	public void unregister(Crop crop) {
-		Crop preExist = cropCacheLoc.remove((Locatable) crop); // did we have one here already?
+		Crop preExist = cropCacheLoc.remove(crop); // did we have one here already?
 		if (preExist != null) {
 			cropCacheID.remove(preExist.getCropID());
 			removedCropQueue.offer(preExist);
@@ -160,19 +152,19 @@ public class WorldChunk {
 	}
 
 	public void register(Sapling sapling) {
-		Sapling preExist = saplingCacheLoc.remove((Locatable) sapling); // did we have one here already?
+		Sapling preExist = saplingCacheLoc.remove(sapling); // did we have one here already?
 		if (preExist != null) {
-			CropControl.getPlugin().debug("Replacing sapling at {0}: {1}", (Locatable) sapling, sapling);
+			CropControl.getPlugin().debug("Replacing sapling at {0}: {1}", sapling, sapling);
 			saplingCacheID.remove(preExist.getSaplingID());
 		} else {
-			CropControl.getPlugin().debug("Putting sapling at {0}: {1}", (Locatable) sapling, sapling);
+			CropControl.getPlugin().debug("Putting sapling at {0}: {1}", sapling, sapling);
 		}
 		saplingCacheLoc.put(new Locatable(sapling.getChunkID(), sapling.getX(), sapling.getY(), sapling.getZ()), sapling);
 		saplingCacheID.put(sapling.getSaplingID(), sapling);
 	}
 
 	public void unregister(Sapling sapling) {
-		Sapling preExist = saplingCacheLoc.remove((Locatable) sapling); // did we have one here already?
+		Sapling preExist = saplingCacheLoc.remove(sapling); // did we have one here already?
 		if (preExist != null) {
 			saplingCacheID.remove(preExist.getSaplingID());
 			removedSaplingQueue.offer(preExist);
@@ -188,12 +180,12 @@ public class WorldChunk {
 	}
 
 	public void register(Tree tree) {
-		Tree preExist = treeCacheLoc.remove((Locatable) tree); // did we have one here already?
+		Tree preExist = treeCacheLoc.remove(tree); // did we have one here already?
 		if (preExist != null) {
-			CropControl.getPlugin().debug("Replacing tree at {0}: {1}", (Locatable) tree, tree);
+			CropControl.getPlugin().debug("Replacing tree at {0}: {1}", tree, tree);
 			treeCacheID.remove(preExist.getTreeID());
 		} else {
-			CropControl.getPlugin().debug("Putting tree at {0}: {1}", (Locatable) tree, tree);
+			CropControl.getPlugin().debug("Putting tree at {0}: {1}", tree, tree);
 		}
 		treeCacheLoc.put(new Locatable(tree.getChunkID(), tree.getX(), tree.getY(), tree.getZ()), tree);
 		treeCacheID.put(tree.getTreeID(), tree);
@@ -201,7 +193,7 @@ public class WorldChunk {
 	}
 	
 	public void unregister(Tree tree) {
-		Tree preExist = treeCacheLoc.remove((Locatable) tree); // did we have one here already?
+		Tree preExist = treeCacheLoc.remove(tree); // did we have one here already?
 		if (preExist != null) {
 			treeCacheID.remove(preExist.getTreeID());
 			removedTreeQueue.offer(preExist);
@@ -230,12 +222,12 @@ public class WorldChunk {
 	}
 
 	public void register(TreeComponent component) {
-		TreeComponent preExist = componentCacheLoc.remove((Locatable) component); // did we have one here already?
+		TreeComponent preExist = componentCacheLoc.remove(component); // did we have one here already?
 		if (preExist != null) {
-			CropControl.getPlugin().debug("Replacing treecomponent at {0}: {1}", (Locatable) component, component);
+			CropControl.getPlugin().debug("Replacing treecomponent at {0}: {1}", component, component);
 			componentCacheID.remove(preExist.getTreeComponentID());
 		} else {
-			CropControl.getPlugin().debug("Putting treecomponent at {0}: {1}", (Locatable) component, component);
+			CropControl.getPlugin().debug("Putting treecomponent at {0}: {1}", component, component);
 		}
 		componentCacheLoc.put(new Locatable(component.getChunkID(), component.getX(), component.getY(), component.getZ()), component);
 		componentCacheID.put(component.getTreeComponentID(), component);
@@ -249,7 +241,7 @@ public class WorldChunk {
 	}
 	
 	public void unregister(TreeComponent component) {
-		TreeComponent preExist = componentCacheLoc.remove((Locatable) component); // did we have one here already?
+		TreeComponent preExist = componentCacheLoc.remove(component); // did we have one here already?
 		if (preExist != null) {
 			componentCacheID.remove(preExist.getTreeID());
 			removedTreeComponentQueue.offer(preExist);
@@ -297,7 +289,7 @@ public class WorldChunk {
 	}
 	
 	public static void unloadChunk(Chunk chunk) {
-		long chunk_id = ((long) chunk.getX() << 32L) + (long) chunk.getZ();
+		long chunk_id = ((long) chunk.getX() << 32L) + chunk.getZ();
 		UUID world_uuid = chunk.getWorld().getUID();
 		//CropControl.getPlugin().debug("Registering unload for chunk {0}:{1}", world_uuid, chunk_id);
 		Map<Long, WorldChunk> chunks = chunkCacheLoc.get(world_uuid);
@@ -313,7 +305,7 @@ public class WorldChunk {
 	
 	// Should be in an async thread.
 	public static void doUnloads() {
-		doUnloads(500l);// don't spend more then half a second unloading.
+		doUnloads(500L);// don't spend more then half a second unloading.
 	}
 	
 	public static void doAllUnloads() {
@@ -323,15 +315,17 @@ public class WorldChunk {
 	public static void doUnloads(Long maxTime) {
 		int unloads = 0;
 		long start = System.currentTimeMillis();
-		long cropz = 0l;
-		long saplingz = 0l;
-		long treez = 0l;
-		long componentz = 0l;
+		long cropz = 0L;
+		long saplingz = 0L;
+		long treez = 0L;
+		long componentz = 0L;
 		
 		while (!unloadQueue.isEmpty()) {
 			WorldChunk unload = unloadQueue.poll();
 			
-			if (unload == null) continue;
+			if (unload == null) {
+				continue;
+			}
 			
 			// extract crops and such
 			Iterable<Crop> crops = unload.cropCacheID.values();
@@ -340,14 +334,14 @@ public class WorldChunk {
 			Iterable<TreeComponent> components = unload.componentCacheID.values();
 			
 			// remove from cache
-			long chunk_id = ((long) unload.getChunkX() << 32L) + (long) unload.getChunkZ();
-			UUID world_uuid = unload.getWorldID();
-			Map<Long, WorldChunk> chunks = chunkCacheLoc.get(world_uuid);
+			long chunkId = ((long) unload.getChunkX() << 32L) + unload.getChunkZ();
+			UUID worldUuid = unload.getWorldID();
+			Map<Long, WorldChunk> chunks = chunkCacheLoc.get(worldUuid);
 			if (chunks == null) {
 				continue;
 			}
 			
-			WorldChunk cacheChunk = chunks.remove(chunk_id);
+			WorldChunk cacheChunk = chunks.remove(chunkId);
 			if (cacheChunk != null) {
 				chunkCacheID.remove(unload.getChunkID());
 			}
@@ -397,14 +391,14 @@ public class WorldChunk {
 	
 	public static WorldChunk getChunk(Chunk chunk) {
 		WorldChunk cacheChunk = null;
-		long chunk_id = ((long) chunk.getX() << 32L) + (long) chunk.getZ();
-		UUID world_uuid = chunk.getWorld().getUID();
-		Map<Long, WorldChunk> chunks = chunkCacheLoc.get(world_uuid);
+		long chunkId = ((long) chunk.getX() << 32L) + chunk.getZ();
+		UUID worldUuid = chunk.getWorld().getUID();
+		Map<Long, WorldChunk> chunks = chunkCacheLoc.get(worldUuid);
 		if (chunks == null) {
-			chunks = new ConcurrentHashMap<Long, WorldChunk>();
-			chunkCacheLoc.put(world_uuid, chunks);
+			chunks = new ConcurrentHashMap<>();
+			chunkCacheLoc.put(worldUuid, chunks);
 		}
-		cacheChunk = chunks.get(chunk_id);
+		cacheChunk = chunks.get(chunkId);
 		if (cacheChunk != null) {
 			// remove from removal list -- tiny possibility of race condition here. Not sure ATM how to address.
 			unloadQueue.remove(cacheChunk);
@@ -415,7 +409,7 @@ public class WorldChunk {
 			try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 					PreparedStatement statement = connection.prepareStatement(
 							"SELECT * FROM crops_chunk WHERE world = ? and x = ? and z = ?;")) {
-				statement.setString(1, world_uuid.toString());
+				statement.setString(1, worldUuid.toString());
 				statement.setInt(2, chunk.getX());
 				statement.setInt(3, chunk.getZ());
 				try (ResultSet rs = statement.executeQuery();) {
@@ -425,7 +419,7 @@ public class WorldChunk {
 						cacheChunk.chunkX = chunk.getX();
 						cacheChunk.chunkZ = chunk.getZ();
 						cacheChunk.chunkID = rs.getLong(1);
-						cacheChunk.worldID = world_uuid;
+						cacheChunk.worldID = worldUuid;
 						/*CropControl.getPlugin().debug("Loaded existing chunk {0}:{1},{2}:{3}:{4}", world_uuid, cacheChunk.chunkX, 
 								cacheChunk.chunkZ, chunk_id, cacheChunk.chunkID);*/
 					}
@@ -440,19 +434,19 @@ public class WorldChunk {
 			try (Connection connection = CropControlDatabaseHandler.getInstanceData().getConnection();
 					PreparedStatement statement = connection.prepareStatement(
 							"INSERT INTO crops_chunk(world, x, z) VALUES (?, ?, ?);", Statement.RETURN_GENERATED_KEYS)) {
-				statement.setString(1, world_uuid.toString());
+				statement.setString(1, worldUuid.toString());
 				statement.setInt(2, chunk.getX());
 				statement.setInt(3, chunk.getZ());
 				statement.execute();
 				try (ResultSet rs = statement.getGeneratedKeys()) {
 					if (rs.next()) {
-						CropControl.getPlugin().debug("Registered new chunk {0}:{1},{2}:{3}:{4}", world_uuid, chunk.getX(), 
-								chunk.getZ(), chunk_id, rs.getLong(1));
+						CropControl.getPlugin().debug("Registered new chunk {0}:{1},{2}:{3}:{4}", worldUuid, chunk.getX(), 
+								chunk.getZ(), chunkId, rs.getLong(1));
 						cacheChunk = new WorldChunk();
 						cacheChunk.chunkX = chunk.getX();
 						cacheChunk.chunkZ = chunk.getZ();
 						cacheChunk.chunkID = rs.getLong(1);
-						cacheChunk.worldID = world_uuid;
+						cacheChunk.worldID = worldUuid;
 					} else {
 						throw new CreationError(WorldChunk.class, "ID assignment of chunk failed!");
 					}
@@ -463,7 +457,7 @@ public class WorldChunk {
 			}
 		}
 		cacheChunk.stuff();
-		chunks.put(chunk_id, cacheChunk);
+		chunks.put(chunkId, cacheChunk);
 		WorldChunk.chunkCacheID.put(cacheChunk.getChunkID(), cacheChunk);
 		return cacheChunk;
 	}
@@ -508,7 +502,7 @@ public class WorldChunk {
 			WorldChunk.chunkCacheID.put(chunkID, cacheChunk);
 			Map<Long, WorldChunk> chunks = chunkCacheLoc.get(cacheChunk.getWorldID());
 			if (chunks == null) {
-				chunks = new ConcurrentHashMap<Long, WorldChunk>();
+				chunks = new ConcurrentHashMap<>();
 				chunkCacheLoc.put(cacheChunk.getWorldID(), chunks);
 			}
 			chunks.put(cacheChunk.getChunkLocID(), cacheChunk);

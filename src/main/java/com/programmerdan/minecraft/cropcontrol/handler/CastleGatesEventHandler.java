@@ -1,18 +1,15 @@
 package com.programmerdan.minecraft.cropcontrol.handler;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-
 import com.aleksey.castlegates.events.CastleGatesDrawGateEvent;
 import com.aleksey.castlegates.events.CastleGatesUndrawGateEvent;
 import com.programmerdan.minecraft.cropcontrol.CropControl;
 import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
-import com.untamedears.realisticbiomes.events.RealisticBiomesBlockGrowEvent;
+import java.util.ArrayList;
+import java.util.List;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 
 /**
  * CastleGates voids a bunch of blocks temporarily. This can cause secondary breaks.
@@ -32,7 +29,7 @@ public class CastleGatesEventHandler implements Listener {
 	@EventHandler
 	public void onDrawEvent(CastleGatesDrawGateEvent e) {
 		try {
-			List<Block> blocks = new ArrayList<Block>();
+			List<Block> blocks = new ArrayList<>();
 			for (Location location : e.getImpacted()) {
 				blocks.add(location.getBlock());
 			}
@@ -50,7 +47,7 @@ public class CastleGatesEventHandler implements Listener {
 	@EventHandler
 	public void onDrawEvent(CastleGatesUndrawGateEvent e) {
 		try {
-			List<Block> blocks = new ArrayList<Block>();
+			List<Block> blocks = new ArrayList<>();
 			for (Location location : e.getImpacted()) {
 				blocks.add(location.getBlock());
 			}

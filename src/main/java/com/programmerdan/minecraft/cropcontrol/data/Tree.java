@@ -1,5 +1,8 @@
 package com.programmerdan.minecraft.cropcontrol.data;
 
+import com.programmerdan.minecraft.cropcontrol.CreationError;
+import com.programmerdan.minecraft.cropcontrol.CropControl;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,10 +16,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import com.programmerdan.minecraft.cropcontrol.CreationError;
-import com.programmerdan.minecraft.cropcontrol.CropControl;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlDatabaseHandler;
+import org.bukkit.TreeType;
 
 /**
  * When a sapling grows, it becomes a tree. Some things (Chorus Fruit) start as trees. 
@@ -36,7 +36,7 @@ public class Tree extends Locatable {
 	private static ConcurrentLinkedQueue<WeakReference<Tree>> dirties = new ConcurrentLinkedQueue<WeakReference<Tree>>();
 
 	private long treeID;
-	private String treeType;
+	private TreeType treeType;
 	private UUID placer;
 	private Timestamp timeStamp;
 
@@ -47,11 +47,11 @@ public class Tree extends Locatable {
 	private Tree() {
 	}
 
-	public static Tree create(WorldChunk chunk, int x, int y, int z, String treeType, UUID placer,
+	public static Tree create(WorldChunk chunk, int x, int y, int z, TreeType treeType, UUID placer,
 			long timeStamp) {
 		return create(chunk, x, y, z, treeType, placer, new Timestamp(timeStamp));
 	}
-	public static Tree create(WorldChunk chunk, int x, int y, int z, String treeType, UUID placer,
+	public static Tree create(WorldChunk chunk, int x, int y, int z, TreeType treeType, UUID placer,
 			Timestamp timeStamp) {
 		Tree tree = new Tree();
 		tree.chunkID = chunk.getChunkID();
@@ -75,7 +75,7 @@ public class Tree extends Locatable {
 			if (tree.treeType == null) {
 				statement.setNull(5, Types.VARCHAR);
 			} else {
-				statement.setString(5, tree.treeType);
+				statement.setString(5, tree.treeType.toString());
 			}
 			if (tree.placer == null) {
 				statement.setNull(6, Types.VARCHAR);
@@ -118,7 +118,7 @@ public class Tree extends Locatable {
 		return treeID;
 	}
 
-	public String getTreeType() {
+	public TreeType getTreeType() {
 		return treeType;
 	}
 
@@ -248,7 +248,7 @@ public class Tree extends Locatable {
 					tree.x = results.getInt(3);
 					tree.y = results.getInt(4);
 					tree.z = results.getInt(5);
-					tree.treeType = results.getString(6);
+					tree.treeType = TreeType.valueOf(results.getString(6));
 					try {
 						tree.placer = UUID.fromString(results.getString(7));
 					} catch (IllegalArgumentException iae) {
@@ -285,7 +285,7 @@ public class Tree extends Locatable {
 					tree.x = results.getInt(3);
 					tree.y = results.getInt(4);
 					tree.z = results.getInt(5);
-					tree.treeType = results.getString(6);
+					tree.treeType = TreeType.valueOf(results.getString(6));
 					try {
 						tree.placer = UUID.fromString(results.getString(7));
 					} catch (IllegalArgumentException iae) {

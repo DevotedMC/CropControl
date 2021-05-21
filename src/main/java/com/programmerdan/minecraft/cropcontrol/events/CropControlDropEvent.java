@@ -1,16 +1,14 @@
 package com.programmerdan.minecraft.cropcontrol.events;
 
+import com.programmerdan.minecraft.cropcontrol.data.Locatable;
+import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
 import java.util.List;
 import java.util.UUID;
-
 import org.bukkit.Location;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
-
-import com.programmerdan.minecraft.cropcontrol.data.Locatable;
-import com.programmerdan.minecraft.cropcontrol.handler.CropControlEventHandler.BreakType;
 
 /**
  * This event is called whenever CropControl is about to drop an item related to a

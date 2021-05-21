@@ -1,8 +1,6 @@
 /**
  * Configuration related items here.
- */
-/**
- * @author ProgrammerDan
  *
+ * @author ProgrammerDan
  */
 package com.programmerdan.minecraft.cropcontrol.config;

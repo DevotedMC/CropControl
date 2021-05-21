@@ -3,3 +3,5 @@
 /apidocs/
 .settings/
 .project
+.idea
+*.iml
